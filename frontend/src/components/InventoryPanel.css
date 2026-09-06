@@ -5,10 +5,10 @@
   z-index: 5;
   top: 50%;
   left: 50%;
-  width: min(94vw, 760px);
+  width: min(96vw, 1080px);
   overflow: visible;
   transform: translate(-50%, -50%);
-  padding: 1.35rem;
+  padding: 1.75rem;
   border: 1px solid var(--inventory-accent);
   border-radius: 10px;
   background: linear-gradient(145deg, rgba(20, 28, 39, 0.98), rgba(10, 15, 23, 0.98));
@@ -61,7 +61,7 @@
 .inventory-heading h2 {
   margin: 0.15rem 0 0;
   color: var(--text-main);
-  font-size: 1.8rem;
+  font-size: 2.1rem;
 }
 
 .inventory-summary {
@@ -638,7 +638,7 @@ button.inventory-equipment-slot:focus-visible {
 
 @media (max-width: 620px) {
   .inventory-panel {
-    width: min(94vw, 620px);
+    width: 96vw;
     padding: 1rem;
   }
 

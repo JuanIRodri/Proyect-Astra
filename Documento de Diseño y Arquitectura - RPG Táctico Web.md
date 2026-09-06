@@ -98,6 +98,7 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 - [ ] Equipar casco, pecho, pantalón, botas, arma y arma secundaria por personaje.
 - [ ] Aplicar bonificaciones de equipamiento a las cinco estadisticas.
 - [ ] Excluir el equipo puesto del peso de la mochila.
+- [x] Confirmar movimiento continuo en 360 grados con diagonales y seguidores suaves.
 
 ### Pendiente de implementacion
 - [ ] Añadir filtros por categoria y rareza al inventario.
