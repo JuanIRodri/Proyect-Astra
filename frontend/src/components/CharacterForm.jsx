@@ -103,7 +103,7 @@ export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
         </div>
 
         <form onSubmit={handleSubmit} className="character-form">
-          {isEditing && (
+          {isEditing && viewMode !== 'estadistica' && (
             <div className="form-group" style={{ marginBottom: '1.5rem' }}>
               <label>Nombre del Héroe</label>
               <input name="nombre" type="text" value={form.nombre} onChange={handleChange} required />

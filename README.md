@@ -1,65 +1,111 @@
-# Maniquí Database 👤
+# Maniquí RPG
 
-Este proyecto contiene el diseño detallado, los datos iniciales y un dashboard web para la base de datos `Maniqui`, un sistema orientado a la gestión y personalización exhaustiva de las características físicas de figuras o personajes.
+Aplicación web para gestionar personajes de un RPG táctico y personalizar sus características físicas. El proyecto combina una base de datos MySQL, una API REST y una interfaz React con un modo de exploración 2D desarrollado con Phaser.
 
-## 🚀 Inicio Rápido
+## Funcionalidades
 
-La forma más sencilla de arrancar todo el ecosistema (Base de Datos, Backend y Frontend) es utilizando el script de inicialización:
+- Listar personajes y consultar su detalle.
+- Crear, editar y eliminar personajes.
+- Gestionar clase, nivel, altura, musculatura, rasgos faciales y estadísticas.
+- Explorar los personajes en una vista interactiva con Phaser.
+- Inicializar o actualizar las tablas y personajes RPG mediante una migración.
+
+## Requisitos
+
+- Docker y Docker Compose.
+- Node.js 18 o superior.
+- `pnpm`.
+
+## Inicio rápido
+
+El script de inicio levanta MySQL, ejecuta la migración RPG, inicia la API y deja el frontend disponible en primer plano:
 
 ```bash
 chmod +x start-app.sh
 ./start-app.sh
 ```
 
-Este script se encargará de:
-1. Levantar el contenedor de la base de datos con Docker.
-2. Instalar dependencias e iniciar el Backend.
-3. Instalar dependencias e iniciar el Frontend.
+Aplicación: `http://localhost:5173`
 
----
+API: `http://localhost:3000`
 
-## 🛠️ Ejecución Manual
+## Configuración
 
-Si prefieres ejecutar cada componente por separado:
+El backend usa las variables de entorno siguientes. Crea `backend/.env` con los valores de desarrollo que coinciden con `docker-compose.yml`:
 
-### 1. Base de Datos (Docker)
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=Maniqui
+PORT=3000
+```
+
+No subas este archivo si contiene credenciales reales.
+
+## Ejecución manual
+
+### Base de datos
+
 ```bash
 docker compose up -d
 ```
-*   **Host**: `localhost`
-*   **Puerto**: `3306`
-*   **Usuario/Pass**: `root` / `root`
-*   **Esquema**: `Maniqui` (se inicializa automáticamente).
 
-### 2. Backend (Express)
+MySQL 8 se expone en `localhost:3306`. Los scripts de `sentencias-sql/creaciones.sql` e `sentencias-sql/inserciones.sql` se ejecutan al crear el volumen de la base de datos por primera vez.
+
+### Backend
+
 ```bash
 cd backend
-npm install
+pnpm install
+node migrate-rpg.js
 node index.js
 ```
-Servidor disponible en `http://localhost:3000`.
 
-### 3. Frontend (React + Vite)
+La API expone las rutas bajo `/api/personajes`:
+
+| Método | Ruta | Operación |
+| --- | --- | --- |
+| `GET` | `/api/personajes` | Listar personajes |
+| `GET` | `/api/personajes/:id` | Consultar detalle |
+| `POST` | `/api/personajes` | Crear personaje |
+| `PUT` | `/api/personajes/:id` | Actualizar personaje |
+| `DELETE` | `/api/personajes/:id` | Eliminar personaje |
+
+### Frontend
+
+En otra terminal:
+
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
-Dashboard disponible en `http://localhost:5173`.
 
----
+El frontend está configurado para consumir la API en `http://localhost:3000/api`.
 
-## 📂 Estructura del Proyecto
+## Estructura del proyecto
 
-*   **`sentencias-sql/`**: Scripts SQL de creación, inserción y consultas.
-*   **`backend/`**: API REST en Express para conectar la base de datos con la web.
-*   **`frontend/`**: Aplicación React para visualizar los personajes.
-*   **`docker-compose.yml`**: Configuración de la base de datos MySQL 8.0.
+```text
+backend/             API Express, conexión MySQL y migración RPG
+frontend/            Aplicación React, estilos y vista Phaser
+sentencias-sql/      Creación, inserción, consultas y vistas SQL
+docker-compose.yml   Servicio MySQL 8
+start-app.sh         Arranque integrado del entorno local
+docs/                Documentación y gráfico del proyecto
+```
 
-## 📊 Modelo de Datos
-La base de datos utiliza una arquitectura de **composición jerárquica**, permitiendo una granularidad total en la definición de cada parte del personaje (Cuerpo, Torso, Extremidades, Rasgos Faciales).
+## Detener el entorno
 
-## 🛠️ Requisitos
-*   Docker & Docker Compose
-*   Node.js (v18+)
-*   NPM
+Para detener la base de datos y conservar sus datos:
+
+```bash
+docker compose down
+```
+
+Para eliminar también el contenedor y sus volúmenes, usa `docker compose down -v`.
+
+## Licencia
+
+Este proyecto se distribuye bajo la licencia GNU General Public License v3.0 (GPLv3). Consulta el archivo `LICENSE` para ver el texto completo.

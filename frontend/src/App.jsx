@@ -3,6 +3,7 @@ import { usePersonajes } from './hooks/usePersonajes'
 import { CharacterGrid } from './components/CharacterGrid'
 import { CharacterDetail } from './components/CharacterDetail'
 import { CharacterForm } from './components/CharacterForm'
+import { ExplorationView } from './components/ExplorationView'
 import './App.css'
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState(null);
-  const [viewMode, setViewMode] = useState('apariencia'); // 'apariencia' o 'estadistica'
+  const [activeView, setActiveView] = useState('dashboard');
 
   const openCreateForm = () => {
     setEditingCharacter(null);
@@ -62,11 +63,11 @@ function App() {
         <p>Administra tu gremio y explora las habilidades de cada aventurero</p>
 
         <div className="header-actions">
-          <button 
-            onClick={() => setViewMode(viewMode === 'apariencia' ? 'estadistica' : 'apariencia')} 
+          <button
+            onClick={() => setActiveView(activeView === 'dashboard' ? 'exploration' : 'dashboard')}
             className="refresh-btn"
           >
-            {viewMode === 'apariencia' ? '📊 Cambiar a Estadísticas' : '👤 Cambiar a Apariencias'}
+            {activeView === 'dashboard' ? '🎮 Abrir exploración' : '📋 Volver al dashboard'}
           </button>
           <button onClick={openCreateForm} className="refresh-btn create-btn">
             ➕ Nuevo Héroe
@@ -74,39 +75,40 @@ function App() {
         </div>
       </header>
 
-      <main>
-        {loading && <p>Cargando personajes...</p>}
-        {error && <p className="error">{error}</p>}
+      {activeView === 'exploration' ? (
+        <ExplorationView personajes={personajes} onUpdateCharacter={handleUpdate} />
+      ) : (
+        <main>
+          {loading && <p>Cargando personajes...</p>}
+          {error && <p className="error">{error}</p>}
 
-        {!loading && !error && (
-          <CharacterGrid
-            personajes={personajes}
-            onCharacterClick={selectCharacter}
-            onEdit={openEditForm}
-            viewMode={viewMode}
-          />
-        )}
-      </main>
+          {!loading && !error && (
+            <CharacterGrid
+              personajes={personajes}
+              onCharacterClick={selectCharacter}
+            />
+          )}
+        </main>
+      )}
 
       {/* Modal de Detalle */}
-      {detailLoading && <div className="detail-modal"><p>Cargando detalles...</p></div>}
-      {selectedCharacter && !detailLoading && (
+      {activeView === 'dashboard' && detailLoading && <div className="detail-modal"><p>Cargando detalles...</p></div>}
+      {activeView === 'dashboard' && selectedCharacter && !detailLoading && (
         <CharacterDetail
           character={selectedCharacter}
           onClose={() => selectCharacter(null)}
           onEdit={openEditForm}
           onDelete={onDeleteCharacter}
-          viewMode={viewMode}
         />
       )}
 
       {/* Modal de Formulario */}
-      {showForm && (
+      {activeView === 'dashboard' && showForm && (
         <CharacterForm
           initialData={editingCharacter}
           onSubmit={onFormSubmit}
           onCancel={onFormCancel}
-          viewMode={viewMode}
+          viewMode="apariencia"
         />
       )}
     </div>

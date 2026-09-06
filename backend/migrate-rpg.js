@@ -16,98 +16,192 @@ const rpgData = [
 ];
 
 async function migrate() {
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    charset: 'utf8mb4'
-  });
+  let connection;
 
   try {
-    console.log('--- Iniciando Migración MMORPG ---');
-    
-    // 1. Añadir columnas
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      charset: 'utf8mb4'
+    });
+
+    console.log('--- Iniciando Migración Completa de Maniquí ---');
+
+    // 1. Crear tablas relacionales del cuerpo si no existen
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Cabello (
+        idCabello INT AUTO_INCREMENT PRIMARY KEY,
+        Corte VARCHAR(50),
+        Tinte VARCHAR(50)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Ojos (
+        idOjos INT AUTO_INCREMENT PRIMARY KEY,
+        Color VARCHAR(50),
+        Forma VARCHAR(50)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Boca (
+        idBoca INT AUTO_INCREMENT PRIMARY KEY,
+        Forma VARCHAR(50)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Nariz (
+        idNariz INT AUTO_INCREMENT PRIMARY KEY,
+        Forma VARCHAR(50)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Cuernos (
+        idCuernos INT AUTO_INCREMENT PRIMARY KEY,
+        Cantidad INT DEFAULT 0,
+        Tamanio VARCHAR(50),
+        Color VARCHAR(50)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Cabeza (
+        idCabeza INT AUTO_INCREMENT PRIMARY KEY,
+        Forma VARCHAR(50),
+        idCabello INT,
+        idOjos INT,
+        idBoca INT,
+        idNariz INT,
+        idCuernos INT,
+        FOREIGN KEY (idCabello) REFERENCES Cabello(idCabello),
+        FOREIGN KEY (idOjos) REFERENCES Ojos(idOjos),
+        FOREIGN KEY (idBoca) REFERENCES Boca(idBoca),
+        FOREIGN KEY (idNariz) REFERENCES Nariz(idNariz),
+        FOREIGN KEY (idCuernos) REFERENCES Cuernos(idCuernos)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Torso (
+        idTorso INT AUTO_INCREMENT PRIMARY KEY,
+        Forma VARCHAR(50),
+        Bello VARCHAR(50)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Cuerpo (
+        idCuerpo INT AUTO_INCREMENT PRIMARY KEY,
+        idCabeza INT,
+        idTorso INT,
+        FOREIGN KEY (idCabeza) REFERENCES Cabeza(idCabeza),
+        FOREIGN KEY (idTorso) REFERENCES Torso(idTorso)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // 2. Crear tabla Personaje con relaciones
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Personaje (
+        idPersonaje INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(100),
+        clase VARCHAR(50),
+        nivel INT DEFAULT 1,
+        altura FLOAT DEFAULT 1.75,
+        musculatura VARCHAR(50) DEFAULT 'Normal',
+        idCuerpo INT,
+        FOREIGN KEY (idCuerpo) REFERENCES Cuerpo(idCuerpo)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Asegurar que las columnas existan si la tabla ya había sido creada antes
     const columns = [
       { name: 'nombre', definition: 'VARCHAR(100)' },
       { name: 'clase', definition: 'VARCHAR(50)' },
-      { name: 'nivel', definition: 'INT DEFAULT 1' }
+      { name: 'nivel', definition: 'INT DEFAULT 1' },
+      { name: 'altura', definition: 'FLOAT DEFAULT 1.75' },
+      { name: 'musculatura', definition: "VARCHAR(50) DEFAULT 'Normal'" },
+      { name: 'idCuerpo', definition: 'INT' }
     ];
+
     for (const col of columns) {
       try {
         await connection.query(`ALTER TABLE Personaje ADD COLUMN ${col.name} ${col.definition}`);
-        console.log(`✅ Columna ${col.name} añadida.`);
       } catch (err) {
-        if (err.code === 'ER_DUP_FIELDNAME') {
-          console.log(`ℹ️ La columna ${col.name} ya existe.`);
-        } else {
-          throw err;
-        }
+        if (err.code !== 'ER_DUP_FIELDNAME') throw err;
       }
     }
 
-    // 2. Crear tabla Estadistica si no existe
+    // 3. Insertar rasgo base por defecto para asociar a los personajes
+    await connection.query(`INSERT IGNORE INTO Cabello (idCabello, Corte, Tinte) VALUES (1, 'Corto', 'Castaño')`);
+    await connection.query(`INSERT IGNORE INTO Ojos (idOjos, Color, Forma) VALUES (1, 'Marron', 'Almendrados')`);
+    await connection.query(`INSERT IGNORE INTO Boca (idBoca, Forma) VALUES (1, 'Estandard')`);
+    await connection.query(`INSERT IGNORE INTO Nariz (idNariz, Forma) VALUES (1, 'Recta')`);
+    await connection.query(`INSERT IGNORE INTO Cuernos (idCuernos, Cantidad, Tamanio, Color) VALUES (1, 0, 'Ninguno', 'N/A')`);
+    await connection.query(`INSERT IGNORE INTO Cabeza (idCabeza, Forma, idCabello, idOjos, idBoca, idNariz, idCuernos) VALUES (1, 'Ovalada', 1, 1, 1, 1, 1)`);
+    await connection.query(`INSERT IGNORE INTO Torso (idTorso, Forma, Bello) VALUES (1, 'Atletico', 'Lampiño')`);
+    await connection.query(`INSERT IGNORE INTO Cuerpo (idCuerpo, idCabeza, idTorso) VALUES (1, 1, 1)`);
+
+    // 4. Crear o actualizar la tabla Estadistica
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Estadistica (
-        idPersonaje INT(11) NOT NULL,
-        fuerza INT(11) DEFAULT 10,
-        destreza INT(11) DEFAULT 10,
-        inteligencia INT(11) DEFAULT 10,
-        constitucion INT(11) DEFAULT 10,
-        agilidad INT(11) DEFAULT 10,
-        PRIMARY KEY (idPersonaje),
+        idPersonaje INT NOT NULL PRIMARY KEY,
+        fuerza INT DEFAULT 10,
+        destreza INT DEFAULT 10,
+        inteligencia INT DEFAULT 10,
+        constitucion INT DEFAULT 10,
+        agilidad INT DEFAULT 10,
         CONSTRAINT fk_estadistica_personaje FOREIGN KEY (idPersonaje) REFERENCES Personaje (idPersonaje) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
-    console.log('✅ Tabla Estadistica verificada/creada.');
 
-    // 3. Actualizar datos de personajes
+    // 5. Cargar o actualizar personajes asignando idCuerpo = 1
     for (const char of rpgData) {
-      await connection.query(
-        'UPDATE Personaje SET nombre = ?, clase = ?, nivel = ? WHERE idPersonaje = ?',
-        [char.nombre, char.clase, char.nivel, char.id]
-      );
+      await connection.query(`
+        INSERT INTO Personaje (idPersonaje, nombre, clase, nivel, idCuerpo)
+        VALUES (?, ?, ?, ?, 1)
+        ON DUPLICATE KEY UPDATE 
+          nombre = VALUES(nombre),
+          clase = VALUES(clase),
+          nivel = VALUES(nivel),
+          idCuerpo = IFNULL(idCuerpo, 1)
+      `, [char.id, char.nombre, char.clase, char.nivel]);
     }
-    console.log('✅ Datos de personajes actualizados.');
 
-    // 4. Para los que no están en la lista (si el usuario añadió más)
     await connection.query(`
       UPDATE Personaje SET 
         nombre = CONCAT('Héroe #', idPersonaje), 
         clase = 'Aventurero', 
-        nivel = 1 
-      WHERE nombre IS NULL
+        nivel = 1,
+        idCuerpo = 1
+      WHERE nombre IS NULL OR idCuerpo IS NULL
     `);
 
-    // 5. Inicializar o recalcular estadísticas para todos
+    // 6. Recalcular Estadísticas
     const [personajes] = await connection.query('SELECT idPersonaje, clase, nivel FROM Personaje');
     for (const p of personajes) {
       const totalPoints = 10 + (p.nivel - 1) * 3;
-      
       let fuerza = 10, destreza = 10, inteligencia = 10, constitucion = 10, agilidad = 10;
-      let weights = { f: 2, d: 2, i: 2, c: 2, a: 2 }; // Default Aventurero
-      
-      if (p.clase === 'Guerrero') {
-        weights = { f: 4, d: 1, i: 0.5, c: 3.5, a: 1 };
-      } else if (p.clase === 'Mago') {
-        weights = { f: 0.5, d: 1, i: 6, c: 1, a: 1.5 };
-      } else if (p.clase === 'Pícaro') {
-        weights = { f: 2, d: 4.5, i: 1, c: 1, a: 1.5 };
-      } else if (p.clase === 'Paladín') {
-        weights = { f: 3, d: 1, i: 2, c: 3, a: 1 };
-      } else if (p.clase === 'Cazador') {
-        weights = { f: 1.5, d: 4, i: 1, c: 1.5, a: 2 };
-      }
-      
+      let weights = { f: 2, d: 2, i: 2, c: 2, a: 2 };
+
+      if (p.clase === 'Guerrero') weights = { f: 4, d: 1, i: 0.5, c: 3.5, a: 1 };
+      else if (p.clase === 'Mago') weights = { f: 0.5, d: 1, i: 6, c: 1, a: 1.5 };
+      else if (p.clase === 'Pícaro') weights = { f: 2, d: 4.5, i: 1, c: 1, a: 1.5 };
+      else if (p.clase === 'Paladín') weights = { f: 3, d: 1, i: 2, c: 3, a: 1 };
+      else if (p.clase === 'Cazador') weights = { f: 1.5, d: 4, i: 1, c: 1.5, a: 2 };
+
       const totalWeight = weights.f + weights.d + weights.i + weights.c + weights.a;
-      
       fuerza += Math.round((weights.f / totalWeight) * totalPoints);
       destreza += Math.round((weights.d / totalWeight) * totalPoints);
       inteligencia += Math.round((weights.i / totalWeight) * totalPoints);
       constitucion += Math.round((weights.c / totalWeight) * totalPoints);
       agilidad += Math.round((weights.a / totalWeight) * totalPoints);
-      
+
       const diff = totalPoints - ((fuerza - 10) + (destreza - 10) + (inteligencia - 10) + (constitucion - 10) + (agilidad - 10));
       fuerza += diff;
 
@@ -122,13 +216,12 @@ async function migrate() {
           agilidad = VALUES(agilidad)
       `, [p.idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad]);
     }
-    console.log('✅ Estadísticas de personajes inicializadas/actualizadas.');
 
-    console.log('🚀 Migración completada con éxito.');
+    console.log('✅ Esquema y datos actualizados correctamente.');
   } catch (err) {
     console.error('❌ Error en la migración:', err);
   } finally {
-    await connection.end();
+    if (connection) await connection.end();
   }
 }
 

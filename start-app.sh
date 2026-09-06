@@ -22,7 +22,7 @@ echo -e "${GREEN}⚙️  Iniciando el Backend...${NC}"
 cd backend
 if [ ! -d "node_modules" ]; then
     echo "Instalando dependencias del backend..."
-    npm install
+    pnpm install
 fi
 
 # Correr la migración para asegurar que las columnas y datos del MMORPG existen
@@ -39,11 +39,11 @@ echo -e "${GREEN}🎨 Iniciando el Frontend (Vite)...${NC}"
 cd frontend
 if [ ! -d "node_modules" ]; then
     echo "Instalando dependencias del frontend..."
-    npm install
+    pnpm install
 fi
 
 # El frontend se queda en primer plano para ver los logs
-npm run dev
+pnpm run dev
 
 # Al cerrar el script, matamos el proceso del backend
 trap "kill $BACKEND_PID" EXIT

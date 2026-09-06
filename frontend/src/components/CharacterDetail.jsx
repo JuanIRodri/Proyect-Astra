@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterDetail.css';
 
-export function CharacterDetail({ character, onClose, onEdit, onDelete, viewMode }) {
+export function CharacterDetail({ character, onClose, onEdit, onDelete }) {
   if (!character) return null;
 
   return (
@@ -10,14 +10,11 @@ export function CharacterDetail({ character, onClose, onEdit, onDelete, viewMode
         <button className="close-btn" onClick={onClose}>&times;</button>
         <div className="detail-header">
            <h2>{character.nombre}</h2>
-           <p className="subtitle">
-             {viewMode === 'apariencia' ? `Esencia de ${character.clase}` : `Potencial de Nivel ${character.nivel}`}
-           </p>
+           <p className="subtitle">Esencia de {character.clase}</p>
         </div>
         
         <div className="detail-sections">
-          {viewMode === 'apariencia' && (
-            <>
+          <>
               <section>
                 <h4>📋 General</h4>
                 <ul>
@@ -45,61 +42,7 @@ export function CharacterDetail({ character, onClose, onEdit, onDelete, viewMode
                   <li><strong>Piernas:</strong> {character.Pierna_Tipo} ({character.Pierna_Tamanio})</li>
                 </ul>
               </section>
-            </>
-          )}
-
-          {viewMode === 'estadistica' && (
-            <section className="full-width">
-              <h4>⚔️ Estadísticas de Combate</h4>
-              <ul className="stats-list">
-                <li className="stat-item">
-                  <div className="stat-label-row">
-                    <span>💪 Fuerza</span>
-                    <strong>{character.fuerza || 10}</strong>
-                  </div>
-                  <div className="stat-bar-container">
-                    <div className="stat-bar fuerza" style={{ width: `${Math.min(100, character.fuerza || 10)}%` }}></div>
-                  </div>
-                </li>
-                <li className="stat-item">
-                  <div className="stat-label-row">
-                    <span>🎯 Destreza</span>
-                    <strong>{character.destreza || 10}</strong>
-                  </div>
-                  <div className="stat-bar-container">
-                    <div className="stat-bar destreza" style={{ width: `${Math.min(100, character.destreza || 10)}%` }}></div>
-                  </div>
-                </li>
-                <li className="stat-item">
-                  <div className="stat-label-row">
-                    <span>🔮 Inteligencia</span>
-                    <strong>{character.inteligencia || 10}</strong>
-                  </div>
-                  <div className="stat-bar-container">
-                    <div className="stat-bar inteligencia" style={{ width: `${Math.min(100, character.inteligencia || 10)}%` }}></div>
-                  </div>
-                </li>
-                <li className="stat-item">
-                  <div className="stat-label-row">
-                    <span>🛡️ Constitución</span>
-                    <strong>{character.constitucion || 10}</strong>
-                  </div>
-                  <div className="stat-bar-container">
-                    <div className="stat-bar constitucion" style={{ width: `${Math.min(100, character.constitucion || 10)}%` }}></div>
-                  </div>
-                </li>
-                <li className="stat-item">
-                  <div className="stat-label-row">
-                    <span>⚡ Agilidad</span>
-                    <strong>{character.agilidad || 10}</strong>
-                  </div>
-                  <div className="stat-bar-container">
-                    <div className="stat-bar agilidad" style={{ width: `${Math.min(100, character.agilidad || 10)}%` }}></div>
-                  </div>
-                </li>
-              </ul>
-            </section>
-          )}
+          </>
         </div>
 
           <div className="detail-actions">
