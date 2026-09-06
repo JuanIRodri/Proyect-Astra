@@ -290,7 +290,7 @@ exports.getInventario = (req, res) => {
 exports.getEquipamiento = (req, res) => {
     const query = `
         SELECT
-            e.ranura,
+            o.tipoEquipamiento as ranura,
             o.clave as itemKey,
             o.nombre,
             o.descripcion,

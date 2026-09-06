@@ -306,6 +306,13 @@ async function migrate() {
       `, objeto);
     }
 
+    await connection.query(`
+      UPDATE Equipamiento e
+      JOIN Objeto o ON e.idObjeto = o.idObjeto
+      SET e.ranura = o.tipoEquipamiento
+      WHERE o.tipoEquipamiento IS NOT NULL AND e.ranura <> o.tipoEquipamiento
+    `);
+
     const [objetos] = await connection.query('SELECT idObjeto, clave FROM Objeto');
     const objetoIds = Object.fromEntries(objetos.map((objeto) => [objeto.clave, objeto.idObjeto]));
     const inventarioInicial = [
