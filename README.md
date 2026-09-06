@@ -1,14 +1,19 @@
-# Maniquí RPG
+# Proyect-Astra
 
-Aplicación web para gestionar personajes de un RPG táctico y personalizar sus características físicas. El proyecto combina una base de datos MySQL, una API REST y una interfaz React con un modo de exploración 2D desarrollado con Phaser.
+RPG táctico 2D para la web, centrado en la exploración, la gestión de un grupo de aventureros y las decisiones basadas en sus estadísticas. El proyecto combina una interfaz React, una escena interactiva con Phaser 3, una API REST con Express y una base de datos MySQL.
 
-## Funcionalidades
+## Estado actual
 
-- Listar personajes y consultar su detalle.
-- Crear, editar y eliminar personajes.
-- Gestionar clase, nivel, altura, musculatura, rasgos faciales y estadísticas.
-- Explorar los personajes en una vista interactiva con Phaser.
-- Inicializar o actualizar las tablas y personajes RPG mediante una migración.
+- Dashboard para listar, consultar, crear, editar y eliminar personajes.
+- Gestión de clase, nivel, estadísticas y características del grupo.
+- Modo de exploración 2D integrado con Phaser.
+- Grupo de hasta tres personajes con formación de seguidores.
+- Cambio de líder con las teclas `1`, `2` y `3`.
+- Movimiento con flechas o `WASD`, cámara siguiendo al líder y bloqueo contra obstáculos.
+- Edición de estadísticas del líder durante la exploración con `U`.
+- Comunicación React-Phaser mediante eventos `CustomEvent` centralizados.
+
+El combate táctico, los mapas exportados desde Tiled, las interacciones con el entorno y el movimiento por casillas forman parte de la hoja de ruta del proyecto.
 
 ## Requisitos
 
@@ -18,14 +23,14 @@ Aplicación web para gestionar personajes de un RPG táctico y personalizar sus 
 
 ## Inicio rápido
 
-El script de inicio levanta MySQL, ejecuta la migración RPG, inicia la API y deja el frontend disponible en primer plano:
+El script de inicio levanta MySQL, ejecuta la migración de la base de datos, inicia la API y deja el cliente web disponible en primer plano:
 
 ```bash
 chmod +x start-app.sh
 ./start-app.sh
 ```
 
-Aplicación: `http://localhost:5173`
+Cliente web: `http://localhost:5173`
 
 API: `http://localhost:3000`
 
