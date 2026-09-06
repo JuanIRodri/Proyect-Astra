@@ -27,6 +27,7 @@ flowchart TD
     Components --> CharacterForm[CharacterForm.jsx]
     Components --> ExplorationView[ExplorationView.jsx\nvista separada de exploracion]
     Components --> PhaserGame[PhaserGame.jsx\npuente React -> Phaser]
+    Components --> InventoryPanel[InventoryPanel.jsx\npanel visual del inventario]
     Components --> FormParts[components/form-parts/\nAppearanceFields.jsx\nStatsFields.jsx]
 
     Hooks --> UsePersonajes[usePersonajes.js\nestado y operaciones de personajes]
@@ -34,6 +35,7 @@ flowchart TD
     Game --> Exploration[game/ExplorationScene.js\nescena Phaser 3]
     Game --> GameEvents[game/gameEvents.js\nCustomEvent compartidos]
     ExplorationView --> PhaserGame
+    ExplorationView --> InventoryPanel
     PhaserGame --> GameEvents
     PhaserGame --> Exploration
     App --> Components
@@ -64,6 +66,7 @@ flowchart TD
 | Entrada de la interfaz | `frontend/src/App.jsx` | componentes, hook de personajes y Phaser |
 | Vista separada de exploracion | `frontend/src/components/ExplorationView.jsx` | `PhaserGame.jsx` |
 | Montar Phaser en React | `frontend/src/components/PhaserGame.jsx` | `frontend/src/game/ExplorationScene.js` |
+| Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `ExplorationView.jsx`, `gameEvents.js` |
 | Logica del mapa y exploracion | `frontend/src/game/ExplorationScene.js` | Phaser 3 |
 | Eventos compartidos React-Phaser | `frontend/src/game/gameEvents.js` | `CustomEvent`, `PhaserGame.jsx`, `ExplorationScene.js` |
 | Estado y CRUD de personajes | `frontend/src/hooks/usePersonajes.js` | `frontend/src/services/api.js` |

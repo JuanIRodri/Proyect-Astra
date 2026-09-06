@@ -1,4 +1,5 @@
 .phaser-game-shell {
+  position: relative;
   margin: 0 auto 3rem;
   max-width: 720px;
   padding: 1.25rem;

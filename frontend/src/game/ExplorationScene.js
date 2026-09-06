@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import {
   emitCharacterEditorRequest,
   emitExplorationStatus,
+  emitInventoryToggle,
 } from './gameEvents'
 
 const TILE_SIZE = 48
@@ -123,6 +124,11 @@ export class ExplorationScene extends Phaser.Scene {
 
     if (key === 'u' || code === 'keyu') {
       this.emitCharacterEditorRequest()
+      return
+    }
+
+    if (key === 'i' || code === 'keyi') {
+      emitInventoryToggle()
       return
     }
 

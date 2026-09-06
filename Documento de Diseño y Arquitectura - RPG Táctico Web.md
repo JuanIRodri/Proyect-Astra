@@ -91,6 +91,7 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 
 ### Implementado pero pendiente de confirmacion del usuario
 - [ ] Centralizar los eventos de comunicacion entre React y Phaser mediante `CustomEvent`.
+- [ ] Mostrar el inventario visual con la tecla `I` durante la exploracion.
 
 ### Pendiente de implementacion
 - [ ] Diseñar y cargar un mapa de prueba exportado desde Tiled.
