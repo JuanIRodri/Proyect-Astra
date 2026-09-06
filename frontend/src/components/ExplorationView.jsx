@@ -51,7 +51,7 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
         onToggleInventory={handleToggleInventory}
       />
       <p className="phaser-status" role="status">{status}</p>
-      {inventoryOpen && <InventoryPanel onClose={() => setInventoryOpen(false)} />}
+      {inventoryOpen && <InventoryPanel personajes={personajes} onClose={() => setInventoryOpen(false)} />}
       {editingCharacter && (
         <CharacterForm
           initialData={editingCharacter}

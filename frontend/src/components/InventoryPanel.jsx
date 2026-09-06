@@ -3,6 +3,7 @@ import './InventoryPanel.css'
 
 const GRID_COLUMNS = 4
 const SLOT_COUNT = 12
+const MAX_WEIGHT = 20
 
 const INVENTORY_ITEMS = [
   {
@@ -12,6 +13,7 @@ const INVENTORY_ITEMS = [
     description: 'Un líquido azul que recupera parte de la vida de un aventurero.',
     category: 'Consumible',
     quantity: 3,
+    weight: 0.4,
     icon: '🧪',
     rarity: 'Comun',
   },
@@ -22,6 +24,7 @@ const INVENTORY_ITEMS = [
     description: 'Una chispa mineral que todavía conserva calor en su interior.',
     category: 'Material',
     quantity: 8,
+    weight: 0.15,
     icon: '◆',
     rarity: 'Raro',
   },
@@ -32,6 +35,7 @@ const INVENTORY_ITEMS = [
     description: 'Comida seca preparada para largas jornadas fuera del refugio.',
     category: 'Suministro',
     quantity: 5,
+    weight: 0.5,
     icon: '◈',
     rarity: 'Comun',
   },
@@ -42,22 +46,47 @@ const INVENTORY_ITEMS = [
     description: 'La aguja apunta hacia el norte incluso bajo las ruinas de Astra.',
     category: 'Objeto clave',
     quantity: 1,
+    weight: 2,
     icon: '✦',
     rarity: 'Epico',
   },
 ]
 
-export function InventoryPanel({ onClose }) {
-  const [items, setItems] = useState([
-    ...INVENTORY_ITEMS,
+function createInventory() {
+  return [
+    ...INVENTORY_ITEMS.map((item) => ({ ...item })),
     ...Array(SLOT_COUNT - INVENTORY_ITEMS.length).fill(null),
-  ])
+  ]
+}
+
+export function InventoryPanel({ onClose, personajes }) {
+  const characterList = personajes.slice(0, 3)
+  const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
+  const [inventories, setInventories] = useState(() => Object.fromEntries(
+    characterList.map((character) => [character.idPersonaje, createInventory()]),
+  ))
+  const [goldByCharacter] = useState(() => Object.fromEntries(
+    characterList.map((character) => [character.idPersonaje, 125]),
+  ))
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0)
   const [cursorSlotIndex, setCursorSlotIndex] = useState(0)
   const [heldSlotIndex, setHeldSlotIndex] = useState(null)
   const [draggedSlotIndex, setDraggedSlotIndex] = useState(null)
   const [notice, setNotice] = useState('Usa WASD y confirma un espacio con Enter.')
+  const activeCharacter = characterList[activeCharacterIndex]
+  const activeCharacterId = activeCharacter?.idPersonaje
+  const items = inventories[activeCharacterId] || createInventory()
   const selectedItem = items[selectedSlotIndex] || null
+  const goldAmount = goldByCharacter[activeCharacterId] || 0
+  const currentWeight = items.reduce((totalWeight, item) => (
+    item ? totalWeight + (item.weight * item.quantity) : totalWeight
+  ), 0)
+  const weightPercent = Math.min(100, (currentWeight / MAX_WEIGHT) * 100)
+  const weightState = currentWeight >= MAX_WEIGHT * 0.8
+    ? 'is-overloaded'
+    : currentWeight >= MAX_WEIGHT * 0.5
+      ? 'is-warning'
+      : ''
 
   const handleDropSelected = useCallback(() => {
     if (!selectedItem) {
@@ -65,14 +94,17 @@ export function InventoryPanel({ onClose }) {
       return
     }
 
-    setItems((currentItems) => currentItems.map((item, itemIndex) => (
+    setInventories((currentInventories) => ({
+      ...currentInventories,
+      [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => (
       itemIndex === selectedSlotIndex ? null : item
-    )))
+      )),
+    }))
     setSelectedSlotIndex((currentIndex) => Math.max(0, currentIndex - 1))
     setCursorSlotIndex((currentIndex) => Math.max(0, currentIndex - 1))
     setHeldSlotIndex(null)
     setNotice(`${selectedItem.name}: objeto soltado.`)
-  }, [selectedItem, selectedSlotIndex])
+  }, [activeCharacterId, selectedItem, selectedSlotIndex])
 
   const handleSplit = useCallback(() => {
     if (!selectedItem) {
@@ -92,7 +124,9 @@ export function InventoryPanel({ onClose }) {
 
     const firstQuantity = Math.ceil(selectedItem.quantity / 2)
     const secondQuantity = Math.floor(selectedItem.quantity / 2)
-    setItems((currentItems) => currentItems.map((item, itemIndex) => {
+    setInventories((currentInventories) => ({
+      ...currentInventories,
+      [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => {
       if (itemIndex === selectedSlotIndex) {
         return { ...item, quantity: firstQuantity }
       }
@@ -104,9 +138,10 @@ export function InventoryPanel({ onClose }) {
         }
       }
       return item
+      }),
     }))
     setNotice(`${selectedItem.name}: pila dividida en ${firstQuantity} y ${secondQuantity}.`)
-  }, [items, selectedItem, selectedSlotIndex])
+  }, [activeCharacterId, items, selectedItem, selectedSlotIndex])
 
   const handleMoveItem = useCallback((sourceSlotIndex, targetSlotIndex) => {
     if (sourceSlotIndex === targetSlotIndex) return
@@ -116,25 +151,31 @@ export function InventoryPanel({ onClose }) {
     if (!sourceItem) return
 
     if (targetItem && targetItem.itemKey === sourceItem.itemKey) {
-      setItems((currentItems) => currentItems.map((item, itemIndex) => {
+      setInventories((currentInventories) => ({
+        ...currentInventories,
+        [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => {
         if (itemIndex === sourceSlotIndex) return null
         if (itemIndex === targetSlotIndex) {
           return { ...item, quantity: item.quantity + sourceItem.quantity }
         }
         return item
+        }),
       }))
       setNotice(`${sourceItem.name}: pilas acumuladas.`)
     } else {
-      setItems((currentItems) => currentItems.map((item, itemIndex) => {
+      setInventories((currentInventories) => ({
+        ...currentInventories,
+        [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => {
         if (itemIndex === sourceSlotIndex) return targetItem
         if (itemIndex === targetSlotIndex) return sourceItem
         return item
+        }),
       }))
       setNotice(targetItem ? 'Objetos intercambiados.' : `${sourceItem.name}: objeto movido.`)
     }
     setSelectedSlotIndex(targetSlotIndex)
     setCursorSlotIndex(targetSlotIndex)
-  }, [items])
+  }, [activeCharacterId, items])
 
   const moveSelection = useCallback((rowDelta, columnDelta) => {
     setCursorSlotIndex((currentIndex) => {
@@ -145,6 +186,14 @@ export function InventoryPanel({ onClose }) {
       return nextRow * GRID_COLUMNS + nextColumn
     })
   }, [])
+
+  const handleCharacterChange = (characterIndex) => {
+    setActiveCharacterIndex(characterIndex)
+    setSelectedSlotIndex(0)
+    setCursorSlotIndex(0)
+    setHeldSlotIndex(null)
+    setNotice('Usa WASD y confirma un espacio con Enter.')
+  }
 
   const handleKeyDown = useCallback((event) => {
     const key = event.key.toLowerCase()
@@ -230,6 +279,40 @@ export function InventoryPanel({ onClose }) {
         </button>
       </div>
 
+      <div className="inventory-character-tabs" role="tablist" aria-label="Inventario por personaje">
+        {characterList.map((character, characterIndex) => (
+          <button
+            className={`inventory-character-tab ${characterIndex === activeCharacterIndex ? 'is-active' : ''}`}
+            key={character.idPersonaje}
+            onClick={() => handleCharacterChange(characterIndex)}
+            role="tab"
+            aria-selected={characterIndex === activeCharacterIndex}
+          >
+            <span className="inventory-character-index">{characterIndex + 1}</span>
+            <span>{character.nombre || `Héroe #${character.idPersonaje}`}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="inventory-summary">
+        <div className="inventory-gold">
+          <span className="inventory-summary-icon" aria-hidden="true">◈</span>
+          <div>
+            <strong>{goldAmount}</strong>
+            <span>Oro</span>
+          </div>
+        </div>
+        <div className={`inventory-weight ${weightState}`}>
+          <div className="inventory-weight-label">
+            <span>Peso</span>
+            <strong>{currentWeight.toFixed(1)} / {MAX_WEIGHT}</strong>
+          </div>
+          <div className="inventory-weight-meter" role="progressbar" aria-label="Peso del inventario" aria-valuemin="0" aria-valuemax={MAX_WEIGHT} aria-valuenow={Number(currentWeight.toFixed(1))}>
+            <span style={{ width: `${weightPercent}%` }} />
+          </div>
+        </div>
+      </div>
+
       <div className="inventory-content">
         <div className="inventory-grid" aria-label="Objetos del inventario">
           {items.map((item, slotIndex) => item ? (
@@ -290,6 +373,7 @@ export function InventoryPanel({ onClose }) {
               <p className="inventory-detail-category">{selectedItem.category} / {selectedItem.rarity}</p>
               <h3>{selectedItem.name}</h3>
               <p>{selectedItem.description}</p>
+              <p className="inventory-item-weight">Peso por unidad: {selectedItem.weight.toFixed(1)}</p>
             </div>
           </div>
         )}
@@ -306,7 +390,7 @@ export function InventoryPanel({ onClose }) {
       </div>
 
       <footer className="inventory-footer">
-        <span className="inventory-footer-notice">{items.filter(Boolean).length} objetos registrados · {notice}</span>
+        <span className="inventory-footer-notice">{activeCharacter?.nombre || 'Personaje'} · {items.filter(Boolean).length} objetos · {notice}</span>
         <span className="inventory-key">I</span>
       </footer>
     </aside>
