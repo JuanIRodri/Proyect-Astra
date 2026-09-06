@@ -102,6 +102,21 @@
   box-shadow: inset 0 0 0 1px rgba(212, 169, 91, 0.24);
 }
 
+.inventory-slot.is-cursor {
+  outline: 2px solid rgba(101, 198, 216, 0.9);
+  outline-offset: 2px;
+}
+
+.inventory-slot.is-held {
+  border-color: #f2c66d;
+  box-shadow: 0 0 0 2px rgba(242, 198, 109, 0.24), inset 0 0 0 1px rgba(242, 198, 109, 0.32);
+  transform: translateY(-2px);
+}
+
+.inventory-slot.is-dragging {
+  opacity: 0.45;
+}
+
 .inventory-slot-empty {
   border-style: dashed;
   background: rgba(255, 255, 255, 0.018);
@@ -112,6 +127,12 @@
   border-color: rgba(148, 163, 184, 0.2);
   background: rgba(255, 255, 255, 0.018);
   transform: none;
+}
+
+.inventory-slot-empty.is-selected {
+  border-style: dashed;
+  border-color: var(--accent-gold);
+  background: rgba(212, 169, 91, 0.08);
 }
 
 .inventory-icon,
@@ -163,12 +184,70 @@
   line-height: 1.55;
 }
 
+.inventory-empty-detail {
+  align-self: stretch;
+  margin: 0;
+  padding: 1rem;
+  border-left: 1px solid rgba(148, 163, 184, 0.18);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.inventory-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.inventory-actions button {
+  flex: 1;
+  min-height: 2.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 5px;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.inventory-actions button:hover:not(:disabled),
+.inventory-actions button:focus-visible:not(:disabled) {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.inventory-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.inventory-shortcut {
+  display: inline-grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-right: 0.25rem;
+  place-items: center;
+  border: 1px solid rgba(212, 169, 91, 0.5);
+  border-radius: 3px;
+  color: var(--accent-gold);
+  font-size: 0.68rem;
+}
+
 .inventory-footer {
   margin-top: 1rem;
   padding-top: 0.85rem;
   border-top: 1px solid rgba(148, 163, 184, 0.16);
   color: var(--text-muted);
   font-size: 0.76rem;
+}
+
+.inventory-footer-notice {
+  overflow: hidden;
+  max-width: calc(100% - 2rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inventory-key {
@@ -207,5 +286,10 @@
     border-top: 1px solid rgba(148, 163, 184, 0.18);
     border-left: 0;
     padding: 1rem 0 0;
+  }
+
+  .inventory-empty-detail {
+    border-top: 1px solid rgba(148, 163, 184, 0.18);
+    border-left: 0;
   }
 }
