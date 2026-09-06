@@ -59,6 +59,22 @@ function createInventory() {
   ]
 }
 
+function getClassThemeKey(clase) {
+  return (clase || 'aventurero')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+}
+
+function getNextSlotIndex(currentIndex, rowDelta, columnDelta) {
+  const currentRow = Math.floor(currentIndex / GRID_COLUMNS)
+  const currentColumn = currentIndex % GRID_COLUMNS
+  const nextRow = Math.max(0, Math.min((SLOT_COUNT / GRID_COLUMNS) - 1, currentRow + rowDelta))
+  const nextColumn = Math.max(0, Math.min(GRID_COLUMNS - 1, currentColumn + columnDelta))
+  return nextRow * GRID_COLUMNS + nextColumn
+}
+
 export function InventoryPanel({ onClose, personajes }) {
   const characterList = personajes.slice(0, 3)
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
@@ -75,6 +91,7 @@ export function InventoryPanel({ onClose, personajes }) {
   const [notice, setNotice] = useState('Usa WASD y confirma un espacio con Enter.')
   const activeCharacter = characterList[activeCharacterIndex]
   const activeCharacterId = activeCharacter?.idPersonaje
+  const classThemeKey = getClassThemeKey(activeCharacter?.clase)
   const items = inventories[activeCharacterId] || createInventory()
   const selectedItem = items[selectedSlotIndex] || null
   const goldAmount = goldByCharacter[activeCharacterId] || 0
@@ -96,7 +113,7 @@ export function InventoryPanel({ onClose, personajes }) {
 
     setInventories((currentInventories) => ({
       ...currentInventories,
-      [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => (
+      [activeCharacterId]: (currentInventories[activeCharacterId] || createInventory()).map((item, itemIndex) => (
       itemIndex === selectedSlotIndex ? null : item
       )),
     }))
@@ -126,7 +143,7 @@ export function InventoryPanel({ onClose, personajes }) {
     const secondQuantity = Math.floor(selectedItem.quantity / 2)
     setInventories((currentInventories) => ({
       ...currentInventories,
-      [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => {
+      [activeCharacterId]: (currentInventories[activeCharacterId] || createInventory()).map((item, itemIndex) => {
       if (itemIndex === selectedSlotIndex) {
         return { ...item, quantity: firstQuantity }
       }
@@ -153,7 +170,7 @@ export function InventoryPanel({ onClose, personajes }) {
     if (targetItem && targetItem.itemKey === sourceItem.itemKey) {
       setInventories((currentInventories) => ({
         ...currentInventories,
-        [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => {
+        [activeCharacterId]: (currentInventories[activeCharacterId] || createInventory()).map((item, itemIndex) => {
         if (itemIndex === sourceSlotIndex) return null
         if (itemIndex === targetSlotIndex) {
           return { ...item, quantity: item.quantity + sourceItem.quantity }
@@ -165,7 +182,7 @@ export function InventoryPanel({ onClose, personajes }) {
     } else {
       setInventories((currentInventories) => ({
         ...currentInventories,
-        [activeCharacterId]: currentInventories[activeCharacterId].map((item, itemIndex) => {
+        [activeCharacterId]: (currentInventories[activeCharacterId] || createInventory()).map((item, itemIndex) => {
         if (itemIndex === sourceSlotIndex) return targetItem
         if (itemIndex === targetSlotIndex) return sourceItem
         return item
@@ -178,14 +195,10 @@ export function InventoryPanel({ onClose, personajes }) {
   }, [activeCharacterId, items])
 
   const moveSelection = useCallback((rowDelta, columnDelta) => {
-    setCursorSlotIndex((currentIndex) => {
-      const currentRow = Math.floor(currentIndex / GRID_COLUMNS)
-      const currentColumn = currentIndex % GRID_COLUMNS
-      const nextRow = Math.max(0, Math.min((SLOT_COUNT / GRID_COLUMNS) - 1, currentRow + rowDelta))
-      const nextColumn = Math.max(0, Math.min(GRID_COLUMNS - 1, currentColumn + columnDelta))
-      return nextRow * GRID_COLUMNS + nextColumn
-    })
-  }, [])
+    const nextIndex = getNextSlotIndex(cursorSlotIndex, rowDelta, columnDelta)
+    setCursorSlotIndex(nextIndex)
+    setSelectedSlotIndex(nextIndex)
+  }, [cursorSlotIndex])
 
   const handleCharacterChange = (characterIndex) => {
     setActiveCharacterIndex(characterIndex)
@@ -197,6 +210,7 @@ export function InventoryPanel({ onClose, personajes }) {
 
   const handleKeyDown = useCallback((event) => {
     const key = event.key.toLowerCase()
+    const code = event.code.toLowerCase()
     const movements = {
       w: [-1, 0],
       arrowup: [-1, 0],
@@ -226,6 +240,22 @@ export function InventoryPanel({ onClose, personajes }) {
       event.preventDefault()
       event.stopPropagation()
       handleSplit()
+      return
+    }
+
+    const characterIndexByKey = {
+      '1': 0,
+      '2': 1,
+      '3': 2,
+      digit1: 0,
+      digit2: 1,
+      digit3: 2,
+    }
+    const characterIndex = characterIndexByKey[key] ?? characterIndexByKey[code]
+    if (characterIndex !== undefined && characterIndex < characterList.length) {
+      event.preventDefault()
+      event.stopPropagation()
+      handleCharacterChange(characterIndex)
       return
     }
 
@@ -268,10 +298,10 @@ export function InventoryPanel({ onClose, personajes }) {
   }, [handleKeyDown])
 
   return (
-    <aside className="inventory-panel" aria-label="Inventario del grupo">
+    <aside className={`inventory-panel inventory-class-${classThemeKey}`} aria-label={`Inventario de ${activeCharacter?.nombre || 'personaje'}`}>
       <div className="inventory-heading">
         <div>
-          <p className="inventory-kicker">EQUIPO DE EXPLORACIÓN</p>
+          <p className="inventory-kicker">EQUIPO DE EXPLORACIÓN · {activeCharacter?.clase || 'Aventurero'}</p>
           <h2>Inventario</h2>
         </div>
         <button className="inventory-close" onClick={onClose} aria-label="Cerrar inventario" title="Cerrar inventario">

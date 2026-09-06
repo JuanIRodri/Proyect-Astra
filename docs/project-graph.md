@@ -12,6 +12,7 @@ flowchart TD
     Root --> Infra[docker-compose.yml\nstart-app.sh]
     Root --> Design[Documento de Diseño y Arquitectura - RPG Táctico Web.md\nrequisitos y hoja de ruta]
     Root --> Readme[README.md\ninstalacion y comandos]
+    Root --> Context[docs/contexto-agente.md\ncontexto operativo y seguimiento]
 
     Frontend --> App[frontend/src/App.jsx\ncomposicion de la interfaz]
     Frontend --> Styles[frontend/src/App.css\nfrontend/src/index.css]
@@ -77,6 +78,7 @@ flowchart TD
 | Conexion a la base de datos | `backend/config/db.js` | MySQL/Docker |
 | Esquema y datos SQL | `sentencias-sql/` | `docker-compose.yml` |
 | Requisitos y hoja de ruta del RPG | `Documento de Diseño y Arquitectura - RPG Táctico Web.md` | grafo y arquitectura |
+| Contexto de trabajo y seguimiento | `docs/contexto-agente.md` | diseño, README y grafo |
 | Configuracion de dependencias frontend | `frontend/package.json` | pnpm |
 | Arranque completo | `start-app.sh` | Docker, backend y frontend |
 ```

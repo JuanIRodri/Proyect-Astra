@@ -1,4 +1,6 @@
 .inventory-panel {
+  --inventory-accent: var(--accent-gold);
+  --inventory-accent-soft: rgba(212, 169, 91, 0.14);
   position: absolute;
   z-index: 5;
   top: 50%;
@@ -7,11 +9,36 @@
   overflow: visible;
   transform: translate(-50%, -50%);
   padding: 1.35rem;
-  border: 1px solid rgba(212, 169, 91, 0.58);
+  border: 1px solid var(--inventory-accent);
   border-radius: 10px;
   background: linear-gradient(145deg, rgba(20, 28, 39, 0.98), rgba(10, 15, 23, 0.98));
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62), 0 0 0 100vmax rgba(4, 7, 12, 0.62);
   animation: inventory-enter 180ms ease-out;
+}
+
+.inventory-class-guerrero {
+  --inventory-accent: #ef4444;
+  --inventory-accent-soft: rgba(239, 68, 68, 0.14);
+}
+
+.inventory-class-mago {
+  --inventory-accent: #3b82f6;
+  --inventory-accent-soft: rgba(59, 130, 246, 0.14);
+}
+
+.inventory-class-picaro {
+  --inventory-accent: #a855f7;
+  --inventory-accent-soft: rgba(168, 85, 247, 0.14);
+}
+
+.inventory-class-paladin {
+  --inventory-accent: #eab308;
+  --inventory-accent-soft: rgba(234, 179, 8, 0.14);
+}
+
+.inventory-class-cazador {
+  --inventory-accent: #22c55e;
+  --inventory-accent-soft: rgba(34, 197, 94, 0.14);
 }
 
 .inventory-heading,
@@ -24,7 +51,7 @@
 .inventory-kicker,
 .inventory-detail-category {
   margin: 0;
-  color: var(--accent-gold);
+  color: var(--inventory-accent);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -73,9 +100,9 @@
 .inventory-character-tab:hover,
 .inventory-character-tab.is-active,
 .inventory-character-tab:focus-visible {
-  border-color: var(--accent-gold);
+  border-color: var(--inventory-accent);
   color: var(--text-main);
-  background: rgba(212, 169, 91, 0.1);
+  background: var(--inventory-accent-soft);
 }
 
 .inventory-character-index {
@@ -175,8 +202,8 @@
 
 .inventory-close:hover,
 .inventory-close:focus-visible {
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  border-color: var(--inventory-accent);
+  color: var(--inventory-accent);
 }
 
 .inventory-content {
@@ -213,15 +240,15 @@
 
 .inventory-slot:hover,
 .inventory-slot:focus-visible {
-  border-color: rgba(212, 169, 91, 0.8);
-  background: rgba(212, 169, 91, 0.1);
+  border-color: var(--inventory-accent);
+  background: var(--inventory-accent-soft);
   transform: translateY(-2px);
 }
 
 .inventory-slot.is-selected {
-  border-color: var(--accent-gold);
-  background: rgba(212, 169, 91, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(212, 169, 91, 0.24);
+  border-color: var(--inventory-accent);
+  background: var(--inventory-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--inventory-accent);
 }
 
 .inventory-slot.is-cursor {
@@ -253,8 +280,8 @@
 
 .inventory-slot-empty.is-selected {
   border-style: dashed;
-  border-color: var(--accent-gold);
-  background: rgba(212, 169, 91, 0.08);
+  border-color: var(--inventory-accent);
+  background: var(--inventory-accent-soft);
 }
 
 .inventory-icon,
@@ -342,8 +369,8 @@
 
 .inventory-actions button:hover:not(:disabled),
 .inventory-actions button:focus-visible:not(:disabled) {
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  border-color: var(--inventory-accent);
+  color: var(--inventory-accent);
 }
 
 .inventory-actions button:disabled {
@@ -357,9 +384,9 @@
   height: 1.35rem;
   margin-right: 0.25rem;
   place-items: center;
-  border: 1px solid rgba(212, 169, 91, 0.5);
+  border: 1px solid var(--inventory-accent);
   border-radius: 3px;
-  color: var(--accent-gold);
+  color: var(--inventory-accent);
   font-size: 0.68rem;
 }
 
@@ -383,9 +410,9 @@
   width: 1.5rem;
   height: 1.5rem;
   place-items: center;
-  border: 1px solid rgba(212, 169, 91, 0.55);
+  border: 1px solid var(--inventory-accent);
   border-radius: 4px;
-  color: var(--accent-gold);
+  color: var(--inventory-accent);
   font-weight: 700;
 }
 
