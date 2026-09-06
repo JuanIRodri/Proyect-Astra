@@ -24,8 +24,14 @@ export function PhaserGame({ personajes, onStatusChange, onOpenCharacterEditor }
       },
     })
 
-    const unsubscribeStatus = subscribeToGameEvent(GAME_EVENTS.explorationStatus, onStatusChange)
-    const unsubscribeEditor = subscribeToGameEvent(GAME_EVENTS.openCharacterEditor, onOpenCharacterEditor)
+    const unsubscribeStatus = subscribeToGameEvent(
+      GAME_EVENTS.explorationStatus,
+      ({ message }) => onStatusChange(message),
+    )
+    const unsubscribeEditor = subscribeToGameEvent(
+      GAME_EVENTS.openCharacterEditor,
+      ({ characterId }) => onOpenCharacterEditor(characterId),
+    )
     game.scene.add('ExplorationScene', ExplorationScene, true, { personajes })
 
     return () => {

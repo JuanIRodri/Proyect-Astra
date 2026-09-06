@@ -1,5 +1,8 @@
 import Phaser from 'phaser'
-import { emitGameEvent, GAME_EVENTS } from './gameEvents'
+import {
+  emitCharacterEditorRequest,
+  emitExplorationStatus,
+} from './gameEvents'
 
 const TILE_SIZE = 48
 const GRID_WIDTH = 16
@@ -134,7 +137,7 @@ export class ExplorationScene extends Phaser.Scene {
       return
     }
 
-    emitGameEvent(GAME_EVENTS.openCharacterEditor, character.id)
+    emitCharacterEditorRequest(character.id)
   }
 
   moveLeader(deltaX, deltaY) {
@@ -191,6 +194,6 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   emitStatus(message) {
-    emitGameEvent(GAME_EVENTS.explorationStatus, message)
+    emitExplorationStatus(message)
   }
 }
