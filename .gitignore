@@ -27,6 +27,9 @@ frontend/dist/
 
 # .env files
 .env
+.env.*
+!.env.example
+!**/.env.example
 .env.local
 .env.development.local
 .env.test.local
@@ -38,3 +41,19 @@ frontend/dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local editor and assistant configuration
+/.vscode
+/.idea
+/.mcp.json
+/.github/agents
+/.gitmodules
+
+# Local shell configuration accidentally copied into the project
+/.bash_profile
+/.bashrc
+/.gitconfig
+/.profile
+/.ripgreprc
+/.zprofile
+/.zshrc
