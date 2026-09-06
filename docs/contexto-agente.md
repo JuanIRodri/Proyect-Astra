@@ -42,9 +42,29 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 - Soltar objetos con `Q`.
 - Indicador de oro, peso y detalle del objeto.
 - Tema de color según la clase del personaje activo, visible en el borde, selección, controles y cabecera.
+- Persistencia por personaje mediante las tablas `Objeto` e `Inventario` y la API de inventario.
+- Consumo de objetos con `E` o el botón `Usar`.
+- Equipar objetos con `E` o el botón contextual; la acción cambia entre usar y equipar según el objeto.
+- `Ver detalles` aparece al posicionarse sobre una ranura ocupada y la descripción se abre al pulsarla de nuevo.
+- `G` cambia entre la navegación de mochila y equipamiento; en equipamiento se recorren las seis ranuras con WASD/flechas y Enter.
+- El peso total conserva el peso de los objetos equipados, mientras la capacidad sigue dependiendo de la Fuerza.
+- Capacidad de carga calculada como `10 + Fuerza * 1.5`.
+- Cuadrícula ampliada a 48 ranuras de prueba con scroll interno para soportar más pilas.
+- Equipamiento persistente por personaje con ranuras de casco, pecho, pantalón, botas, arma y arma secundaria.
+- Bonificaciones de equipamiento para Fuerza, Destreza, Inteligencia, Constitución y Agilidad.
+- El equipo puesto no se cuenta en el peso de la mochila; su bonificación de Fuerza sí aumenta la capacidad.
 
 La seleccion numerica fue probada desde el navegador para el personaje 2 y funciona. La confirmacion funcional final corresponde al usuario.
 El cambio de color por clase fue probado tecnicamente en navegador y queda pendiente de confirmacion visual del usuario.
+La persistencia, el consumo y la capacidad quedan pendientes de prueba manual del usuario.
+
+## Planning posterior del inventario
+
+- Filtros por categoría y rareza.
+- Aplicar los efectos de consumo a vida/maná reales del personaje.
+- Validar límites de pila y capacidad al recoger objetos desde la exploración.
+- Integrar el equipamiento con las estadísticas efectivas del personaje y el combate.
+- Decidir si se incorporan ranuras de aretes, collar u otros accesorios.
 
 ## Como ejecutar
 

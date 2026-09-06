@@ -91,10 +91,18 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 
 ### Implementado pero pendiente de confirmacion del usuario
 - [ ] Centralizar los eventos de comunicacion entre React y Phaser mediante `CustomEvent`.
-- [ ] Mostrar el inventario visual con la tecla `I` durante la exploracion.
+- [ ] Mostrar el inventario persistente por personaje con la tecla `I` durante la exploracion.
+- [ ] Consumir objetos desde el inventario y reflejar sus efectos en el estado del personaje.
+- [ ] Calcular la capacidad de carga segun la Fuerza del personaje.
+- [ ] Ampliar la cuadricula del inventario y soportar mas pilas de objetos.
+- [ ] Equipar casco, pecho, pantalón, botas, arma y arma secundaria por personaje.
+- [ ] Aplicar bonificaciones de equipamiento a las cinco estadisticas.
+- [ ] Excluir el equipo puesto del peso de la mochila.
 
 ### Pendiente de implementacion
-- [ ] Definir las reglas del inventario y diseñar el modelo de datos de objetos antes de crear tablas o migraciones.
+- [ ] Añadir filtros por categoria y rareza al inventario.
+- [ ] Decidir si se añaden ranuras de aretes, collar u otros accesorios.
+- [ ] Aplicar los efectos de consumo a los recursos de vida/maná del personaje.
 - [ ] Diseñar y cargar un mapa de prueba exportado desde Tiled.
 - [ ] Leer capas de colision desde un mapa Tiled.
 - [ ] Reajustar la camara al personaje lider.
