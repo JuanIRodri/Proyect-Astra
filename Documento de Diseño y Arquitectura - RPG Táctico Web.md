@@ -94,6 +94,7 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 - [ ] Mostrar el inventario visual con la tecla `I` durante la exploracion.
 
 ### Pendiente de implementacion
+- [ ] Definir las reglas del inventario y diseñar el modelo de datos de objetos antes de crear tablas o migraciones.
 - [ ] Diseñar y cargar un mapa de prueba exportado desde Tiled.
 - [ ] Leer capas de colision desde un mapa Tiled.
 - [ ] Reajustar la camara al personaje lider.
