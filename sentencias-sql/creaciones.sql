@@ -169,3 +169,46 @@ CREATE TABLE `Estadistica` (
   CONSTRAINT `fk_estadistica_personaje` FOREIGN KEY (`idPersonaje`) REFERENCES `Personaje` (`idPersonaje`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `Objeto` (
+  `idObjeto` int(11) NOT NULL AUTO_INCREMENT,
+  `clave` varchar(80) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` text NOT NULL,
+  `categoria` varchar(50) NOT NULL,
+  `rareza` varchar(30) NOT NULL,
+  `peso` decimal(6,2) NOT NULL DEFAULT 0,
+  `icono` varchar(10) NOT NULL,
+  `consumible` tinyint(1) NOT NULL DEFAULT 0,
+  `efectoVida` int(11) NOT NULL DEFAULT 0,
+  `maxPila` int(11) NOT NULL DEFAULT 99,
+  `tipoEquipamiento` varchar(20) DEFAULT NULL,
+  `bonusFuerza` int(11) NOT NULL DEFAULT 0,
+  `bonusDestreza` int(11) NOT NULL DEFAULT 0,
+  `bonusInteligencia` int(11) NOT NULL DEFAULT 0,
+  `bonusConstitucion` int(11) NOT NULL DEFAULT 0,
+  `bonusAgilidad` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`idObjeto`),
+  UNIQUE KEY `uk_objeto_clave` (`clave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `Equipamiento` (
+  `idPersonaje` int(11) NOT NULL,
+  `ranura` varchar(20) NOT NULL,
+  `idObjeto` int(11) NOT NULL,
+  PRIMARY KEY (`idPersonaje`, `ranura`),
+  KEY `fk_equipamiento_objeto` (`idObjeto`),
+  CONSTRAINT `fk_equipamiento_personaje` FOREIGN KEY (`idPersonaje`) REFERENCES `Personaje` (`idPersonaje`) ON DELETE CASCADE,
+  CONSTRAINT `fk_equipamiento_objeto` FOREIGN KEY (`idObjeto`) REFERENCES `Objeto` (`idObjeto`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `Inventario` (
+  `idPersonaje` int(11) NOT NULL,
+  `ranura` int(11) NOT NULL,
+  `idObjeto` int(11) DEFAULT NULL,
+  `cantidad` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`idPersonaje`, `ranura`),
+  KEY `fk_inventario_objeto` (`idObjeto`),
+  CONSTRAINT `fk_inventario_personaje` FOREIGN KEY (`idPersonaje`) REFERENCES `Personaje` (`idPersonaje`) ON DELETE CASCADE,
+  CONSTRAINT `fk_inventario_objeto` FOREIGN KEY (`idObjeto`) REFERENCES `Objeto` (`idObjeto`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

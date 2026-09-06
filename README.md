@@ -77,6 +77,12 @@ La API expone las rutas bajo `/api/personajes`:
 | `POST` | `/api/personajes` | Crear personaje |
 | `PUT` | `/api/personajes/:id` | Actualizar personaje |
 | `DELETE` | `/api/personajes/:id` | Eliminar personaje |
+| `GET` | `/api/personajes/:id/inventario` | Consultar inventario persistente |
+| `PUT` | `/api/personajes/:id/inventario` | Guardar ranuras del inventario |
+| `POST` | `/api/personajes/:id/inventario/:ranura/usar` | Consumir un objeto |
+| `GET` | `/api/personajes/:id/equipamiento` | Consultar equipo puesto |
+| `POST` | `/api/personajes/:id/inventario/:ranura/equipar` | Equipar un objeto |
+| `POST` | `/api/personajes/:id/equipamiento/:ranura/desequipar` | Quitar un objeto equipado |
 
 ### Frontend
 

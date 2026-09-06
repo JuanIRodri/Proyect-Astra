@@ -249,3 +249,224 @@ exports.createPersonaje = async (req, res) => {
         res.status(500).json({ error: 'Error al crear el personaje y su estructura' });
     }
 };
+
+exports.getInventario = (req, res) => {
+    const query = `
+        SELECT
+            i.ranura,
+            i.cantidad,
+            o.clave as itemKey,
+            o.nombre,
+            o.descripcion,
+            o.categoria,
+            o.rareza,
+            o.peso,
+            o.icono,
+            o.consumible,
+            o.efectoVida,
+            o.maxPila,
+            o.tipoEquipamiento,
+            o.bonusFuerza,
+            o.bonusDestreza,
+            o.bonusInteligencia,
+            o.bonusConstitucion,
+            o.bonusAgilidad
+        FROM Inventario i
+        LEFT JOIN Objeto o ON i.idObjeto = o.idObjeto
+        WHERE i.idPersonaje = ?
+        ORDER BY i.ranura
+    `;
+
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) {
+            console.error('Error fetching inventory:', err);
+            res.status(500).json({ error: 'Database error' });
+            return;
+        }
+        res.json(results);
+    });
+};
+
+exports.getEquipamiento = (req, res) => {
+    const query = `
+        SELECT
+            e.ranura,
+            o.clave as itemKey,
+            o.nombre,
+            o.descripcion,
+            o.categoria,
+            o.rareza,
+            o.peso,
+            o.icono,
+            o.tipoEquipamiento,
+            o.bonusFuerza,
+            o.bonusDestreza,
+            o.bonusInteligencia,
+            o.bonusConstitucion,
+            o.bonusAgilidad
+        FROM Equipamiento e
+        JOIN Objeto o ON e.idObjeto = o.idObjeto
+        WHERE e.idPersonaje = ?
+    `;
+
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) {
+            console.error('Error fetching equipment:', err);
+            res.status(500).json({ error: 'Database error' });
+            return;
+        }
+        res.json(results);
+    });
+};
+
+exports.equiparObjeto = async (req, res) => {
+    const { id, ranura } = req.params;
+    const connection = db.promise();
+
+    try {
+        const [items] = await connection.query(`
+            SELECT i.idObjeto, i.cantidad, o.tipoEquipamiento, o.nombre
+            FROM Inventario i
+            JOIN Objeto o ON i.idObjeto = o.idObjeto
+            WHERE i.idPersonaje = ? AND i.ranura = ?
+        `, [id, ranura]);
+
+        if (items.length === 0) throw new Error('Objeto no encontrado');
+        const item = items[0];
+        if (!item.tipoEquipamiento) throw new Error('Este objeto no se puede equipar');
+        if (item.cantidad !== 1) throw new Error('Los objetos equipables no pueden formar pilas');
+
+        const [occupied] = await connection.query(
+            'SELECT idObjeto FROM Equipamiento WHERE idPersonaje = ? AND ranura = ?',
+            [id, item.tipoEquipamiento],
+        );
+        if (occupied.length > 0) throw new Error('La ranura de equipamiento ya está ocupada');
+
+        await connection.beginTransaction();
+        await connection.query('DELETE FROM Inventario WHERE idPersonaje = ? AND ranura = ?', [id, ranura]);
+        await connection.query(
+            'INSERT INTO Equipamiento (idPersonaje, ranura, idObjeto) VALUES (?, ?, ?)',
+            [id, item.tipoEquipamiento, item.idObjeto],
+        );
+        await connection.commit();
+        res.json({ message: `${item.nombre} equipado`, ranura: item.tipoEquipamiento });
+    } catch (err) {
+        try { await connection.rollback(); } catch {}
+        const status = ['Objeto no encontrado', 'Este objeto no se puede equipar', 'Los objetos equipables no pueden formar pilas', 'La ranura de equipamiento ya está ocupada'].includes(err.message) ? 400 : 500;
+        if (status === 500) console.error('Error equipping item:', err);
+        res.status(status).json({ error: err.message || 'Database error' });
+    }
+};
+
+exports.desequiparObjeto = async (req, res) => {
+    const { id, ranura } = req.params;
+    const connection = db.promise();
+
+    try {
+        const [equipment] = await connection.query(`
+            SELECT e.idObjeto, o.clave, o.nombre
+            FROM Equipamiento e
+            JOIN Objeto o ON e.idObjeto = o.idObjeto
+            WHERE e.idPersonaje = ? AND e.ranura = ?
+        `, [id, ranura]);
+        if (equipment.length === 0) throw new Error('Ranura de equipamiento vacía');
+
+        const [emptySlots] = await connection.query(
+            'SELECT ranura FROM Inventario WHERE idPersonaje = ? ORDER BY ranura',
+            [id],
+        );
+        const usedSlots = new Set(emptySlots.map((slot) => slot.ranura));
+        let targetSlot = 0;
+        while (usedSlots.has(targetSlot)) targetSlot += 1;
+
+        await connection.beginTransaction();
+        await connection.query('DELETE FROM Equipamiento WHERE idPersonaje = ? AND ranura = ?', [id, ranura]);
+        await connection.query(
+            'INSERT INTO Inventario (idPersonaje, ranura, idObjeto, cantidad) VALUES (?, ?, ?, 1)',
+            [id, targetSlot, equipment[0].idObjeto],
+        );
+        await connection.commit();
+        res.json({ message: `${equipment[0].nombre} desequipado`, ranura: targetSlot });
+    } catch (err) {
+        try { await connection.rollback(); } catch {}
+        const status = err.message === 'Ranura de equipamiento vacía' ? 400 : 500;
+        if (status === 500) console.error('Error unequipping item:', err);
+        res.status(status).json({ error: err.message || 'Database error' });
+    }
+};
+
+exports.saveInventario = async (req, res) => {
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+    const idPersonaje = req.params.id;
+    const connection = db.promise();
+
+    try {
+        await connection.beginTransaction();
+        await connection.query('DELETE FROM Inventario WHERE idPersonaje = ?', [idPersonaje]);
+
+        for (const [ranura, item] of items.entries()) {
+            if (!item || !item.itemKey || item.quantity < 1) continue;
+            const [objects] = await connection.query('SELECT idObjeto FROM Objeto WHERE clave = ?', [item.itemKey]);
+            if (objects.length === 0) continue;
+            await connection.query(
+                'INSERT INTO Inventario (idPersonaje, ranura, idObjeto, cantidad) VALUES (?, ?, ?, ?)',
+                [idPersonaje, ranura, objects[0].idObjeto, item.quantity],
+            );
+        }
+
+        await connection.commit();
+        res.json({ message: 'Inventario guardado' });
+    } catch (err) {
+        await connection.rollback();
+        console.error('Error saving inventory:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+};
+
+exports.useInventarioObjeto = (req, res) => {
+    const { id, ranura } = req.params;
+    const selectQuery = `
+        SELECT i.cantidad, o.nombre, o.consumible, o.efectoVida
+        FROM Inventario i
+        JOIN Objeto o ON i.idObjeto = o.idObjeto
+        WHERE i.idPersonaje = ? AND i.ranura = ?
+    `;
+
+    db.query(selectQuery, [id, ranura], (err, results) => {
+        if (err) {
+            console.error('Error reading inventory item:', err);
+            res.status(500).json({ error: 'Database error' });
+            return;
+        }
+        if (results.length === 0) {
+            res.status(404).json({ error: 'Objeto no encontrado' });
+            return;
+        }
+        const item = results[0];
+        if (!item.consumible) {
+            res.status(400).json({ error: 'Este objeto no se puede consumir' });
+            return;
+        }
+
+        const nextQuantity = item.cantidad - 1;
+        const updateQuery = nextQuantity > 0
+            ? 'UPDATE Inventario SET cantidad = ? WHERE idPersonaje = ? AND ranura = ?'
+            : 'DELETE FROM Inventario WHERE idPersonaje = ? AND ranura = ?';
+        const updateParams = nextQuantity > 0
+            ? [nextQuantity, id, ranura]
+            : [id, ranura];
+
+        db.query(updateQuery, updateParams, (updateErr) => {
+            if (updateErr) {
+                console.error('Error consuming inventory item:', updateErr);
+                res.status(500).json({ error: 'Database error' });
+                return;
+            }
+            res.json({
+                message: `${item.nombre} consumido`,
+                effect: { vida: item.efectoVida },
+                quantity: nextQuantity,
+            });
+        });
+    });
+};
