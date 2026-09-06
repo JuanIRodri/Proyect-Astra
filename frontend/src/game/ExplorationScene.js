@@ -1,7 +1,6 @@
 import Phaser from 'phaser'
 import {
   emitCharacterEditorRequest,
-  emitExplorationStatus,
   emitInventoryToggle,
 } from './gameEvents'
 
@@ -36,7 +35,6 @@ export class ExplorationScene extends Phaser.Scene {
     this.createParty()
     this.configureCamera()
     this.createInput()
-    this.emitStatus('Exploración activa')
   }
 
   buildPartyData(personajes = []) {
@@ -178,45 +176,10 @@ export class ExplorationScene extends Phaser.Scene {
   emitCharacterEditorRequest() {
     const character = this.partyData[this.leaderIndex]
     if (character?.id === undefined) {
-      this.emitStatus('No hay un personaje disponible para editar')
       return
     }
 
     emitCharacterEditorRequest(character.id)
-  }
-
-  moveLeader(deltaX, deltaY) {
-    const formationPositions = this.partyOrder.map((partyIndex) => this.partyPositions[partyIndex])
-    const current = formationPositions[0]
-    const next = { x: current.x + deltaX, y: current.y + deltaY }
-
-    if (next.x < 0 || next.x >= GRID_WIDTH || next.y < 0 || next.y >= GRID_HEIGHT) return
-    if (next.x === 16 && next.y >= 7 && next.y <= 9) {
-      this.emitStatus('Movimiento bloqueado por una pared')
-      return
-    }
-
-    const previousPositions = formationPositions.map((position) => ({ ...position }))
-    this.partyPositions[this.partyOrder[0]] = next
-    this.partyOrder.slice(1).forEach((partyIndex, followerOrder) => {
-      this.partyPositions[partyIndex] = previousPositions[followerOrder]
-    })
-    this.moving = true
-    this.partyOrder.forEach((partyIndex, formationIndex) => {
-      const position = this.partyPositions[partyIndex]
-      this.tweens.add({
-        targets: this.party[partyIndex],
-        x: position.x * TILE_SIZE + TILE_SIZE / 2,
-        y: position.y * TILE_SIZE + TILE_SIZE / 2,
-        duration: 140,
-        onComplete: () => {
-          if (formationIndex !== this.partyOrder.length - 1) return
-          this.moving = false
-          this.updateLeaderMarker()
-          this.emitStatus(`${this.partyData[this.leaderIndex].name} avanzó y el grupo lo siguió`)
-        },
-      })
-    })
   }
 
   setLeader(index) {
@@ -227,7 +190,6 @@ export class ExplorationScene extends Phaser.Scene {
     })
     this.updateLeaderMarker()
     this.cameras.main.startFollow(this.party[index], true, 0.12, 0.12)
-    this.emitStatus(`${this.partyData[index].name} es el nuevo líder`)
   }
 
   updateLeaderMarker() {
@@ -235,7 +197,4 @@ export class ExplorationScene extends Phaser.Scene {
     this.leaderMarker.setPosition(leader.x, leader.y)
   }
 
-  emitStatus(message) {
-    emitExplorationStatus(message)
-  }
 }

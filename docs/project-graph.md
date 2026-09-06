@@ -22,9 +22,6 @@ flowchart TD
     Frontend --> Game[frontend/src/game/]
     Frontend --> Assets[frontend/src/assets/\nfrontend/public/]
 
-    Components --> CharacterGrid[CharacterGrid.jsx]
-    Components --> CharacterCard[CharacterCard.jsx]
-    Components --> CharacterDetail[CharacterDetail.jsx]
     Components --> CharacterForm[CharacterForm.jsx]
     Components --> ExplorationView[ExplorationView.jsx\nvista separada de exploracion]
     Components --> PhaserGame[PhaserGame.jsx\npuente React -> Phaser]
@@ -70,7 +67,7 @@ flowchart TD
 | Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `ExplorationView.jsx`, `gameEvents.js` |
 | Logica del mapa y exploracion | `frontend/src/game/ExplorationScene.js` | Phaser 3 |
 | Eventos compartidos React-Phaser | `frontend/src/game/gameEvents.js` | `CustomEvent`, `PhaserGame.jsx`, `ExplorationScene.js` |
-| Estado y CRUD de personajes | `frontend/src/hooks/usePersonajes.js` | `frontend/src/services/api.js` |
+| Estado y actualización de personajes | `frontend/src/hooks/usePersonajes.js` | `frontend/src/services/api.js` |
 | Peticiones al backend | `frontend/src/services/api.js` | API Express |
 | Entrada de la API | `backend/index.js` | rutas y conexion MySQL |
 | Rutas de personajes | `backend/routes/personajesRoutes.js` | controlador de personajes |

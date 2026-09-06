@@ -7,8 +7,6 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
 
-  const handleStatusChange = useCallback(() => {}, [])
-
   const handleOpenCharacterEditor = useCallback((characterId) => {
     const character = personajes.find((personaje) => personaje.idPersonaje === characterId)
     setEditingCharacter(character || null)
@@ -41,7 +39,6 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
     <section className="phaser-game-shell">
       <PhaserGame
         personajes={personajes}
-        onStatusChange={handleStatusChange}
         onOpenCharacterEditor={handleOpenCharacterEditor}
         onToggleInventory={handleToggleInventory}
       />
