@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { PhaserGame } from './PhaserGame'
 import { CharacterForm } from './CharacterForm'
 import { InventoryPanel } from './InventoryPanel'
+import { CharacterSelector } from './CharacterSelector'
 
 export function ExplorationView({ personajes, onUpdateCharacter }) {
   const [status, setStatus] = useState('Preparando la escena...')
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
+  const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
 
   const handleStatusChange = useCallback((message) => {
     setStatus(message)
@@ -51,7 +53,21 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
         onToggleInventory={handleToggleInventory}
       />
       <p className="phaser-status" role="status">{status}</p>
-      {inventoryOpen && <InventoryPanel personajes={personajes} onClose={() => setInventoryOpen(false)} />}
+      {inventoryOpen && (
+        <div className="inventory-layout">
+          <CharacterSelector
+            personajes={personajes}
+            activeCharacterIndex={activeCharacterIndex}
+            onSelect={setActiveCharacterIndex}
+          />
+          <InventoryPanel
+            personajes={personajes}
+            activeCharacterIndex={activeCharacterIndex}
+            onActiveCharacterChange={setActiveCharacterIndex}
+            onClose={() => setInventoryOpen(false)}
+          />
+        </div>
+      )}
       {editingCharacter && (
         <CharacterForm
           initialData={editingCharacter}

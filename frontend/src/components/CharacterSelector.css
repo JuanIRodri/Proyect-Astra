@@ -1,0 +1,113 @@
+.inventory-layout {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  transform: translate(-50%, -50%);
+}
+
+.inventory-layout::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(4, 7, 12, 0.62);
+}
+
+.character-selector {
+  width: 7.5rem;
+  flex: 0 0 auto;
+  padding: 1.35rem 0.9rem;
+  border: 1px solid var(--accent-gold);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(20, 28, 39, 0.98), rgba(10, 15, 23, 0.98));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62);
+  animation: character-selector-enter 180ms ease-out;
+}
+
+.character-selector-kicker {
+  margin: 0;
+  color: var(--accent-gold);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.character-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.character-selector-tab {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 5px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.character-selector-tab:hover,
+.character-selector-tab.is-active,
+.character-selector-tab:focus-visible {
+  border-color: var(--accent-gold);
+  color: var(--text-main);
+  background: rgba(212, 169, 91, 0.14);
+}
+
+.character-selector-index {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .inventory-layout {
+    flex-direction: column;
+  }
+
+  .character-selector {
+    width: auto;
+  }
+
+  .character-selector-list {
+    flex-direction: row;
+  }
+
+  .character-selector-tab {
+    flex: 1 1 0;
+  }
+}
+
+@keyframes character-selector-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

@@ -43,8 +43,9 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 - Indicador de oro, peso y detalle del objeto.
 - Tema de color según la clase del personaje activo, visible en el borde, selección, controles y cabecera.
 - Persistencia por personaje mediante las tablas `Objeto` e `Inventario` y la API de inventario.
-- Consumo de objetos con `E` o el botón `Usar`.
-- Equipar objetos con `E` o el botón contextual; la acción cambia entre usar y equipar según el objeto.
+- Consumo de objetos con la tecla `E`.
+- Equipar/desequipar con la tecla `E`, soltar con `Q` y dividir pilas con `R`.
+- El pie muestra las claves de acceso rápido: `E` Equipar·Usar, `Q` Soltar, `R` Dividir, `V` Detalles, `G` Equipo, `I` Salir.
 - `Ver detalles` aparece al posicionarse sobre una ranura ocupada y la descripción se abre al pulsarla de nuevo.
 - `G` cambia entre la navegación de mochila y equipamiento; en equipamiento se recorren las seis ranuras con WASD/flechas y Enter.
 - El peso total conserva el peso de los objetos equipados, mientras la capacidad sigue dependiendo de la Fuerza.
