@@ -77,9 +77,8 @@ function getNextEquipmentIndex(currentIndex, rowDelta, columnDelta) {
   return (nextRow * columns) + nextColumn
 }
 
-export function InventoryPanel({ onClose, personajes }) {
+export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange }) {
   const characterList = personajes.slice(0, 3)
-  const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
   const [inventories, setInventories] = useState(() => Object.fromEntries(
     characterList.map((character) => [character.idPersonaje, createInventory()]),
   ))
@@ -107,6 +106,9 @@ export function InventoryPanel({ onClose, personajes }) {
   const selectedEquipmentItem = selectedEquipmentSlot ? equipment[selectedEquipmentSlot] : null
   const detailItem = selectedEquipmentItem || selectedItem
   const goldAmount = goldByCharacter[activeCharacterId] || 0
+  const equipKeyActive = Boolean(
+    (selectedEquipmentSlot && selectedEquipmentItem) || selectedItem?.tipoEquipamiento || selectedItem?.consumible,
+  )
   const equipmentBonuses = EQUIPMENT_SLOTS.reduce((bonuses, slot) => {
     const item = equipment[slot.key]
     if (!item) return bonuses
@@ -322,6 +324,31 @@ export function InventoryPanel({ onClose, personajes }) {
     }
   }, [activeCharacterId])
 
+  const handleToggleDetails = useCallback(() => {
+    if (!detailItem) {
+      setNotice('Selecciona un objeto para ver sus detalles.')
+      return
+    }
+    setShowItemDetails((isVisible) => !isVisible)
+  }, [detailItem])
+
+  const handleToggleEquipment = useCallback(() => {
+    if (navigationArea === 'equipment') {
+      setNavigationArea('inventory')
+      setSelectedEquipmentSlot(null)
+      setSelectedSlotIndex(0)
+      setCursorSlotIndex(0)
+      setNotice('Navegación en la mochila.')
+    } else {
+      const equipmentSlot = EQUIPMENT_SLOTS[equipmentCursorIndex]
+      setNavigationArea('equipment')
+      setSelectedEquipmentSlot(equipmentSlot.key)
+      setSelectedSlotIndex(-1)
+      setShowItemDetails(false)
+      setNotice('Navegación en el equipamiento.')
+    }
+  }, [equipmentCursorIndex, navigationArea])
+
   const moveSelection = useCallback((rowDelta, columnDelta) => {
     const nextIndex = getNextSlotIndex(cursorSlotIndex, rowDelta, columnDelta)
     setCursorSlotIndex(nextIndex)
@@ -332,7 +359,7 @@ export function InventoryPanel({ onClose, personajes }) {
   }, [cursorSlotIndex])
 
   const handleCharacterChange = (characterIndex) => {
-    setActiveCharacterIndex(characterIndex)
+    onActiveCharacterChange(characterIndex)
     setSelectedSlotIndex(0)
     setCursorSlotIndex(0)
     setHeldSlotIndex(null)
@@ -373,20 +400,7 @@ export function InventoryPanel({ onClose, personajes }) {
     if (key === 'g') {
       event.preventDefault()
       event.stopPropagation()
-      if (navigationArea === 'equipment') {
-        setNavigationArea('inventory')
-        setSelectedEquipmentSlot(null)
-        setSelectedSlotIndex(0)
-        setCursorSlotIndex(0)
-        setNotice('Navegación en la mochila.')
-      } else {
-        const equipmentSlot = EQUIPMENT_SLOTS[equipmentCursorIndex]
-        setNavigationArea('equipment')
-        setSelectedEquipmentSlot(equipmentSlot.key)
-        setSelectedSlotIndex(-1)
-        setShowItemDetails(false)
-        setNotice('Navegación en el equipamiento.')
-      }
+      handleToggleEquipment()
       return
     }
 
@@ -399,7 +413,7 @@ export function InventoryPanel({ onClose, personajes }) {
         setNotice('Esta ranura de equipamiento está vacía.')
       } else if (selectedItem?.tipoEquipamiento) {
         handleEquipSelected()
-      } else {
+      } else if (selectedItem?.consumible) {
         handleUseSelected()
       }
       return
@@ -408,11 +422,7 @@ export function InventoryPanel({ onClose, personajes }) {
     if (key === 'v') {
       event.preventDefault()
       event.stopPropagation()
-      if (!detailItem) {
-        setNotice('Selecciona un objeto para ver sus detalles.')
-        return
-      }
-      setShowItemDetails((isVisible) => !isVisible)
+      handleToggleDetails()
       return
     }
 
@@ -489,7 +499,7 @@ export function InventoryPanel({ onClose, personajes }) {
       return
     }
     moveSelection(movement[0], movement[1])
-  }, [cursorSlotIndex, detailItem, equipmentCursorIndex, handleDropSelected, handleEquipSelected, handleMoveItem, handleSplit, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem])
+  }, [cursorSlotIndex, detailItem, equipmentCursorIndex, handleDropSelected, handleEquipSelected, handleMoveItem, handleSplit, handleToggleDetails, handleToggleEquipment, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown, true)
@@ -510,40 +520,6 @@ export function InventoryPanel({ onClose, personajes }) {
         <button className="inventory-close" onClick={onClose} aria-label="Cerrar inventario" title="Cerrar inventario">
           ×
         </button>
-      </div>
-
-      <div className="inventory-character-tabs" role="tablist" aria-label="Inventario por personaje">
-        {characterList.map((character, characterIndex) => (
-          <button
-            className={`inventory-character-tab ${characterIndex === activeCharacterIndex ? 'is-active' : ''}`}
-            key={character.idPersonaje}
-            onClick={() => handleCharacterChange(characterIndex)}
-            role="tab"
-            aria-selected={characterIndex === activeCharacterIndex}
-          >
-            <span className="inventory-character-index">{characterIndex + 1}</span>
-            <span>{character.nombre || `Héroe #${character.idPersonaje}`}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="inventory-summary">
-        <div className="inventory-gold">
-          <span className="inventory-summary-icon" aria-hidden="true">◈</span>
-          <div>
-            <strong>{goldAmount}</strong>
-            <span>Oro</span>
-          </div>
-        </div>
-        <div className={`inventory-weight ${weightState}`}>
-          <div className="inventory-weight-label">
-            <span>Peso</span>
-            <strong>{currentWeight.toFixed(1)} / {maxWeight.toFixed(1)}</strong>
-          </div>
-          <div className="inventory-weight-meter" role="progressbar" aria-label="Peso del inventario" aria-valuemin="0" aria-valuemax={maxWeight} aria-valuenow={Number(currentWeight.toFixed(1))}>
-            <span style={{ width: `${weightPercent}%` }} />
-          </div>
-        </div>
       </div>
 
       <div className="inventory-content">
@@ -696,29 +672,34 @@ export function InventoryPanel({ onClose, personajes }) {
         </div>
       </div>
 
-      <div className="inventory-actions">
-        <button
-          type="button"
-          onClick={selectedEquipmentSlot ? () => handleUnequip(selectedEquipmentSlot) : (selectedItem?.tipoEquipamiento ? handleEquipSelected : handleUseSelected)}
-          disabled={selectedEquipmentSlot ? !selectedEquipmentItem : !selectedItem || (!selectedItem.consumible && !selectedItem.tipoEquipamiento)}
-          title="Usar, equipar o desequipar el objeto seleccionado (E)"
-        >
-          <span className="inventory-shortcut" aria-hidden="true">E</span> {selectedEquipmentSlot ? 'Desequipar' : (selectedItem?.tipoEquipamiento ? 'Equipar' : 'Usar')}
-        </button>
-        <button type="button" onClick={handleDropSelected} disabled={!selectedItem} title="Soltar el objeto seleccionado (Q)">
-          <span className="inventory-shortcut" aria-hidden="true">Q</span> Soltar
-        </button>
-        <button type="button" onClick={handleSplit} disabled={!selectedItem || selectedItem.quantity < 2} title="Dividir la pila seleccionada">
-          <span className="inventory-shortcut" aria-hidden="true">R</span> Dividir
-        </button>
+      <div className="inventory-summary">
+        <div className="inventory-gold">
+          <span className="inventory-summary-icon" aria-hidden="true">◈</span>
+          <div>
+            <strong>{goldAmount}</strong>
+            <span>Oro</span>
+          </div>
+        </div>
+        <div className={`inventory-weight ${weightState}`}>
+          <div className="inventory-weight-label">
+            <span>Peso</span>
+            <strong>{currentWeight.toFixed(1)} / {maxWeight.toFixed(1)}</strong>
+          </div>
+          <div className="inventory-weight-meter" role="progressbar" aria-label="Peso del inventario" aria-valuemin="0" aria-valuemax={maxWeight} aria-valuenow={Number(currentWeight.toFixed(1))}>
+            <span style={{ width: `${weightPercent}%` }} />
+          </div>
+        </div>
       </div>
 
       <footer className="inventory-footer">
         <span className="inventory-footer-notice">{activeCharacter?.nombre || 'Personaje'} · {items.filter(Boolean).length} objetos · {inventoryLoading ? 'Cargando inventario...' : notice}</span>
         <span className="inventory-footer-keys">
+          <span><span className={`inventory-key ${equipKeyActive ? '' : 'is-inactive'}`}>E</span> Equipar · Usar</span>
+          <span><span className="inventory-key">Q</span> Soltar</span>
+          <span><span className="inventory-key">R</span> Dividir</span>
           <span><span className="inventory-key">V</span> Detalles</span>
           <span><span className="inventory-key">G</span> Equipo</span>
-          <span><span className="inventory-key">I / Esc</span> Salir</span>
+          <span><span className="inventory-key">I</span> Salir</span>
         </span>
       </footer>
     </aside>
