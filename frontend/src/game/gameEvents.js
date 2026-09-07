@@ -1,15 +1,10 @@
 export const GAME_EVENTS = Object.freeze({
-  explorationStatus: 'exploration-status',
   openCharacterEditor: 'open-character-editor',
   toggleInventory: 'toggle-inventory',
 })
 
 export function emitGameEvent(eventName, detail) {
   window.dispatchEvent(new CustomEvent(eventName, { detail }))
-}
-
-export function emitExplorationStatus(message) {
-  emitGameEvent(GAME_EVENTS.explorationStatus, { message })
 }
 
 export function emitCharacterEditorRequest(characterId) {

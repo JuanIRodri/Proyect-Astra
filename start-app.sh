@@ -5,14 +5,14 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Arrancando el ecosistema Maniquí...${NC}"
+echo -e "${BLUE}🚀 Arrancando el ecosistema Proyect-Astra...${NC}"
 
 # 1. Base de Datos (Docker)
 echo -e "${GREEN}📦 Asegurando que la base de datos esté lista...${NC}"
 docker compose up -d
 
 echo -e "${BLUE}⏳ Esperando a que MySQL responda...${NC}"
-until docker exec maniqui-db mysqladmin ping -h"localhost" -u"root" -p"root" --silent; do
+until docker exec proyect-astra-db mysqladmin ping -h"localhost" -u"root" -p"root" --silent; do
     echo "Esperando 2 segundos..."
     sleep 2
 done

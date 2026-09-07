@@ -1,4 +1,4 @@
-﻿Documento de Diseño y Arquitectura: RPG Táctico Web
+Documento de Diseño y Arquitectura: RPG Táctico Web
 ________________
 1. Visión General del Proyecto
 Juego de rol (RPG) 2D desarrollado para la web con enfoque en la exploración, la toma de decisiones basada en estadísticas del grupo y un sistema de combate por turnos en arenas acotadas.
@@ -90,14 +90,16 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 - [x] Implementar y confirmar el tablero de exploracion ampliado.
 
 ### Implementado pero pendiente de confirmacion del usuario
-- [ ] Centralizar los eventos de comunicacion entre React y Phaser mediante `CustomEvent`.
-- [ ] Mostrar el inventario persistente por personaje con la tecla `I` durante la exploracion.
-- [ ] Consumir objetos desde el inventario y reflejar sus efectos en el estado del personaje.
-- [ ] Calcular la capacidad de carga segun la Fuerza del personaje.
-- [ ] Ampliar la cuadricula del inventario y soportar mas pilas de objetos.
-- [ ] Equipar casco, pecho, pantalón, botas, arma y arma secundaria por personaje.
-- [ ] Aplicar bonificaciones de equipamiento a las cinco estadisticas.
-- [ ] Excluir el equipo puesto del peso de la mochila.
+- [x] Centralizar los eventos de comunicacion entre React y Phaser mediante `CustomEvent` (modulo `gameEvents.js`).
+- [x] Mostrar el inventario persistente por personaje con la tecla `I` durante la exploracion.
+- [x] Consumir objetos desde el inventario (los objetos se consumen correctamente; los efectos en vida/mana quedan pendientes hasta implementar el sistema de HP/MP).
+- [x] Calcular la capacidad de carga segun la Fuerza del personaje.
+- [x] Ampliar la cuadricula del inventario y soportar mas pilas de objetos.
+- [x] Equipar casco, pecho, pantalón, botas, arma y arma secundaria por personaje.
+- [x] Aplicar bonificaciones de equipamiento a las cinco estadisticas.
+- [x] Agregar boton en el inventario para cambiar a la vista de equipamiento (tecla `G`).
+- [x] Excluir el equipo puesto del peso de la mochila.
+- [x] Confirmar movimiento continuo en 360 grados con diagonales y seguidores suaves.
 
 ### Pendiente de implementacion
 - [ ] Añadir filtros por categoria y rareza al inventario.

@@ -5,14 +5,9 @@ import { InventoryPanel } from './InventoryPanel'
 import { CharacterSelector } from './CharacterSelector'
 
 export function ExplorationView({ personajes, onUpdateCharacter }) {
-  const [status, setStatus] = useState('Preparando la escena...')
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
-
-  const handleStatusChange = useCallback((message) => {
-    setStatus(message)
-  }, [])
 
   const handleOpenCharacterEditor = useCallback((characterId) => {
     const character = personajes.find((personaje) => personaje.idPersonaje === characterId)
@@ -32,7 +27,7 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
     if (!editingCharacter) return undefined
 
     const handleCloseShortcut = (event) => {
-      if (event.key === 'Escape' || event.code === 'Escape') {
+      if (event.key === 'Escape' || event.code === 'Escape' || event.key.toLowerCase() === 'u' || event.code.toLowerCase() === 'keyu') {
         event.preventDefault()
         setEditingCharacter(null)
       }
@@ -44,14 +39,12 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
 
   return (
     <section className="phaser-game-shell">
-      <h2>Exploración</h2>
-      <p>Selecciona líder con 1, 2 o 3. Muévete con las flechas o WASD y abre el inventario con I.</p>
       <PhaserGame
         personajes={personajes}
-        onStatusChange={handleStatusChange}
         onOpenCharacterEditor={handleOpenCharacterEditor}
         onToggleInventory={handleToggleInventory}
       />
+      {inventoryOpen && <InventoryPanel personajes={personajes} onClose={() => setInventoryOpen(false)} />}
       <p className="phaser-status" role="status">{status}</p>
       {inventoryOpen && (
         <div className="inventory-layout">

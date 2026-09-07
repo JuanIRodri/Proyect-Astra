@@ -49,6 +49,7 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 - `Ver detalles` aparece al posicionarse sobre una ranura ocupada y la descripción se abre al pulsarla de nuevo.
 - `G` cambia entre la navegación de mochila y equipamiento; en equipamiento se recorren las seis ranuras con WASD/flechas y Enter.
 - El peso total conserva el peso de los objetos equipados, mientras la capacidad sigue dependiendo de la Fuerza.
+- Movimiento de exploración continuo en 360 grados con diagonales normalizadas, límites y colisión contra la pared.
 - Capacidad de carga calculada como `10 + Fuerza * 1.5`.
 - Cuadrícula ampliada a 48 ranuras de prueba con scroll interno para soportar más pilas.
 - Equipamiento persistente por personaje con ranuras de casco, pecho, pantalón, botas, arma y arma secundaria.
@@ -58,6 +59,7 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 La seleccion numerica fue probada desde el navegador para el personaje 2 y funciona. La confirmacion funcional final corresponde al usuario.
 El cambio de color por clase fue probado tecnicamente en navegador y queda pendiente de confirmacion visual del usuario.
 La persistencia, el consumo y la capacidad quedan pendientes de prueba manual del usuario.
+El movimiento continuo fue probado y confirmado por el usuario.
 
 ## Planning posterior del inventario
 
