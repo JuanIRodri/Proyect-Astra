@@ -1,0 +1,73 @@
+.group-hud {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 11rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(217, 164, 65, 0.5);
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.92);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.group-hud-member {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.group-hud-member.is-leader .group-hud-name {
+  color: var(--accent-gold);
+}
+
+.group-hud-dot {
+  flex: 0 0 auto;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.group-hud-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.group-hud-name {
+  overflow: hidden;
+  color: var(--text-main);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-hud-bar {
+  height: 0.28rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.group-hud-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 180ms ease;
+}
+
+.group-hud-vida span {
+  background: #e05a63;
+}
+
+.group-hud-mana span {
+  background: #4f8ee0;
+}

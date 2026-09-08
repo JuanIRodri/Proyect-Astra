@@ -3,6 +3,8 @@ import { PhaserGame } from './PhaserGame'
 import { CharacterForm } from './CharacterForm'
 import { InventoryPanel } from './InventoryPanel'
 import { CharacterSelector } from './CharacterSelector'
+import { Minimap } from './Minimap'
+import { GroupHud } from './GroupHud'
 import { lockInput, unlockInput } from '../game/inputLock'
 
 export function ExplorationView({ personajes, onUpdateCharacter }) {
@@ -63,6 +65,8 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
         onOpenCharacterEditor={handleOpenCharacterEditor}
         onToggleInventory={handleToggleInventory}
       />
+      <Minimap />
+      <GroupHud personajes={personajes} />
       {inventoryOpen && (
         <div className="inventory-layout">
           <CharacterSelector
