@@ -5,6 +5,7 @@ import { InventoryFilters } from './inventory/InventoryFilters'
 import { InventoryGrid } from './inventory/InventoryGrid'
 import { InventoryDetail } from './inventory/InventoryDetail'
 import { InventoryStats } from './inventory/InventoryStats'
+import { InventoryResources } from './inventory/InventoryResources'
 import { TransferModal } from './inventory/TransferModal'
 import { DetailsModal } from './inventory/DetailsModal'
 import { InventoryContextMenu } from './inventory/InventoryContextMenu'
@@ -16,6 +17,7 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
     activeCharacter,
     characterList,
     classThemeKey,
+    resources,
     items,
     itemCount,
     equipment,
@@ -119,6 +121,8 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
           onLeave={clearHoverItem}
         />
       </div>
+
+      <InventoryResources resources={resources} />
 
       <InventoryStats
         goldAmount={goldAmount}

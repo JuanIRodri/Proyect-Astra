@@ -103,9 +103,29 @@ async function usarObjeto(idPersonaje, ranura) {
             await conn.query('DELETE FROM Inventario WHERE idPersonaje = ? AND ranura = ?', [idPersonaje, ranura]);
         }
 
+        const [estadistica] = await conn.query(`
+            SELECT constitucion, inteligencia, vidaActual, manaActual
+            FROM Estadistica
+            WHERE idPersonaje = ?
+        `, [idPersonaje]);
+
+        let vidaActual = estadistica[0]?.vidaActual ?? 0;
+        let manaActual = estadistica[0]?.manaActual ?? 0;
+
+        if (item.efectoVida !== 0) {
+            const vidaMax = 30 + (estadistica[0]?.constitucion ?? 10) * 5;
+            vidaActual = Math.min(vidaMax, vidaActual + item.efectoVida);
+        }
+
+        await conn.query(`
+            UPDATE Estadistica
+            SET vidaActual = ?, manaActual = ?
+            WHERE idPersonaje = ?
+        `, [vidaActual, manaActual, idPersonaje]);
+
         return {
             message: `${item.nombre} consumido`,
-            effect: { vida: item.efectoVida },
+            effect: { vida: item.efectoVida, vidaActual, manaActual },
             quantity: nextQuantity,
         };
     });

@@ -105,7 +105,7 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 
 ### Pendiente de implementacion
 - [ ] Decidir si se añaden ranuras de aretes, collar u otros accesorios.
-- [ ] Aplicar los efectos de consumo a los recursos de vida/maná del personaje.
+- [x] Aplicar los efectos de consumo a los recursos de vida/maná del personaje (pendiente de confirmación visual).
 - [ ] Diseñar y cargar un mapa de prueba exportado desde Tiled.
 - [ ] Leer capas de colision desde un mapa Tiled.
 - [ ] Reajustar la camara al personaje lider.

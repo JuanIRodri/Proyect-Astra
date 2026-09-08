@@ -60,6 +60,14 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const activeCharacter = characterList[activeCharacterIndex]
   const activeCharacterId = activeCharacter?.idPersonaje
   const classThemeKey = getClassThemeKey(activeCharacter?.clase)
+  const [resourcesByCharacter, setResourcesByCharacter] = useState({})
+  const defaultResources = (character) => ({
+    vidaActual: character?.vidaActual ?? 30 + (character?.constitucion ?? 10) * 5,
+    vidaMax: character?.vidaMax ?? 30 + (character?.constitucion ?? 10) * 5,
+    manaActual: character?.manaActual ?? 20 + (character?.inteligencia ?? 10) * 5,
+    manaMax: character?.manaMax ?? 20 + (character?.inteligencia ?? 10) * 5,
+  })
+  const resources = resourcesByCharacter[activeCharacterId] || defaultResources(activeCharacter)
   const items = inventories[activeCharacterId] || createInventory()
   const equipment = equipmentByCharacter[activeCharacterId] || {}
   const selectedItem = items[selectedSlotIndex] || null
@@ -175,12 +183,20 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
         ...currentInventories,
         [activeCharacterId]: nextItems,
       }))
-      const effectNotice = result.effect?.vida ? ` Efecto: +${result.effect.vida} vida.` : ''
+      const nextResources = {
+        vidaActual: result.effect?.vidaActual ?? resources.vidaActual,
+        manaActual: result.effect?.manaActual ?? resources.manaActual,
+      }
+      setResourcesByCharacter((currentResources) => ({
+        ...currentResources,
+        [activeCharacterId]: { ...resources, ...nextResources },
+      }))
+      const effectNotice = result.effect?.vida ? ` Efecto: +${result.effect.vida} vida (${nextResources.vidaActual}/${resources.vidaMax}).` : ''
       setNotice(`${item.name} consumido.${effectNotice}`)
     } catch {
       setNotice('No se pudo consumir el objeto.')
     }
-  }, [activeCharacterId, items, selectedSlotIndex])
+  }, [activeCharacterId, items, selectedSlotIndex, resources])
 
   const handleEquipSelected = useCallback(async (slotIndex = selectedSlotIndex) => {
     const item = items[slotIndex]
@@ -622,6 +638,7 @@ handleSplit,
     activeCharacter,
     characterList,
     classThemeKey,
+    resources,
     items,
     itemCount,
     equipment,
