@@ -1,5 +1,5 @@
 import {
-  PARTY_COLORS,
+  getPartyColorForClass,
   PARTY_POSITIONS,
   TILE_SIZE,
   TOKEN_RADIUS,
@@ -11,16 +11,17 @@ const FOLLOWER_STROKE = 0x18202b
 const STROKE_WIDTH = 3
 
 export function buildPartyData(personajes = []) {
-  return personajes.slice(0, 3).map((personaje, index) => ({
+  return personajes.slice(0, 3).map((personaje) => ({
     id: personaje.idPersonaje,
     name: personaje.nombre || `Héroe #${personaje.idPersonaje}`,
-    color: PARTY_COLORS[index],
+    clase: personaje.clase,
+    color: getPartyColorForClass(personaje.clase),
   }))
 }
 
-export function createParty(scene, partyData) {
+export function createParty(scene, partyData, positions = PARTY_POSITIONS) {
   const tokens = partyData.map((character, index) => {
-    const position = PARTY_POSITIONS[index]
+    const position = positions[index] || PARTY_POSITIONS[index]
     const token = scene.add.circle(
       position.x * TILE_SIZE + TILE_SIZE / 2,
       position.y * TILE_SIZE + TILE_SIZE / 2,

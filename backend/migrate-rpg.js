@@ -28,9 +28,9 @@ async function migrate() {
       charset: 'utf8mb4'
     });
 
-    console.log('--- Iniciando Migración Completa de Maniquí ---');
+    console.log('--- Starting Full Maniqui Migration ---');
 
-    // 1. Crear tablas relacionales del cuerpo si no existen
+    // 1. Create relational body tables if they don't exist
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Cabello (
         idCabello INT AUTO_INCREMENT PRIMARY KEY,
@@ -105,7 +105,7 @@ async function migrate() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
-    // 2. Crear tabla Personaje con relaciones
+    // 2. Create Personaje table with relations
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Personaje (
         idPersonaje INT AUTO_INCREMENT PRIMARY KEY,
@@ -119,7 +119,7 @@ async function migrate() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
-    // Asegurar que las columnas existan si la tabla ya había sido creada antes
+    // Ensure columns exist if the table was created before
     const columns = [
       { name: 'nombre', definition: 'VARCHAR(100)' },
       { name: 'clase', definition: 'VARCHAR(50)' },
@@ -137,7 +137,7 @@ async function migrate() {
       }
     }
 
-    // 3. Insertar rasgo base por defecto para asociar a los personajes
+    // 3. Insert default body feature to associate with characters
     await connection.query(`INSERT IGNORE INTO Cabello (idCabello, Corte, Tinte) VALUES (1, 'Corto', 'Castaño')`);
     await connection.query(`INSERT IGNORE INTO Ojos (idOjos, Color, Forma) VALUES (1, 'Marron', 'Almendrados')`);
     await connection.query(`INSERT IGNORE INTO Boca (idBoca, Forma) VALUES (1, 'Estandard')`);
@@ -147,7 +147,7 @@ async function migrate() {
     await connection.query(`INSERT IGNORE INTO Torso (idTorso, Forma, Bello) VALUES (1, 'Atletico', 'Lampiño')`);
     await connection.query(`INSERT IGNORE INTO Cuerpo (idCuerpo, idCabeza, idTorso) VALUES (1, 1, 1)`);
 
-    // 4. Crear o actualizar la tabla Estadistica
+    // 4. Create or update the Estadistica table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Estadistica (
         idPersonaje INT NOT NULL PRIMARY KEY,
@@ -162,7 +162,7 @@ async function migrate() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
-    // Asegurar que las columnas de recursos existan si la tabla ya existía
+    // Ensure resource columns exist if the table already existed
     const resourceColumns = [
       { name: 'vidaActual', definition: 'INT DEFAULT 0' },
       { name: 'manaActual', definition: 'INT DEFAULT 0' },
@@ -176,7 +176,7 @@ async function migrate() {
       }
     }
 
-    // Backfill inicial: llenar recursos de personajes ya existentes (columna recién agregada en 0)
+    // Initial backfill: fill resources of existing characters (column just added, set to 0)
     await connection.query(`
       UPDATE Estadistica
       SET vidaActual = 30 + constitucion * 5,
@@ -246,7 +246,24 @@ async function migrate() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
-    // 5. Cargar o actualizar personajes asignando idCuerpo = 1
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Partida (
+        idPartida INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(60) NOT NULL,
+        mapa VARCHAR(60) DEFAULT NULL,
+        liderX INT DEFAULT NULL,
+        liderY INT DEFAULT NULL,
+        liderIndex INT DEFAULT 0,
+        fechaGuardado DATETIME DEFAULT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    const [partidas] = await connection.query('SELECT COUNT(*) AS total FROM Partida');
+    if (Number(partidas[0].total) === 0) {
+      await connection.query(`INSERT INTO Partida (nombre) VALUES ('Partida 1'), ('Partida 2'), ('Partida 3')`);
+    }
+
+    // 5. Load or update characters assigning idCuerpo = 1
     for (const char of rpgData) {
       await connection.query(`
         INSERT INTO Personaje (idPersonaje, nombre, clase, nivel, idCuerpo)
@@ -268,8 +285,8 @@ async function migrate() {
       WHERE nombre IS NULL OR idCuerpo IS NULL
     `);
 
-    // 6. Cargar Estadísticas iniciales con la fórmula, solo si el personaje no tiene datos.
-    // Una vez cargadas, se respetan los valores editados por el usuario.
+    // 6. Load initial stats with the formula, only if the character has no data yet.
+    // Once loaded, user-edited values are kept.
     const [personajes] = await connection.query('SELECT idPersonaje, clase, nivel FROM Personaje');
     const [statsExistentes] = await connection.query('SELECT idPersonaje FROM Estadistica');
     const statsYaCargadas = new Set(statsExistentes.map((stat) => stat.idPersonaje));
@@ -340,8 +357,8 @@ async function migrate() {
       WHERE o.tipoEquipamiento IS NOT NULL AND e.ranura <> o.tipoEquipamiento
     `);
 
-    // El inventario inicial solo se siembra la primera vez: si ya hay filas,
-    // pertenecen a la partida del usuario y no se deben volver a crear objetos soltados.
+    // Initial inventory is only seeded the first time: if rows already exist,
+    // they belong to the user's playthrough and dropped items must not be recreated.
     const [inventarioTotal] = await connection.query('SELECT COUNT(*) AS total FROM Inventario');
     if (Number(inventarioTotal[0].total) === 0) {
       const [objetos] = await connection.query('SELECT idObjeto, clave FROM Objeto');
@@ -377,9 +394,9 @@ async function migrate() {
       }
     }
 
-    console.log('✅ Esquema y datos actualizados correctamente.');
+    console.log('✅ Schema and data updated successfully.');
   } catch (err) {
-    console.error('❌ Error en la migración:', err);
+    console.error('❌ Migration error:', err);
   } finally {
     if (connection) await connection.end();
   }

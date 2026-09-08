@@ -1,5 +1,9 @@
 import { usePersonajes } from './hooks/usePersonajes'
 import { ExplorationView } from './components/ExplorationView'
+import { MainMenu } from './components/MainMenu'
+import { getPartida, resetPartida } from './services/api'
+import { PARTY_POSITIONS } from './game/constants'
+import { useCallback, useState } from 'react'
 import './App.css'
 
 function App() {
@@ -8,22 +12,63 @@ function App() {
     loading,
     error,
     handleUpdate,
+    fetchPersonajes,
   } = usePersonajes();
+  const [activePartida, setActivePartida] = useState(null);
+
+  const handleStart = useCallback(async (partidaId, mode) => {
+    if (mode === 'nueva') {
+      await resetPartida(partidaId);
+      setActivePartida({ id: partidaId, positions: PARTY_POSITIONS, leaderIndex: 0 });
+      return;
+    }
+
+    const partida = await getPartida(partidaId);
+    setActivePartida({
+      id: partida.idPartida,
+      positions: [
+        { x: partida.liderX, y: partida.liderY },
+        { x: partida.liderX - 1, y: partida.liderY },
+        { x: partida.liderX - 2, y: partida.liderY },
+      ],
+      leaderIndex: partida.liderIndex,
+      mapa: partida.mapa,
+    });
+  }, []);
+
+  const handleBackToMenu = useCallback(() => {
+    setActivePartida(null);
+    fetchPersonajes();
+  }, [fetchPersonajes]);
+
+  if (loading && !activePartida) {
+    return (
+      <div className="container">
+        <p className="loading-message">Preparando la expedición...</p>
+      </div>
+    )
+  }
+
+  if (error && !activePartida) {
+    return (
+      <div className="container">
+        <p className="error">{error}</p>
+      </div>
+    )
+  }
+
+  if (!activePartida) {
+    return <MainMenu personajes={personajes} onStart={handleStart} />
+  }
 
   return (
-    <div className="container">
-      <header>
-        <p className="eyebrow">PROYECT-ASTRA / EXPLORACIÓN</p>
-        <h1>Las ruinas de Astra</h1>
-        <p>Guía a tu grupo, observa sus estadísticas y descubre qué aguarda más allá del mapa.</p>
-      </header>
-
-      {loading && <p className="loading-message">Preparando la expedición...</p>}
-      {error && <p className="error">{error}</p>}
-      {!loading && !error && (
-        <ExplorationView personajes={personajes} onUpdateCharacter={handleUpdate} />
-      )}
-    </div>
+    <ExplorationView
+      key={activePartida.id}
+      personajes={personajes}
+      onUpdateCharacter={handleUpdate}
+      onBackToMenu={handleBackToMenu}
+      inicioPartida={activePartida}
+    />
   )
 }
 

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import './CharacterForm.css';
 import { AppearanceFields } from './form-parts/AppearanceFields';
 import { StatsFields } from './form-parts/StatsFields';
+import { getClassThemeKey } from './inventory/inventoryUtils';
 
 const CLASES = ['Guerrero', 'Mago', 'Pícaro', 'Paladín', 'Cazador'];
 
@@ -31,6 +32,7 @@ const getInitialStatsForClass = (clase, nivel) => {
 export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
   const isEditing = !!initialData;
   const [step, setStep] = useState(1);
+  const submitRef = useRef(null);
 
   const [form, setForm] = useState(() => {
     const base = {
@@ -81,6 +83,10 @@ export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
     setForm(prev => ({ ...prev, ...getInitialStatsForClass(form.clase, Number(form.nivel)) }));
   };
 
+  const handleResetStats = () => {
+    setForm(prev => ({ ...prev, fuerza: 10, destreza: 10, inteligencia: 10, constitucion: 10, agilidad: 10 }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (viewMode === 'estadistica' && availablePoints < 0) return alert("Exceso de puntos.");
@@ -92,13 +98,14 @@ export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
   };
 
   return (
-    <div className="detail-modal">
-      <div className="detail-content form-content">
+    <div className="inventory-layout stats-layout">
+      <div className={`form-content inventory-class-${getClassThemeKey(form.clase)}`}>
         <button className="close-btn" onClick={onCancel}>&times;</button>
         <div className="detail-header">
+          <p className="inventory-kicker">Atributos</p>
           <h2>{isEditing ? `Editar a ${form.nombre}` : 'Nuevo Héroe'}</h2>
           <p className="subtitle">
-            {isEditing ? (viewMode === 'apariencia' ? 'Apariencia Física' : 'Atributos') : `Paso ${step} de 2`}
+            {isEditing ? (viewMode === 'apariencia' ? 'Apariencia Física' : `Puntos: ${availablePoints} / ${totalPoints}`) : `Paso ${step} de 2`}
           </p>
         </div>
 
@@ -114,7 +121,7 @@ export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
             viewMode === 'apariencia' ? (
               <AppearanceFields form={form} handleChange={handleChange} />
             ) : (
-              <StatsFields form={form} availablePoints={availablePoints} totalPoints={totalPoints} adjustStat={adjustStat} handleAutoDistribute={handleAutoDistribute} />
+              <StatsFields form={form} availablePoints={availablePoints} totalPoints={totalPoints} adjustStat={adjustStat} handleAutoDistribute={handleAutoDistribute} handleResetStats={handleResetStats} submitRef={submitRef} />
             )
           ) : (
             step === 1 ? (
@@ -125,7 +132,7 @@ export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
                   <div className="form-group"><label>Altura</label><input name="altura" type="number" value={form.altura} onChange={handleChange} /></div>
                   <div className="form-group"><label>Musculatura</label><input name="musculatura" type="number" value={form.musculatura} onChange={handleChange} /></div>
                 </div>
-                <StatsFields form={form} availablePoints={availablePoints} totalPoints={totalPoints} adjustStat={adjustStat} handleAutoDistribute={handleAutoDistribute} />
+                <StatsFields form={form} availablePoints={availablePoints} totalPoints={totalPoints} adjustStat={adjustStat} handleAutoDistribute={handleAutoDistribute} handleResetStats={handleResetStats} submitRef={submitRef} />
               </>
             ) : (
               <AppearanceFields form={form} handleChange={handleChange} />
@@ -138,7 +145,7 @@ export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
             ) : (
               <>
                 {!isEditing && step === 2 && <button type="button" className="btn-cancel" onClick={() => setStep(1)}>⬅️ Volver</button>}
-                <button type="submit" className="btn-submit">{isEditing ? '💾 Guardar' : '⚔️ Reclutar'}</button>
+                <button type="submit" className="btn-submit" ref={submitRef}>{isEditing ? '💾 Guardar' : '⚔️ Reclutar'}</button>
               </>
             )}
           </div>

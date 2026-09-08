@@ -16,7 +16,7 @@ import {
 import { drawBoard } from './board'
 import { createMovementKeys, moveParty } from './movement'
 import { createKeyHandler } from './input'
-import { emitCharacterEditorRequest } from './gameEvents'
+import { emitCharacterEditorRequest, emitPartyPositionUpdate } from './gameEvents'
 import { isInputLocked } from './inputLock'
 
 export class ExplorationScene extends Phaser.Scene {
@@ -31,19 +31,26 @@ export class ExplorationScene extends Phaser.Scene {
 
   init(data) {
     this.partyData = data?.personajes ?? []
+    this.initialPositions = data?.positions ?? null
+    this.leaderIndex = Number.isInteger(data?.leaderIndex) ? data.leaderIndex : 0
+    this.partyOrder = [0, 1, 2].filter((index) => index !== this.leaderIndex)
+    this.partyOrder.unshift(this.leaderIndex)
+    this.lastEmittedTile = null
   }
 
   create() {
     this.partyData = buildPartyData(this.partyData)
     drawBoard(this)
 
-    const { tokens, leaderMarker } = createParty(this, this.partyData)
+    const { tokens, leaderMarker } = createParty(this, this.partyData, this.initialPositions)
     this.party = tokens
     this.leaderMarker = leaderMarker
+    updatePartyLeaderStyling(this.party, this.leaderIndex)
     updateLeaderMarker(this.party, this.leaderMarker, this.leaderIndex)
 
     this.configureCamera()
     this.createInput()
+    this.emitPartyPositionIfNeeded(true)
   }
 
   createInput() {
@@ -57,7 +64,21 @@ export class ExplorationScene extends Phaser.Scene {
 
     if (moveParty(this, delta)) {
       updateLeaderMarker(this.party, this.leaderMarker, this.leaderIndex)
+      this.emitPartyPositionIfNeeded(false)
     }
+  }
+
+  emitPartyPositionIfNeeded(force) {
+    const leader = this.party[this.leaderIndex]
+    if (!leader) return
+    const tileX = Math.floor(leader.x / TILE_SIZE)
+    const tileY = Math.floor(leader.y / TILE_SIZE)
+    if (!force && this.lastEmittedTile === `${tileX},${tileY}`) return
+    this.lastEmittedTile = `${tileX},${tileY}`
+    emitPartyPositionUpdate(
+      this.party.map((token) => ({ x: token.x, y: token.y })),
+      this.leaderIndex,
+    )
   }
 
   configureCamera() {
@@ -73,6 +94,7 @@ export class ExplorationScene extends Phaser.Scene {
     updatePartyLeaderStyling(this.party, index)
     updateLeaderMarker(this.party, this.leaderMarker, index)
     this.cameras.main.startFollow(this.party[index], true, CAMERA_SMOOTHNESS, CAMERA_SMOOTHNESS)
+    this.emitPartyPositionIfNeeded(true)
   }
 
   emitCharacterEditorRequest() {
