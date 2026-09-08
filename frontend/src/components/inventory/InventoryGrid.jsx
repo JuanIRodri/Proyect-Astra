@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import './InventoryGrid.css'
 
 export function InventoryGrid({
@@ -17,9 +18,19 @@ export function InventoryGrid({
   onContextMenu,
   onHoverItem,
   onLeave,
+  onWheel,
 }) {
+  const gridRef = useRef(null)
+
+  useEffect(() => {
+    const grid = gridRef.current
+    if (!grid || !onWheel) return undefined
+    grid.addEventListener('wheel', onWheel, { passive: false })
+    return () => grid.removeEventListener('wheel', onWheel)
+  }, [onWheel])
+
   return (
-    <div className="inventory-grid" aria-label="Objetos del inventario">
+    <div className="inventory-grid" ref={gridRef} aria-label="Objetos del inventario">
       {items.map((item, slotIndex) => item ? (
         <button
           className={`inventory-slot ${slotIndex === selectedSlotIndex ? 'is-selected' : ''} ${slotIndex === cursorSlotIndex ? 'is-cursor' : ''} ${slotIndex === heldSlotIndex ? 'is-held' : ''} ${slotIndex === draggedSlotIndex ? 'is-dragging' : ''} ${filteredOutIndexes?.has(slotIndex) ? 'is-filtered-out' : ''}`}

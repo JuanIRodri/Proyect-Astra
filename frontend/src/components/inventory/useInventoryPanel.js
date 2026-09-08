@@ -28,6 +28,7 @@ import {
   setQuantity,
   sortInventory,
   splitStack,
+  splitStackByQuantity,
 } from './inventoryOperations'
 import { createInventoryKeyHandler } from './inventoryKeyHandler'
 
@@ -54,6 +55,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const [transferPromptActive, setTransferPromptActive] = useState(false)
   const [contextMenu, setContextMenu] = useState(null)
   const [contextMenuActionIndex, setContextMenuActionIndex] = useState(0)
+  const [contextMenuSubmenuIndex, setContextMenuSubmenuIndex] = useState(null)
   const [hoverItem, setHoverItem] = useState(null)
   const slotRefs = useRef([])
   const [notice, setNotice] = useState('Usa WASD y selecciona objetos con Enter.')
@@ -155,6 +157,32 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     }
     updateInventory(result.nextItems, result.message)
   }, [items, selectedSlotIndex, updateInventory])
+
+  const [splitPromptActive, setSplitPromptActive] = useState(false)
+
+  const handleRequestSplit = useCallback(() => {
+    const item = items[selectedSlotIndex]
+    if (!item || item.quantity < 2) {
+      setNotice('Selecciona una pila con más de un objeto para dividirla.')
+      return
+    }
+    setSplitPromptActive(true)
+  }, [items, selectedSlotIndex])
+
+  const handleConfirmSplit = useCallback((quantity) => {
+    setSplitPromptActive(false)
+    const result = splitStackByQuantity(items, selectedSlotIndex, quantity)
+    if (result.error) {
+      setNotice(result.error)
+      return
+    }
+    updateInventory(result.nextItems, result.message)
+  }, [items, selectedSlotIndex, updateInventory])
+
+  const handleCancelSplit = useCallback(() => {
+    setSplitPromptActive(false)
+    setNotice('División cancelada.')
+  }, [])
 
   const handleMoveItem = useCallback((sourceSlotIndex, targetSlotIndex) => {
     const result = moveOrMergeItems(items, sourceSlotIndex, targetSlotIndex)
@@ -415,19 +443,6 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setNotice('Traspaso cancelado.')
   }, [])
 
-  const contextMenuActions = useMemo(() => {
-    if (!contextMenu) return []
-    const item = items[contextMenu.slotIndex]
-    const actions = []
-    if (item?.consumible) actions.push({ label: 'Usar', run: handleUseSelected })
-    if (item?.tipoEquipamiento) actions.push({ label: 'Equipar', run: handleEquipSelected })
-    actions.push({ label: 'Traspasar', run: handleRequestTransfer })
-    if (item && item.quantity > 1) actions.push({ label: 'Dividir', run: handleSplit })
-    actions.push({ label: 'Ver detalles', run: handleToggleDetails })
-    actions.push({ label: 'Soltar', run: handleDropSelected })
-    return actions
-  }, [contextMenu, handleDropSelected, handleEquipSelected, handleRequestTransfer, handleSplit, handleToggleDetails, handleUseSelected, items])
-
   const handleOpenContextMenu = useCallback((slotIndex, clientX, clientY, limitX, limitY) => {
     setSelectedSlotIndex(slotIndex)
     setCursorSlotIndex(slotIndex)
@@ -437,6 +452,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setNavigationArea('inventory')
     setTransferPromptActive(false)
     setContextMenuActionIndex(0)
+    setContextMenuSubmenuIndex(null)
     setContextMenu({
       slotIndex,
       x: Math.max(4, Math.min(clientX, limitX - 170)),
@@ -447,6 +463,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const handleCloseContextMenu = useCallback(() => {
     setContextMenu(null)
     setContextMenuActionIndex(0)
+    setContextMenuSubmenuIndex(null)
   }, [])
 
   const handleTransferFromSlot = useCallback(async (slotIndex, targetCharacterIndex) => {
@@ -490,6 +507,30 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     handleTransferFromSlot(selectedSlotIndex, targetCharacterIndex)
   }, [handleTransferFromSlot, selectedSlotIndex])
 
+  const contextMenuActions = useMemo(() => {
+    if (!contextMenu) return []
+    const item = items[contextMenu.slotIndex]
+    const actions = []
+    if (item?.consumible) actions.push({ label: 'Usar', run: handleUseSelected })
+    if (item?.tipoEquipamiento) actions.push({ label: 'Equipar', run: handleEquipSelected })
+    const targetCharacters = characterList
+      .map((character, index) => ({ character, index }))
+      .filter(({ character }) => character.idPersonaje !== activeCharacterId)
+    if (item && targetCharacters.length > 0) {
+      actions.push({
+        label: 'Enviar a',
+        submenu: targetCharacters.map(({ character, index }) => ({
+          label: `${index + 1} · ${character.nombre || `Héroe #${character.idPersonaje}`}`,
+          run: () => handleTransferFromSlot(contextMenu.slotIndex, index),
+        })),
+      })
+    }
+    if (item && item.quantity > 1) actions.push({ label: 'Dividir', run: handleRequestSplit })
+    actions.push({ label: 'Ver detalles', run: handleToggleDetails })
+    actions.push({ label: 'Soltar', run: handleDropSelected })
+    return actions
+  }, [activeCharacterId, characterList, contextMenu, handleDropSelected, handleEquipSelected, handleRequestSplit, handleToggleDetails, handleTransferFromSlot, handleUseSelected, items])
+
   const handleCharacterChange = (characterIndex) => {
     onActiveCharacterChange(characterIndex)
     setSelectedSlotIndex(0)
@@ -522,13 +563,13 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       setHeldSlotIndex,
       setEquipmentCursorIndex,
       setSelectedEquipmentSlot,
-      handleDropSelected,
+handleDropSelected,
       handleToggleEquipment,
       handleUnequip,
       handleEquipSelected,
       handleUseSelected,
       handleToggleDetails,
-handleSplit,
+      handleSplit,
       handleMoveItem,
       handleCharacterChange,
       handleOrderItems,
@@ -544,9 +585,15 @@ handleSplit,
       contextMenuActionIndex,
       setContextMenuActionIndex,
       contextMenuActions,
+      contextMenuSubmenuIndex,
+      setContextMenuSubmenuIndex,
+      splitPromptActive,
+      handleRequestSplit,
+      handleCancelSplit,
+      activeCharacterIndex,
       handleCloseContextMenu,
     }),
-    [contextMenu, contextMenuActionIndex, contextMenuActions, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, transferPromptActive, showItemDetails],
+    [activeCharacterIndex, contextMenu, contextMenuActionIndex, contextMenuActions, contextMenuSubmenuIndex, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCancelSplit, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestSplit, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, splitPromptActive, transferPromptActive, showItemDetails],
   )
 
   useEffect(() => {
@@ -567,6 +614,17 @@ handleSplit,
     setTransferPromptActive(false)
     setNavigationArea('inventory')
   }
+
+  const handleGridWheel = useCallback((event) => {
+    event.preventDefault()
+    const direction = event.deltaY > 0 ? 1 : -1
+    if (event.shiftKey) {
+      if (direction > 0) handleCycleCategory()
+      else handleCycleRarity()
+      return
+    }
+    moveSelection(direction, 0)
+  }, [handleCycleCategory, handleCycleRarity, moveSelection])
 
   const handleOpenDetails = () => setShowItemDetails(true)
 
@@ -681,6 +739,8 @@ handleSplit,
     contextMenuActions,
     contextMenuActionIndex,
     setContextMenuActionIndex,
+    contextMenuSubmenuIndex,
+    setContextMenuSubmenuIndex,
     handleOpenContextMenu,
     handleCloseContextMenu,
     handleDoubleClickSlot,
@@ -688,6 +748,7 @@ handleSplit,
     handleUnequipToSlot,
     handleDoubleClickEquipment,
     handleSelectSlot,
+    handleGridWheel,
     handleOpenDetails,
     handleSelectEquipmentSlot,
     handleDragEnd,
@@ -697,5 +758,8 @@ handleSplit,
     hoverItem,
     handleHoverItem,
     clearHoverItem,
+    splitPromptActive,
+    handleConfirmSplit,
+    handleCancelSplit,
   }
 }

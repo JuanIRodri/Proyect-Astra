@@ -10,6 +10,7 @@ import { TransferModal } from './inventory/TransferModal'
 import { DetailsModal } from './inventory/DetailsModal'
 import { InventoryContextMenu } from './inventory/InventoryContextMenu'
 import { InventoryTooltip } from './inventory/InventoryTooltip'
+import { SplitModal } from './inventory/SplitModal'
 import './InventoryPanel.css'
 
 export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete }, ref) {
@@ -54,6 +55,8 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
     contextMenuActions,
     contextMenuActionIndex,
     setContextMenuActionIndex,
+    contextMenuSubmenuIndex,
+    setContextMenuSubmenuIndex,
     handleOpenContextMenu,
     handleCloseContextMenu,
     handleDoubleClickSlot,
@@ -61,6 +64,7 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
     handleDoubleClickEquipment,
     handleCloseDetails,
     handleSelectSlot,
+    handleGridWheel,
     handleOpenDetails,
     handleSelectEquipmentSlot,
     handleDragStartWithSplit,
@@ -70,6 +74,9 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
     handleHoverItem,
     clearHoverItem,
     handleTransferFromSlot,
+    splitPromptActive,
+    handleConfirmSplit,
+    handleCancelSplit,
   } = useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete })
 
   useImperativeHandle(ref, () => ({
@@ -109,6 +116,7 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
           onContextMenu={handleOpenContextMenu}
           onHoverItem={handleHoverItem}
           onLeave={clearHoverItem}
+          onWheel={handleGridWheel}
         />
         <InventoryDetail
           equipment={equipment}
@@ -139,12 +147,14 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
         <InventoryContextMenu
           actions={contextMenuActions}
           actionIndex={contextMenuActionIndex}
+          submenuIndex={contextMenuSubmenuIndex}
           position={{ x: contextMenu.x, y: contextMenu.y }}
           onRun={(action) => {
             action.run()
             handleCloseContextMenu()
           }}
           onHover={setContextMenuActionIndex}
+          onHoverSubmenu={setContextMenuSubmenuIndex}
           onClose={handleCloseContextMenu}
         />
       )}
@@ -156,6 +166,14 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
           activeCharacterId={activeCharacter.idPersonaje}
           onTransfer={handleTransferSelected}
           onCancel={handleCancelTransfer}
+        />
+      )}
+
+      {splitPromptActive && (
+        <SplitModal
+          item={selectedItem}
+          onConfirm={handleConfirmSplit}
+          onCancel={handleCancelSplit}
         />
       )}
 

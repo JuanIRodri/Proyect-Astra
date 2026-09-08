@@ -35,6 +35,30 @@ export function splitStack(items, sourceSlotIndex) {
   }
 }
 
+export function splitStackByQuantity(items, sourceSlotIndex, quantity) {
+  const sourceItem = items[sourceSlotIndex]
+  if (!sourceItem) return { error: 'Selecciona una pila antes de dividirla.' }
+  if (sourceItem.quantity < 2) return { error: 'Necesitas al menos dos unidades para dividir una pila.' }
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity >= sourceItem.quantity) {
+    return { error: `Eligí un número entre 1 y ${sourceItem.quantity - 1}.` }
+  }
+
+  const emptySlotIndex = items.findIndex((item) => !item)
+  if (emptySlotIndex === -1) return { error: 'No hay espacios libres para dividir esta pila.' }
+
+  const nextItems = items.map((item, itemIndex) => {
+    if (itemIndex === sourceSlotIndex) return { ...item, quantity: sourceItem.quantity - quantity }
+    if (itemIndex === emptySlotIndex) {
+      return { ...sourceItem, id: `${sourceItem.id}-split-${Date.now()}`, quantity }
+    }
+    return item
+  })
+  return {
+    nextItems,
+    message: `${sourceItem.name}: pila dividida en ${sourceItem.quantity - quantity} y ${quantity}.`,
+  }
+}
+
 export function moveOrMergeItems(items, sourceSlotIndex, targetSlotIndex) {
   if (sourceSlotIndex === targetSlotIndex) return null
 

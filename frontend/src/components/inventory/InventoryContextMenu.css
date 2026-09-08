@@ -47,3 +47,13 @@
   background: var(--inventory-accent-soft);
   outline: none;
 }
+
+.context-menu-chevron {
+  float: right;
+  margin-left: 0.75rem;
+  color: var(--text-muted);
+}
+
+.context-menu-submenu {
+  margin-left: 0.35rem;
+}

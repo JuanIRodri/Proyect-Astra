@@ -27,6 +27,8 @@ export function createInventoryKeyHandler(config) {
     contextMenuActive,
     contextMenuActionIndex,
     setContextMenuActionIndex,
+    contextMenuSubmenuIndex,
+    setContextMenuSubmenuIndex,
     contextMenuActions,
     handleCloseContextMenu,
     handleDropSelected,
@@ -36,6 +38,8 @@ export function createInventoryKeyHandler(config) {
     handleUseSelected,
     handleToggleDetails,
     handleSplit,
+    handleRequestSplit,
+    activeCharacterIndex,
     handleMoveItem,
     handleCharacterChange,
     handleOrderItems,
@@ -59,7 +63,7 @@ export function createInventoryKeyHandler(config) {
   return (event) => {
     const targetNode = event.target
     if (targetNode && typeof targetNode.tagName === 'string' &&
-      (targetNode.tagName === 'SELECT' || targetNode.classList?.contains('inventory-filter-control'))) {
+      (targetNode.tagName === 'INPUT' || targetNode.tagName === 'SELECT' || targetNode.classList?.contains('inventory-filter-control'))) {
       return
     }
 
@@ -68,25 +72,67 @@ export function createInventoryKeyHandler(config) {
     if (contextMenuActive) {
       event.preventDefault()
       event.stopPropagation()
+      const selectedAction = contextMenuActions[contextMenuActionIndex]
+      const hasSubmenu = Boolean(selectedAction?.submenu?.length)
+      const submenuOpen = hasSubmenu && contextMenuSubmenuIndex !== null
+
       if (key === 'escape') {
-        handleCloseContextMenu()
+        if (submenuOpen) {
+          setContextMenuSubmenuIndex(null)
+        } else {
+          handleCloseContextMenu()
+        }
         return
       }
-      if (key === 'arrowdown' || key === 's' || key === 'arrowright' || key === 'd') {
-        if (contextMenuActions.length > 0) {
+
+      if (submenuOpen) {
+        if (key === 'arrowleft' || key === 'a') {
+          setContextMenuSubmenuIndex(null)
+          return
+        }
+        if (key === 'arrowdown' || key === 's') {
+          setContextMenuSubmenuIndex((index) => (index + 1) % selectedAction.submenu.length)
+          return
+        }
+        if (key === 'arrowup' || key === 'w') {
+          setContextMenuSubmenuIndex((index) => (index - 1 + selectedAction.submenu.length) % selectedAction.submenu.length)
+          return
+        }
+        if (key === 'enter' || key === ' ') {
+          selectedAction.submenu[contextMenuSubmenuIndex]?.run()
+          handleCloseContextMenu()
+          return
+        }
+        return
+      }
+
+      const openSubmenu = () => {
+        if (hasSubmenu) {
+          setContextMenuSubmenuIndex(0)
+          return true
+        }
+        return false
+      }
+
+      if (key === 'enter' || key === ' ') {
+        if (!openSubmenu()) {
+          selectedAction?.run()
+          handleCloseContextMenu()
+        }
+        return
+      }
+      if (key === 'arrowright' || key === 'd') {
+        if (!openSubmenu()) {
           setContextMenuActionIndex((index) => (index + 1) % contextMenuActions.length)
         }
         return
       }
-      if (key === 'arrowup' || key === 'w' || key === 'arrowleft' || key === 'a') {
-        if (contextMenuActions.length > 0) {
-          setContextMenuActionIndex((index) => (index - 1 + contextMenuActions.length) % contextMenuActions.length)
-        }
+      if (key === 'arrowdown' || key === 's') {
+        setContextMenuActionIndex((index) => (index + 1) % contextMenuActions.length)
         return
       }
-      if (key === 'enter' || key === ' ') {
-        contextMenuActions[contextMenuActionIndex]?.run()
-        handleCloseContextMenu()
+      if (key === 'arrowup' || key === 'w' || key === 'arrowleft' || key === 'a') {
+        setContextMenuActionIndex((index) => (index - 1 + contextMenuActions.length) % contextMenuActions.length)
         return
       }
       return
@@ -168,6 +214,13 @@ export function createInventoryKeyHandler(config) {
       return
     }
 
+    if (key === 'c') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleRequestSplit()
+      return
+    }
+
     if (key === 'o') {
       event.preventDefault()
       event.stopPropagation()
@@ -201,6 +254,15 @@ export function createInventoryKeyHandler(config) {
       event.preventDefault()
       event.stopPropagation()
       handleCharacterChange(characterIndex)
+      return
+    }
+
+    if (key === 'tab') {
+      event.preventDefault()
+      event.stopPropagation()
+      const direction = event.shiftKey ? -1 : 1
+      const nextIndex = (activeCharacterIndex + direction + characterListLength) % characterListLength
+      handleCharacterChange(nextIndex)
       return
     }
 

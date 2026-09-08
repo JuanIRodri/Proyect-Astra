@@ -43,6 +43,7 @@ export function CharacterSelector({ personajes, activeCharacterIndex, onSelect, 
             className={`character-selector-tab ${characterIndex === activeCharacterIndex ? 'is-active' : ''}`}
             key={character.idPersonaje}
             onClick={() => onSelect(characterIndex)}
+            onDoubleClick={() => onSelect(characterIndex)}
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
               event.preventDefault()
