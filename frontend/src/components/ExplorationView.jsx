@@ -5,14 +5,21 @@ import { InventoryPanel } from './InventoryPanel'
 import { CharacterSelector } from './CharacterSelector'
 import { Minimap } from './Minimap'
 import { GroupHud } from './GroupHud'
+import { usePartyPositions } from '../hooks/usePartyPositions'
+import { savePartida } from '../services/api'
 import { lockInput, unlockInput } from '../game/inputLock'
 
-export function ExplorationView({ personajes, onUpdateCharacter }) {
+export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, inicioPartida }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
-  const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
+  const [activeCharacterIndex, setActiveCharacterIndex] = useState(inicioPartida?.leaderIndex ?? 0)
   const [transferToken, setTransferToken] = useState(0)
   const inventoryRef = useRef(null)
+  const { positions, leaderIndex } = usePartyPositions(
+    3,
+    inicioPartida?.positions ?? undefined,
+    inicioPartida?.leaderIndex ?? 0,
+  )
 
   const handleRequestTransfer = useCallback((slotIndex, targetCharacterIndex) => {
     inventoryRef.current?.transferFromSlot(slotIndex, targetCharacterIndex)
@@ -58,15 +65,36 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
     return () => reasons.forEach(unlockInput)
   }, [inventoryOpen, editingCharacter])
 
+  const partidaId = inicioPartida?.id
+  useEffect(() => {
+    if (!partidaId || !positions[leaderIndex]) return undefined
+
+    const timer = setTimeout(() => {
+      savePartida(partidaId, {
+        liderX: Math.round(positions[leaderIndex].x),
+        liderY: Math.round(positions[leaderIndex].y),
+        liderIndex: leaderIndex,
+      }).catch(() => {})
+    }, 800)
+
+    return () => clearTimeout(timer)
+  }, [partidaId, positions, leaderIndex])
+
   return (
     <section className="phaser-game-shell">
       <PhaserGame
         personajes={personajes}
+        inicioPartida={inicioPartida}
         onOpenCharacterEditor={handleOpenCharacterEditor}
         onToggleInventory={handleToggleInventory}
       />
       <Minimap />
       <GroupHud personajes={personajes} />
+      {onBackToMenu && (
+        <button type="button" className="back-to-menu-btn" onClick={onBackToMenu}>
+          ← Menú
+        </button>
+      )}
       {inventoryOpen && (
         <div className="inventory-layout">
           <CharacterSelector

@@ -18,9 +18,9 @@ export function buildPartyData(personajes = []) {
   }))
 }
 
-export function createParty(scene, partyData) {
+export function createParty(scene, partyData, positions = PARTY_POSITIONS) {
   const tokens = partyData.map((character, index) => {
-    const position = PARTY_POSITIONS[index]
+    const position = positions[index] || PARTY_POSITIONS[index]
     const token = scene.add.circle(
       position.x * TILE_SIZE + TILE_SIZE / 2,
       position.y * TILE_SIZE + TILE_SIZE / 2,

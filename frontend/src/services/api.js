@@ -9,6 +9,26 @@ export const getPersonajes = async () => {
   return response.data;
 };
 
+export const getPartidas = async () => {
+  const response = await api.get('/partidas');
+  return response.data;
+};
+
+export const getPartida = async (id) => {
+  const response = await api.get(`/partidas/${id}`);
+  return response.data;
+};
+
+export const savePartida = async (id, data) => {
+  const response = await api.put(`/partidas/${id}`, data);
+  return response.data;
+};
+
+export const resetPartida = async (id) => {
+  const response = await api.post(`/partidas/${id}/reset`);
+  return response.data;
+};
+
 export const updatePersonaje = async (id, data) => {
   const response = await api.put(`/personajes/${id}`, data);
   return response.data;

@@ -246,6 +246,23 @@ async function migrate() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS Partida (
+        idPartida INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(60) NOT NULL,
+        mapa VARCHAR(60) DEFAULT NULL,
+        liderX INT DEFAULT NULL,
+        liderY INT DEFAULT NULL,
+        liderIndex INT DEFAULT 0,
+        fechaGuardado DATETIME DEFAULT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    const [partidas] = await connection.query('SELECT COUNT(*) AS total FROM Partida');
+    if (Number(partidas[0].total) === 0) {
+      await connection.query(`INSERT INTO Partida (nombre) VALUES ('Partida 1'), ('Partida 2'), ('Partida 3')`);
+    }
+
     // 5. Load or update characters assigning idCuerpo = 1
     for (const char of rpgData) {
       await connection.query(`

@@ -91,6 +91,19 @@ Iteración de interfaz sobre la exploración, empezando por un minimapa y un HUD
 - Puente Phaser→React: `gameEvents.js` ganó `partyPositionUpdate` y el emisor `emitPartyPositionUpdate(positions, leaderIndex)`. `ExplorationScene.js` lo dispara al crear la escena, al cambiar de líder (`setLeader`) y en `update` cuando el líder cambia de casilla (se cachea la última casilla para no spamear eventos en cada frame).
 - Ambas piezas se montan en `ExplorationView.jsx` junto a `<PhaserGame/>`; son overlays con `pointer-events: none` para no bloquear el input de la escena.
 
+## Trabajo actual: menú y guardado de partida
+
+Sistema de guardado **ligero** (snapshot de exploración, no volcado de toda la DB; los personajes ya persisten en vivo):
+
+- Tabla `Partida`: `idPartida`, `nombre`, `mapa`, `liderX`, `liderY`, `liderIndex`, `fechaGuardado`. La migración crea 3 slots ("Partida 1/2/3") si la tabla está vacía. Endpoints: `GET /partidas` (lista con `tieneGuardado`), `GET /partidas/:id`, `PUT /partidas/:id` (guarda posición + líder, setea `fechaGuardado = NOW()`), `POST /partidas/:id/reset` (limpia el slot). Backend en capas: `routes/partidasRoutes.js`, `controllers/partidasController.js`, `services/partidasService.js`.
+- `MainMenu.jsx`/`.css`: pantalla previa a la exploración con título y 3 slots; cada slot ofrece "Continuar" (deshabilitado si está vacío) y "Nueva partida" (que resetea el slot). Lista con `usePartidas.js` (evita `setState` síncrono en el efecto para lint).
+- `App.jsx` decide entre `MainMenu` y `ExplorationView`: "Continuar" carga `GET /partidas/:id` y deriva las 3 posiciones del grupo desde el líder (x-1, x-2); "Nueva partida" resetea el slot y usa `PARTY_POSITIONS`. `ExplorationView` se remonta con `key={id}` y recibe `inicioPartida`.
+- `ExplorationScene` acepta `positions` (tiles) y `leaderIndex` desde `init(data)`; `createParty` acepta un arreglo de posiciones custom. `PhaserGame` recibe `inicioPartida` y se lo pasa a la escena. Así el grupo arranca donde quedó, con el líder correcto y cámara siguiéndolo.
+- Autosave: `ExplorationView` usa `usePartyPositions` (ahora acepta posiciones/líder iniciales) y guarda con debounce de 800 ms `PUT /partidas/:id` con `liderX`/`liderY`/`liderIndex` (coordenadas de tile) cada vez que el grupo se mueve o cambia de líder.
+- Botón "← Menú" en la parte superior centrada (`back-to-menu-btn` en `PhaserGame.css`) devuelve a `MainMenu` (`onBackToMenu` en `App`).
+
+Todo queda pendiente de confirmación visual del usuario.
+
 ## Planning posterior del inventario
 
 - Validar límites de pila y capacidad al recoger objetos desde la exploración.

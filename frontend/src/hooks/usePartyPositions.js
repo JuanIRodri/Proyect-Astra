@@ -6,11 +6,14 @@ function worldToTile(x) {
   return (x - TILE_SIZE / 2) / TILE_SIZE
 }
 
-export function usePartyPositions(partySize = 3) {
-  const [positions, setPositions] = useState(() => (
-    PARTY_POSITIONS.map((position) => ({ x: position.x, y: position.y }))
-  ))
-  const [leaderIndex, setLeaderIndex] = useState(0)
+export function usePartyPositions(partySize = 3, initialPositions, initialLeaderIndex = 0) {
+  const [positions, setPositions] = useState(() => {
+    const base = initialPositions?.length
+      ? initialPositions
+      : PARTY_POSITIONS
+    return base.slice(0, partySize).map((position) => ({ x: position.x, y: position.y }))
+  })
+  const [leaderIndex, setLeaderIndex] = useState(initialLeaderIndex)
 
   useEffect(() => {
     const unsubscribe = subscribeToGameEvent(

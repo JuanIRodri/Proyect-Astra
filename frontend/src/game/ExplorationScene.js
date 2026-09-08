@@ -31,6 +31,10 @@ export class ExplorationScene extends Phaser.Scene {
 
   init(data) {
     this.partyData = data?.personajes ?? []
+    this.initialPositions = data?.positions ?? null
+    this.leaderIndex = Number.isInteger(data?.leaderIndex) ? data.leaderIndex : 0
+    this.partyOrder = [0, 1, 2].filter((index) => index !== this.leaderIndex)
+    this.partyOrder.unshift(this.leaderIndex)
     this.lastEmittedTile = null
   }
 
@@ -38,9 +42,10 @@ export class ExplorationScene extends Phaser.Scene {
     this.partyData = buildPartyData(this.partyData)
     drawBoard(this)
 
-    const { tokens, leaderMarker } = createParty(this, this.partyData)
+    const { tokens, leaderMarker } = createParty(this, this.partyData, this.initialPositions)
     this.party = tokens
     this.leaderMarker = leaderMarker
+    updatePartyLeaderStyling(this.party, this.leaderIndex)
     updateLeaderMarker(this.party, this.leaderMarker, this.leaderIndex)
 
     this.configureCamera()
