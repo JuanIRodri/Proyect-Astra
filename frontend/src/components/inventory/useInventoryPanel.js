@@ -619,7 +619,7 @@ handleSplit,
 
   const handleDropGrid = (data, slotIndex) => {
     if (data.startsWith('equip-')) {
-      handleUnequipToSlot(data.slice(5), slotIndex)
+      handleUnequipToSlot(data.slice(6), slotIndex)
       setDraggedSlotIndex(null)
       return
     }
