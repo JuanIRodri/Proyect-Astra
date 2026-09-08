@@ -45,6 +45,7 @@ Patrón de error: los servicios lanzan `AppError` (p. ej. 404/400); el controlad
 - El documento de diseño cuenta con una hoja de ruta con casillas `[x]` — completado, pendiente de confirmación y pendiente de implementación. No repetir tareas ya completadas ni reimplementar lo existente.
 - **Siempre modularizar cuando se pueda**: al implementar o refactorizar, dividir el código en módulos pequeños con una sola responsabilidad (un hook, helpers puros, subcomponentes) y componer desde un punto de entrada, en lugar de acumular lógica inline en archivos grandes.
 - Los cambios implementados se dejan como "pendiente de confirmación" hasta que el usuario los pruebe en el navegador.
+- **Flujo de trabajo con ramas**: trabajar siempre en ramas `feature/<tarea>` creadas desde `main`; `main` no se modifica directamente y la integración se hace mediante PR. En cada rama solo se tocan archivos relacionados con esa tarea; no mezclar cambios ajenos.
 
 ## Documentos de referencia (leer solo si hace falta)
 
