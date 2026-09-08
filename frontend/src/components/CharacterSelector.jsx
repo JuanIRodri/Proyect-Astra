@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getInventario } from '../services/api'
 import './CharacterSelector.css'
 
-export function CharacterSelector({ personajes, activeCharacterIndex, onSelect, onRequestTransfer }) {
+export function CharacterSelector({ personajes, activeCharacterIndex, onSelect, onRequestTransfer, refreshToken = 0 }) {
   const characterList = personajes.slice(0, 3)
   const [countsByKey, setCountsByKey] = useState({})
   const characterIds = characterList.map((character) => character.idPersonaje).join(',')
@@ -32,7 +32,7 @@ export function CharacterSelector({ personajes, activeCharacterIndex, onSelect, 
     return () => {
       cancelled = true
     }
-  }, [characterIds, personajes, activeCharacterIndex])
+  }, [characterIds, personajes, activeCharacterIndex, refreshToken])
 
   return (
     <aside className="character-selector" aria-label="Selección de personaje">

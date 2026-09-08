@@ -31,7 +31,7 @@ import {
 } from './inventoryOperations'
 import { createInventoryKeyHandler } from './inventoryKeyHandler'
 
-export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange }) {
+export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete }) {
   const characterList = personajes.slice(0, 3)
   const [inventories, setInventories] = useState(() => Object.fromEntries(
     characterList.map((character) => [character.idPersonaje, createInventory()]),
@@ -478,12 +478,13 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       setHeldSlotIndex(null)
       setDraggedSlotIndex(null)
       setTransferPromptActive(false)
+      onTransferComplete?.()
       setNotice(`${item.name} enviado a ${target.nombre}.`)
     } catch (error) {
       setTransferPromptActive(false)
       setNotice(error.response?.data?.error || 'No se pudo transferir el objeto.')
     }
-  }, [activeCharacterId, characterList, items])
+  }, [activeCharacterId, characterList, items, onTransferComplete])
 
   const handleTransferSelected = useCallback((targetCharacterIndex) => {
     handleTransferFromSlot(selectedSlotIndex, targetCharacterIndex)

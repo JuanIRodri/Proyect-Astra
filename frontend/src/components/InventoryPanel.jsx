@@ -12,7 +12,7 @@ import { InventoryContextMenu } from './inventory/InventoryContextMenu'
 import { InventoryTooltip } from './inventory/InventoryTooltip'
 import './InventoryPanel.css'
 
-export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange }, ref) {
+export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete }, ref) {
   const {
     activeCharacter,
     characterList,
@@ -70,7 +70,7 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
     handleHoverItem,
     clearHoverItem,
     handleTransferFromSlot,
-  } = useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange })
+  } = useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete })
 
   useImperativeHandle(ref, () => ({
     transferFromSlot: handleTransferFromSlot,

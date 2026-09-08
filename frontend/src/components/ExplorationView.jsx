@@ -9,10 +9,15 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
+  const [transferToken, setTransferToken] = useState(0)
   const inventoryRef = useRef(null)
 
   const handleRequestTransfer = useCallback((slotIndex, targetCharacterIndex) => {
     inventoryRef.current?.transferFromSlot(slotIndex, targetCharacterIndex)
+  }, [])
+
+  const handleTransferComplete = useCallback(() => {
+    setTransferToken((current) => current + 1)
   }, [])
 
   const handleOpenCharacterEditor = useCallback((characterId) => {
@@ -65,12 +70,14 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
             activeCharacterIndex={activeCharacterIndex}
             onSelect={setActiveCharacterIndex}
             onRequestTransfer={handleRequestTransfer}
+            refreshToken={transferToken}
           />
           <InventoryPanel
             ref={inventoryRef}
             personajes={personajes}
             activeCharacterIndex={activeCharacterIndex}
             onActiveCharacterChange={setActiveCharacterIndex}
+            onTransferComplete={handleTransferComplete}
             onClose={() => setInventoryOpen(false)}
           />
         </div>
