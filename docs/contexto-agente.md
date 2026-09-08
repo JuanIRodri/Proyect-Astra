@@ -100,7 +100,7 @@ Sistema de guardado **ligero** (snapshot de exploración, no volcado de toda la 
 - `App.jsx` decide entre `MainMenu` y `ExplorationView`: "Continuar" carga `GET /partidas/:id` y deriva las 3 posiciones del grupo desde el líder (x-1, x-2); "Nueva partida" resetea el slot y usa `PARTY_POSITIONS`. `ExplorationView` se remonta con `key={id}` y recibe `inicioPartida`.
 - `ExplorationScene` acepta `positions` (tiles) y `leaderIndex` desde `init(data)`; `createParty` acepta un arreglo de posiciones custom. `PhaserGame` recibe `inicioPartida` y se lo pasa a la escena. Así el grupo arranca donde quedó, con el líder correcto y cámara siguiéndolo.
 - Autosave: `ExplorationView` usa `usePartyPositions` (ahora acepta posiciones/líder iniciales) y guarda con debounce de 800 ms `PUT /partidas/:id` con `liderX`/`liderY`/`liderIndex` (coordenadas de tile) cada vez que el grupo se mueve o cambia de líder.
-- Botón "← Menú" en la parte superior centrada (`back-to-menu-btn` en `PhaserGame.css`) devuelve a `MainMenu` (`onBackToMenu` en `App`).
+- Menú de pausa: ESC abre `PauseMenu.jsx`/`.css` (overlay con "Continuar" y "Guardar y salir") **solo cuando** no hay inventario, editor o modal abiertos; si el inventario (`I`) o el editor (`U`) están abiertos, ESC sigue teniendo prioridad para cerrarlos antes de abrir el menú. El menú abierto bloquea el input de Phaser (`lockInput` con razón `'pause'`), y ESC lo cierra de nuevo. "Guardar y salir" guarda la posición del líder y vuelve al `MainMenu`.
 
 Todo queda pendiente de confirmación visual del usuario.
 

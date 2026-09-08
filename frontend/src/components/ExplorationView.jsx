@@ -5,6 +5,7 @@ import { InventoryPanel } from './InventoryPanel'
 import { CharacterSelector } from './CharacterSelector'
 import { Minimap } from './Minimap'
 import { GroupHud } from './GroupHud'
+import { PauseMenu } from './PauseMenu'
 import { usePartyPositions } from '../hooks/usePartyPositions'
 import { savePartida } from '../services/api'
 import { lockInput, unlockInput } from '../game/inputLock'
@@ -12,6 +13,8 @@ import { lockInput, unlockInput } from '../game/inputLock'
 export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, inicioPartida }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
+  const [pauseOpen, setPauseOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(inicioPartida?.leaderIndex ?? 0)
   const [transferToken, setTransferToken] = useState(0)
   const inventoryRef = useRef(null)
@@ -61,9 +64,54 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
     const reasons = []
     if (inventoryOpen) reasons.push('inventory')
     if (editingCharacter) reasons.push('editor')
+    if (pauseOpen) reasons.push('pause')
     reasons.forEach(lockInput)
     return () => reasons.forEach(unlockInput)
-  }, [inventoryOpen, editingCharacter])
+  }, [inventoryOpen, editingCharacter, pauseOpen])
+
+  useEffect(() => {
+    if (pauseOpen || inventoryOpen || editingCharacter) {
+      return undefined
+    }
+
+    const handleOpenPause = (event) => {
+      if (event.key === 'Escape' || event.code === 'Escape') {
+        event.preventDefault()
+        setPauseOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleOpenPause)
+    return () => window.removeEventListener('keydown', handleOpenPause)
+  }, [pauseOpen, inventoryOpen, editingCharacter])
+
+  useEffect(() => {
+    if (!pauseOpen) return undefined
+
+    const handleClosePause = (event) => {
+      if (event.key === 'Escape' || event.code === 'Escape') {
+        event.preventDefault()
+        setPauseOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleClosePause)
+    return () => window.removeEventListener('keydown', handleClosePause)
+  }, [pauseOpen])
+
+  const handleSaveAndExit = async () => {
+    setSaving(true)
+    const partidaId = inicioPartida?.id
+    if (partidaId && positions[leaderIndex]) {
+      await savePartida(partidaId, {
+        liderX: Math.round(positions[leaderIndex].x),
+        liderY: Math.round(positions[leaderIndex].y),
+        liderIndex: leaderIndex,
+      }).catch(() => {})
+    }
+    setSaving(false)
+    onBackToMenu?.()
+  }
 
   const partidaId = inicioPartida?.id
   useEffect(() => {
@@ -90,10 +138,12 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
       />
       <Minimap />
       <GroupHud personajes={personajes} />
-      {onBackToMenu && (
-        <button type="button" className="back-to-menu-btn" onClick={onBackToMenu}>
-          ← Menú
-        </button>
+      {pauseOpen && (
+        <PauseMenu
+          onContinue={() => setPauseOpen(false)}
+          onSaveAndExit={handleSaveAndExit}
+          saving={saving}
+        />
       )}
       {inventoryOpen && (
         <div className="inventory-layout">
