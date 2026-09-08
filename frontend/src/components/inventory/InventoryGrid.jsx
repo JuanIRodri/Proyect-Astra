@@ -11,11 +11,12 @@ export function InventoryGrid({
   onSelectSlot,
   onOpenDetails,
   onDoubleClickSlot,
-  onDragStart,
+  onDragStartWithSplit,
   onDragEnd,
-  onDrop,
-  onDropEquipped,
+  onDropGrid,
   onContextMenu,
+  onHoverItem,
+  onLeave,
 }) {
   return (
     <div className="inventory-grid" aria-label="Objetos del inventario">
@@ -32,27 +33,25 @@ export function InventoryGrid({
             onSelectSlot(slotIndex)
           }}
           onDoubleClick={() => onDoubleClickSlot(slotIndex)}
+          onMouseEnter={() => onHoverItem(item)}
+          onMouseLeave={onLeave}
           onContextMenu={(event) => {
             event.preventDefault()
             onContextMenu(slotIndex, event.clientX, event.clientY, window.innerWidth, window.innerHeight)
           }}
           draggable
           onDragStart={(event) => {
+            const split = event.shiftKey || event.ctrlKey || event.metaKey
             event.dataTransfer.setData('text/plain', String(slotIndex))
             event.dataTransfer.effectAllowed = 'move'
-            onDragStart(slotIndex)
+            onDragStartWithSplit(slotIndex, split)
           }}
           onDragEnd={onDragEnd}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
             const data = event.dataTransfer.getData('text/plain')
-            if (data.startsWith('equip-')) {
-              onDropEquipped(data.slice(5), slotIndex)
-              return
-            }
-            const parsedSlot = Number(data)
-            if (Number.isFinite(parsedSlot)) onDrop(parsedSlot, slotIndex)
+            onDropGrid(data, slotIndex)
           }}
           aria-label={`${item.name}, cantidad ${item.quantity}`}
         >
@@ -67,16 +66,12 @@ export function InventoryGrid({
           ref={(element) => { slotRefs.current[slotIndex] = element }}
           onClick={() => onSelectSlot(slotIndex)}
           onDoubleClick={() => onDoubleClickSlot(slotIndex)}
+          onMouseLeave={onLeave}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
             const data = event.dataTransfer.getData('text/plain')
-            if (data.startsWith('equip-')) {
-              onDropEquipped(data.slice(5), slotIndex)
-              return
-            }
-            const parsedSlot = Number(data)
-            if (Number.isFinite(parsedSlot)) onDrop(parsedSlot, slotIndex)
+            onDropGrid(data, slotIndex)
           }}
           aria-label={`Espacio vacío ${slotIndex + 1}`}
         />

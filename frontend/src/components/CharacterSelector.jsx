@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getInventario } from '../services/api'
 import './CharacterSelector.css'
 
-export function CharacterSelector({ personajes, activeCharacterIndex, onSelect }) {
+export function CharacterSelector({ personajes, activeCharacterIndex, onSelect, onRequestTransfer }) {
   const characterList = personajes.slice(0, 3)
   const [countsByKey, setCountsByKey] = useState({})
   const characterIds = characterList.map((character) => character.idPersonaje).join(',')
@@ -43,6 +43,15 @@ export function CharacterSelector({ personajes, activeCharacterIndex, onSelect }
             className={`character-selector-tab ${characterIndex === activeCharacterIndex ? 'is-active' : ''}`}
             key={character.idPersonaje}
             onClick={() => onSelect(characterIndex)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault()
+              if (characterIndex === activeCharacterIndex) return
+              const data = event.dataTransfer.getData('text/plain')
+              const slotIndex = Number(data)
+              if (!Number.isFinite(slotIndex)) return
+              onRequestTransfer?.(slotIndex, characterIndex)
+            }}
             role="tab"
             aria-selected={characterIndex === activeCharacterIndex}
           >

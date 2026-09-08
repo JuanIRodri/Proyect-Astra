@@ -23,6 +23,7 @@ import {
 import {
   computeLoadStats,
   moveOrMergeItems,
+  moveSingleItem,
   removeItem,
   setQuantity,
   sortInventory,
@@ -53,6 +54,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const [transferPromptActive, setTransferPromptActive] = useState(false)
   const [contextMenu, setContextMenu] = useState(null)
   const [contextMenuActionIndex, setContextMenuActionIndex] = useState(0)
+  const [hoverItem, setHoverItem] = useState(null)
   const slotRefs = useRef([])
   const [notice, setNotice] = useState('Usa WASD y selecciona objetos con Enter.')
   const activeCharacter = characterList[activeCharacterIndex]
@@ -429,7 +431,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setContextMenuActionIndex(0)
   }, [])
 
-  const handleTransferSelected = useCallback(async (targetCharacterIndex) => {
+  const handleTransferFromSlot = useCallback(async (slotIndex, targetCharacterIndex) => {
     const target = characterList[targetCharacterIndex]
     if (!target) {
       setTransferPromptActive(false)
@@ -440,27 +442,34 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       setNotice('No puedes enviarte un objeto a vos mismo.')
       return
     }
-    if (!selectedItem) {
+    const item = items[slotIndex]
+    if (!item) {
       setTransferPromptActive(false)
+      setNotice('Selecciona un objeto antes de transferirlo.')
       return
     }
     try {
-      await transferirObjeto(activeCharacterId, selectedSlotIndex, target.idPersonaje)
+      await transferirObjeto(activeCharacterId, slotIndex, target.idPersonaje)
       setInventories((current) => {
-        const next = { ...current, [activeCharacterId]: removeItem(items, selectedSlotIndex) }
+        const next = { ...current, [activeCharacterId]: removeItem(items, slotIndex) }
         delete next[target.idPersonaje]
         return next
       })
       setSelectedSlotIndex((current) => Math.max(0, current - 1))
       setCursorSlotIndex((current) => Math.max(0, current - 1))
       setHeldSlotIndex(null)
+      setDraggedSlotIndex(null)
       setTransferPromptActive(false)
-      setNotice(`${selectedItem.name} enviado a ${target.nombre}.`)
+      setNotice(`${item.name} enviado a ${target.nombre}.`)
     } catch (error) {
       setTransferPromptActive(false)
       setNotice(error.response?.data?.error || 'No se pudo transferir el objeto.')
     }
-  }, [activeCharacterId, characterList, items, selectedItem, selectedSlotIndex])
+  }, [activeCharacterId, characterList, items])
+
+  const handleTransferSelected = useCallback((targetCharacterIndex) => {
+    handleTransferFromSlot(selectedSlotIndex, targetCharacterIndex)
+  }, [handleTransferFromSlot, selectedSlotIndex])
 
   const handleCharacterChange = (characterIndex) => {
     onActiveCharacterChange(characterIndex)
@@ -552,12 +561,57 @@ handleSplit,
     setHeldSlotIndex(null)
   }
 
-  const handleDragEnd = () => setDraggedSlotIndex(null)
+  const handleDragEnd = () => {
+    window.inventoryDrag = null
+    setDraggedSlotIndex(null)
+    setHeldSlotIndex(null)
+  }
+
+  const handleHoverItem = (item) => {
+    setHoverItem(item)
+  }
+
+  const clearHoverItem = () => {
+    setHoverItem(null)
+  }
 
   const handleDrop = (sourceIndex, targetIndex) => {
     handleMoveItem(sourceIndex, targetIndex)
     setDraggedSlotIndex(null)
     setHeldSlotIndex(null)
+  }
+
+  const handleDropSplit = (sourceIndex, targetIndex) => {
+    const result = moveSingleItem(items, sourceIndex, targetIndex)
+    if (result?.error) {
+      setNotice(result.error)
+    } else if (result) {
+      updateInventory(result.nextItems, result.message)
+    }
+    setDraggedSlotIndex(null)
+    setHeldSlotIndex(null)
+  }
+
+  const handleDragStartWithSplit = (slotIndex, split) => {
+    if (split && items[slotIndex]?.quantity > 1) window.inventoryDrag = { slotIndex, split: true }
+    handleDragStart(slotIndex)
+  }
+
+  const handleDropGrid = (data, slotIndex) => {
+    if (data.startsWith('equip-')) {
+      handleUnequipToSlot(data.slice(5), slotIndex)
+      setDraggedSlotIndex(null)
+      return
+    }
+    const sourceIndex = Number(data)
+    if (!Number.isFinite(sourceIndex)) return
+    const drag = window.inventoryDrag
+    window.inventoryDrag = null
+    if (drag?.split && drag.slotIndex === sourceIndex && items[sourceIndex]?.quantity > 1) {
+      handleDropSplit(sourceIndex, slotIndex)
+      return
+    }
+    handleDrop(sourceIndex, slotIndex)
   }
 
   return {
@@ -612,8 +666,12 @@ handleSplit,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,
-    handleDragStart,
     handleDragEnd,
-    handleDrop,
+    handleDropGrid,
+    handleDragStartWithSplit,
+    handleTransferFromSlot,
+    hoverItem,
+    handleHoverItem,
+    clearHoverItem,
   }
 }

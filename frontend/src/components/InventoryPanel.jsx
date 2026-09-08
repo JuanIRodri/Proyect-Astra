@@ -1,3 +1,4 @@
+import { forwardRef, useImperativeHandle } from 'react'
 import { useInventoryPanel } from './inventory/useInventoryPanel'
 import { InventoryHeader } from './inventory/InventoryHeader'
 import { InventoryFilters } from './inventory/InventoryFilters'
@@ -6,9 +7,10 @@ import { InventoryDetail } from './inventory/InventoryDetail'
 import { InventoryStats } from './inventory/InventoryStats'
 import { TransferModal } from './inventory/TransferModal'
 import { InventoryContextMenu } from './inventory/InventoryContextMenu'
+import { InventoryTooltip } from './inventory/InventoryTooltip'
 import './InventoryPanel.css'
 
-export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange }) {
+export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange }, ref) {
   const {
     activeCharacter,
     characterList,
@@ -53,15 +55,22 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
     handleCloseContextMenu,
     handleDoubleClickSlot,
     handleEquipToSlot,
-    handleUnequipToSlot,
     handleDoubleClickEquipment,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,
-    handleDragStart,
+    handleDragStartWithSplit,
     handleDragEnd,
-    handleDrop,
+    handleDropGrid,
+    hoverItem,
+    handleHoverItem,
+    clearHoverItem,
+    handleTransferFromSlot,
   } = useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange })
+
+  useImperativeHandle(ref, () => ({
+    transferFromSlot: handleTransferFromSlot,
+  }), [handleTransferFromSlot])
 
   return (
     <aside className={`inventory-panel inventory-class-${classThemeKey}`} aria-label={`Inventario de ${activeCharacter?.nombre || 'personaje'}`}>
@@ -90,11 +99,12 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
           onSelectSlot={handleSelectSlot}
           onOpenDetails={handleOpenDetails}
           onDoubleClickSlot={handleDoubleClickSlot}
-          onDragStart={handleDragStart}
+          onDragStartWithSplit={handleDragStartWithSplit}
           onDragEnd={handleDragEnd}
-          onDrop={handleDrop}
-          onDropEquipped={handleUnequipToSlot}
+          onDropGrid={handleDropGrid}
           onContextMenu={handleOpenContextMenu}
+          onHoverItem={handleHoverItem}
+          onLeave={clearHoverItem}
         />
         <InventoryDetail
           detailItem={detailItem}
@@ -105,6 +115,8 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
           onSelectEquipmentSlot={handleSelectEquipmentSlot}
           onDoubleClickEquipmentSlot={handleDoubleClickEquipment}
           onDropEquip={handleEquipToSlot}
+          onHoverItem={handleHoverItem}
+          onLeave={clearHoverItem}
         />
       </div>
 
@@ -142,6 +154,8 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
           onCancel={handleCancelTransfer}
         />
       )}
+
+      {hoverItem && <InventoryTooltip item={hoverItem} />}
     </aside>
   )
-}
+})

@@ -61,6 +61,32 @@ export function moveOrMergeItems(items, sourceSlotIndex, targetSlotIndex) {
   return { nextItems, message: targetItem ? 'Objetos intercambiados.' : `${sourceItem.name}: objeto movido.` }
 }
 
+export function moveSingleItem(items, sourceSlotIndex, targetSlotIndex) {
+  const sourceItem = items[sourceSlotIndex]
+  if (!sourceItem) return null
+  if (sourceItem.quantity < 2) return { error: 'Esta pila ya tiene una sola unidad.' }
+
+  const targetItem = items[targetSlotIndex]
+  if (targetItem && targetItem.itemKey !== sourceItem.itemKey) {
+    return { error: 'El destino está ocupado: soltá en un espacio vacío para separar una unidad.' }
+  }
+
+  const nextItems = items.map((item, itemIndex) => {
+    if (targetItem && itemIndex === targetSlotIndex) return { ...item, quantity: item.quantity + 1 }
+    if (itemIndex === sourceSlotIndex) return { ...item, quantity: item.quantity - 1 }
+    if (itemIndex === targetSlotIndex) {
+      return { ...sourceItem, id: `${sourceItem.id}-split-${Date.now()}`, quantity: 1 }
+    }
+    return item
+  })
+  return {
+    nextItems,
+    message: targetItem
+      ? `${sourceItem.name}: una unidad separada y unida a la pila.`
+      : `${sourceItem.name}: una unidad separada.`,
+  }
+}
+
 export function computeEquipmentBonuses(equipment) {
   return EQUIPMENT_SLOTS.reduce((bonuses, slot) => {
     const item = equipment[slot.key]

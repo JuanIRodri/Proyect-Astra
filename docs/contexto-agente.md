@@ -76,6 +76,7 @@ El equipamiento con `G` fue confirmado por el usuario: equipar/desequipar con `E
 El movimiento continuo fue probado y confirmado por el usuario.
 Confirmado por el usuario: contador de objetos por personaje en el aside, pie del panel solo con el aviso de estado, filtros con `F`/`Shift+F`, auto-orden con `O`, bloqueo de input con el panel abierto, ancho de panel ampliado, grilla de 8 columnas y el traspaso con `T` (modo que pregunta a qué personaje enviar con `1/2/3`, Escape cancela).
 - El drag y el doble clic quedan pendientes de confirmación visual del usuario.
+- Mejoras con mouse implementadas (pendientes de confirmación): tooltip al pasar el cursor sobre un objeto de la mochila o equipo (`InventoryTooltip.jsx`, portal a `body`); drop sobre el tab de otro personaje en `CharacterSelector` transfiere el objeto arrastrado directamente (el panel expone `transferFromSlot` por ref, sin pasar modal); soltar una pila con `Shift`/`Ctrl` separa 1 unidad a ese hueco (`moveSingleItem`); el swap al soltar sobre un slot ocupado ya existía en `moveOrMergeItems`.
 
 ## Planning posterior del inventario
 

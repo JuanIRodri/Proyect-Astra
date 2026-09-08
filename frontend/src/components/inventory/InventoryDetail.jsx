@@ -10,6 +10,8 @@ export function InventoryDetail({
   onSelectEquipmentSlot,
   onDoubleClickEquipmentSlot,
   onDropEquip,
+  onHoverItem,
+  onLeave,
 }) {
   return (
     <div className="inventory-detail">
@@ -58,6 +60,8 @@ export function InventoryDetail({
                 type="button"
                 onClick={() => onSelectEquipmentSlot(slot.key)}
                 onDoubleClick={() => onDoubleClickEquipmentSlot(slot.key)}
+                onMouseEnter={() => onHoverItem(equippedItem)}
+                onMouseLeave={onLeave}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
                   event.preventDefault()
