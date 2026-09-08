@@ -72,7 +72,7 @@ El consumo con `E` fue confirmado por el usuario (la cantidad de la pila baja y 
 El peso total y la capacidad se muestran en el pie, pero la capacidad de peso NO bloquea mover/acomodar objetos dentro del inventario: el jugador puede dejar un objeto aunque esté sobre el límite, para transferirlo a otro personaje que sí tenga capacidad. El límite se aplicará al recoger objetos desde la exploración (pendiente, en el planning).
 El equipamiento con `G` fue confirmado por el usuario: equipar/desequipar con `E`, soltar con `Q` y dividir pilas con `R` funcionando.
 El movimiento continuo fue probado y confirmado por el usuario.
-Confirmado por el usuario: contador de objetos por personaje en el aside, pie del panel solo con el aviso de estado, filtros con `F`/`Shift+F`, auto-orden con `O`, bloqueo de input con el panel abierto, ancho de panel ampliado y grilla de 8 columnas.
+Confirmado por el usuario: contador de objetos por personaje en el aside, pie del panel solo con el aviso de estado, filtros con `F`/`Shift+F`, auto-orden con `O`, bloqueo de input con el panel abierto, ancho de panel ampliado, grilla de 8 columnas y el traspaso con `T` (modo que pregunta a qué personaje enviar con `1/2/3`, Escape cancela).
 
 ## Planning posterior del inventario
 
