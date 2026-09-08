@@ -51,7 +51,8 @@ export function InventoryGrid({
               onDropEquipped(data.slice(5), slotIndex)
               return
             }
-            onDrop(Number(data), slotIndex)
+            const parsedSlot = Number(data)
+            if (Number.isFinite(parsedSlot)) onDrop(parsedSlot, slotIndex)
           }}
           aria-label={`${item.name}, cantidad ${item.quantity}`}
         >
@@ -74,7 +75,8 @@ export function InventoryGrid({
               onDropEquipped(data.slice(5), slotIndex)
               return
             }
-            onDrop(Number(data), slotIndex)
+            const parsedSlot = Number(data)
+            if (Number.isFinite(parsedSlot)) onDrop(parsedSlot, slotIndex)
           }}
           aria-label={`Espacio vacío ${slotIndex + 1}`}
         />
