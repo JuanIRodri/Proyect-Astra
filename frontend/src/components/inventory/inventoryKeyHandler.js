@@ -28,6 +28,7 @@ export function createInventoryKeyHandler(config) {
     handleSplit,
     handleMoveItem,
     handleCharacterChange,
+    handleOrderItems,
     moveSelection,
   } = config
 
@@ -43,6 +44,12 @@ export function createInventoryKeyHandler(config) {
   }
 
   return (event) => {
+    const targetNode = event.target
+    if (targetNode && typeof targetNode.tagName === 'string' &&
+      (targetNode.tagName === 'SELECT' || targetNode.classList?.contains('inventory-filter-control'))) {
+      return
+    }
+
     const key = event.key.toLowerCase()
 
     if (key === 'i' || key === 'escape') {
@@ -92,6 +99,13 @@ export function createInventoryKeyHandler(config) {
       event.preventDefault()
       event.stopPropagation()
       handleSplit()
+      return
+    }
+
+    if (key === 'o') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleOrderItems()
       return
     }
 

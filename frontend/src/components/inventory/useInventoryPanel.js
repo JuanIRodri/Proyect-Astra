@@ -11,6 +11,9 @@ import {
   EQUIPMENT_SLOTS,
   createInventory,
   getClassThemeKey,
+  getFilteredIndexes,
+  getFilterOptions,
+  getNextFilteredSlotIndex,
   getNextSlotIndex,
   normalizeEquipment,
   normalizeInventory,
@@ -20,6 +23,7 @@ import {
   moveOrMergeItems,
   removeItem,
   setQuantity,
+  sortInventory,
   splitStack,
 } from './inventoryOperations'
 import { createInventoryKeyHandler } from './inventoryKeyHandler'
@@ -42,6 +46,8 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const [selectedEquipmentSlot, setSelectedEquipmentSlot] = useState(null)
   const [navigationArea, setNavigationArea] = useState('inventory')
   const [equipmentCursorIndex, setEquipmentCursorIndex] = useState(0)
+  const [filterCategory, setFilterCategory] = useState('todos')
+  const [filterRarity, setFilterRarity] = useState('todos')
   const slotRefs = useRef([])
   const [notice, setNotice] = useState('Usa WASD y selecciona objetos con Enter.')
   const activeCharacter = characterList[activeCharacterIndex]
@@ -53,6 +59,17 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const selectedEquipmentItem = selectedEquipmentSlot ? equipment[selectedEquipmentSlot] : null
   const detailItem = selectedEquipmentItem || selectedItem
   const goldAmount = goldByCharacter[activeCharacterId] || 0
+  const isFilterActive = filterCategory !== 'todos' || filterRarity !== 'todos'
+  const matchingIndexes = useMemo(() => (
+    getFilteredIndexes(items, filterCategory, filterRarity)
+  ), [items, filterCategory, filterRarity])
+  const filteredOutIndexes = useMemo(() => {
+    if (!isFilterActive) return null
+    const matching = new Set(matchingIndexes)
+    return new Set(items.map((item, index) => (item && !matching.has(index) ? index : null)).filter((index) => index !== null))
+  }, [items, matchingIndexes, isFilterActive])
+  const categoryOptions = useMemo(() => ['todos', ...getFilterOptions(items, 'category')], [items])
+  const rarityOptions = useMemo(() => ['todos', ...getFilterOptions(items, 'rarity')], [items])
   const equipKeyActive = Boolean(
     (selectedEquipmentSlot && selectedEquipmentItem) || selectedItem?.tipoEquipamiento || selectedItem?.consumible,
   )
@@ -231,13 +248,41 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   }, [equipmentCursorIndex, navigationArea])
 
   const moveSelection = useCallback((rowDelta, columnDelta) => {
-    const nextIndex = getNextSlotIndex(cursorSlotIndex, rowDelta, columnDelta)
+    const nextIndex = isFilterActive && matchingIndexes.length > 0
+      ? getNextFilteredSlotIndex(cursorSlotIndex, rowDelta, columnDelta, new Set(matchingIndexes))
+      : getNextSlotIndex(cursorSlotIndex, rowDelta, columnDelta)
     setCursorSlotIndex(nextIndex)
     setSelectedSlotIndex(nextIndex)
     setShowItemDetails(false)
     setSelectedEquipmentSlot(null)
     setNavigationArea('inventory')
-  }, [cursorSlotIndex])
+  }, [cursorSlotIndex, isFilterActive, matchingIndexes])
+
+  const handleCategoryChange = useCallback((nextCategory) => {
+    setFilterCategory(nextCategory)
+    const nextMatches = getFilteredIndexes(items, nextCategory, filterRarity)
+    if (navigationArea === 'equipment') return
+    if (nextMatches.length > 0 && !nextMatches.includes(selectedSlotIndex)) {
+      setSelectedSlotIndex(nextMatches[0])
+      setCursorSlotIndex(nextMatches[0])
+      setShowItemDetails(false)
+    }
+  }, [filterRarity, items, navigationArea, selectedSlotIndex])
+
+  const handleRarityChange = useCallback((nextRarity) => {
+    setFilterRarity(nextRarity)
+    const nextMatches = getFilteredIndexes(items, filterCategory, nextRarity)
+    if (navigationArea === 'equipment') return
+    if (nextMatches.length > 0 && !nextMatches.includes(selectedSlotIndex)) {
+      setSelectedSlotIndex(nextMatches[0])
+      setCursorSlotIndex(nextMatches[0])
+      setShowItemDetails(false)
+    }
+  }, [filterCategory, items, navigationArea, selectedSlotIndex])
+
+  const handleOrderItems = useCallback(() => {
+    updateInventory(sortInventory(items), 'Mochila ordenada: pilas unidas y objetos acomodados.')
+  }, [items, updateInventory])
 
   const handleCharacterChange = (characterIndex) => {
     onActiveCharacterChange(characterIndex)
@@ -274,12 +319,13 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       handleEquipSelected,
       handleUseSelected,
       handleToggleDetails,
-      handleSplit,
+handleSplit,
       handleMoveItem,
       handleCharacterChange,
+      handleOrderItems,
       moveSelection,
     }),
-    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleDropSelected, handleEquipSelected, handleMoveItem, handleSplit, handleToggleDetails, handleToggleEquipment, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem],
+    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleSplit, handleToggleDetails, handleToggleEquipment, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem],
   )
 
   useEffect(() => {
@@ -345,6 +391,14 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     heldSlotIndex,
     draggedSlotIndex,
     slotRefs,
+    filterCategory,
+    filterRarity,
+    handleCategoryChange,
+    handleRarityChange,
+    categoryOptions,
+    rarityOptions,
+    filteredOutIndexes,
+    filteredCount: matchingIndexes.length,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,

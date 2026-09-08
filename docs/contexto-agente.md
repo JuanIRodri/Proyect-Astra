@@ -57,6 +57,9 @@ El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
 - Equipamiento persistente por personaje con ranuras de casco, pecho, pantalón, botas, arma y arma secundaria.
 - Bonificaciones de equipamiento para Fuerza, Destreza, Inteligencia, Constitución y Agilidad.
 - El equipo puesto no se cuenta en el peso de la mochila; su bonificación de Fuerza sí aumenta la capacidad.
+- Filtros por categoría y rareza en la cabecera del inventario, con contador de objetos visibles y botón para limpiar filtros.
+- Auto-orden de la mochila con la tecla `O`: une pilas del mismo objeto (respetando el máximo por pila) y acomoda la cuadrícula por categoría/nombre/rareza.
+- La navegación con WASD/flechas salta a los objetos que coinciden con el filtro activo; los que no coinciden se atenúan.
 
 La seleccion numerica fue probada desde el navegador para el personaje 2 y funciona. La confirmacion funcional final corresponde al usuario.
 El cambio de color por clase fue probado tecnicamente en navegador y queda pendiente de confirmacion visual del usuario.
@@ -65,7 +68,6 @@ El movimiento continuo fue probado y confirmado por el usuario.
 
 ## Planning posterior del inventario
 
-- Filtros por categoría y rareza.
 - Aplicar los efectos de consumo a vida/maná reales del personaje.
 - Validar límites de pila y capacidad al recoger objetos desde la exploración.
 - Integrar el equipamiento con las estadísticas efectivas del personaje y el combate.

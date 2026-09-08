@@ -1,5 +1,6 @@
 import { useInventoryPanel } from './inventory/useInventoryPanel'
 import { InventoryHeader } from './inventory/InventoryHeader'
+import { InventoryFilters } from './inventory/InventoryFilters'
 import { InventoryGrid } from './inventory/InventoryGrid'
 import { InventoryDetail } from './inventory/InventoryDetail'
 import { InventoryStats } from './inventory/InventoryStats'
@@ -29,6 +30,14 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
     heldSlotIndex,
     draggedSlotIndex,
     slotRefs,
+    filterCategory,
+    handleCategoryChange,
+    filterRarity,
+    handleRarityChange,
+    categoryOptions,
+    rarityOptions,
+    filteredOutIndexes,
+    filteredCount,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,
@@ -41,6 +50,17 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
     <aside className={`inventory-panel inventory-class-${classThemeKey}`} aria-label={`Inventario de ${activeCharacter?.nombre || 'personaje'}`}>
       <InventoryHeader activeCharacter={activeCharacter} onClose={onClose} />
 
+      <InventoryFilters
+        categoryOptions={categoryOptions}
+        rarityOptions={rarityOptions}
+        filterCategory={filterCategory}
+        filterRarity={filterRarity}
+        onCategoryChange={handleCategoryChange}
+        onRarityChange={handleRarityChange}
+        filteredCount={filteredCount}
+        itemCount={itemCount}
+      />
+
       <div className="inventory-content">
         <InventoryGrid
           items={items}
@@ -48,6 +68,7 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
           cursorSlotIndex={cursorSlotIndex}
           heldSlotIndex={heldSlotIndex}
           draggedSlotIndex={draggedSlotIndex}
+          filteredOutIndexes={filteredOutIndexes}
           slotRefs={slotRefs}
           onSelectSlot={handleSelectSlot}
           onOpenDetails={handleOpenDetails}

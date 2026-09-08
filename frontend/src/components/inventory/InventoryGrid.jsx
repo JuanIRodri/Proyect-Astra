@@ -4,6 +4,7 @@ export function InventoryGrid({
   cursorSlotIndex,
   heldSlotIndex,
   draggedSlotIndex,
+  filteredOutIndexes,
   slotRefs,
   onSelectSlot,
   onOpenDetails,
@@ -15,7 +16,7 @@ export function InventoryGrid({
     <div className="inventory-grid" aria-label="Objetos del inventario">
       {items.map((item, slotIndex) => item ? (
         <button
-          className={`inventory-slot ${slotIndex === selectedSlotIndex ? 'is-selected' : ''} ${slotIndex === cursorSlotIndex ? 'is-cursor' : ''} ${slotIndex === heldSlotIndex ? 'is-held' : ''} ${slotIndex === draggedSlotIndex ? 'is-dragging' : ''}`}
+          className={`inventory-slot ${slotIndex === selectedSlotIndex ? 'is-selected' : ''} ${slotIndex === cursorSlotIndex ? 'is-cursor' : ''} ${slotIndex === heldSlotIndex ? 'is-held' : ''} ${slotIndex === draggedSlotIndex ? 'is-dragging' : ''} ${filteredOutIndexes?.has(slotIndex) ? 'is-filtered-out' : ''}`}
           key={`${item.id}-${slotIndex}`}
           ref={(element) => { slotRefs.current[slotIndex] = element }}
           onClick={() => {

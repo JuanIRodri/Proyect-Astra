@@ -92,3 +92,34 @@ export function computeLoadStats({ items, equipment, fuerza }) {
       : ''
   return { equipmentBonuses, maxWeight, currentWeight, weightPercent, weightState }
 }
+
+export function sortInventory(items) {
+  const mergedStacks = []
+  items.forEach((item) => {
+    if (!item) return
+    const target = mergedStacks.find((stack) => (
+      stack.itemKey === item.itemKey && stack.quantity < stack.maxPila
+    ))
+    if (target) {
+      const room = target.maxPila - target.quantity
+      const added = Math.min(room, item.quantity)
+      target.quantity += added
+      if (item.quantity > added) mergedStacks.push({ ...item, quantity: item.quantity - added })
+    } else {
+      mergedStacks.push({ ...item })
+    }
+  })
+
+  mergedStacks.sort((a, b) => (
+    a.category.localeCompare(b.category, 'es')
+    || a.name.localeCompare(b.name, 'es')
+    || a.rarity.localeCompare(b.rarity, 'es')
+  ))
+
+  const nextItems = Array(items.length).fill(null)
+  mergedStacks.forEach((item, index) => {
+    if (index >= items.length) return
+    nextItems[index] = { ...item, id: `${item.itemKey}-${index}` }
+  })
+  return nextItems
+}
