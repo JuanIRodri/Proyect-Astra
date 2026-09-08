@@ -1,9 +1,10 @@
+import { createPortal } from 'react-dom'
 import './TransferModal.css'
 
 export function TransferModal({ item, characters, activeCharacterId, onTransfer, onCancel }) {
   if (!item) return null
 
-  return (
+  return createPortal(
     <div className="transfer-overlay" onClick={onCancel}>
       <div
         className="transfer-modal"
@@ -43,6 +44,7 @@ export function TransferModal({ item, characters, activeCharacterId, onTransfer,
           <button className="transfer-modal-close" onClick={onCancel}>Cancelar</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

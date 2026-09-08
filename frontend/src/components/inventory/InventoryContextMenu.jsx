@@ -1,7 +1,8 @@
+import { createPortal } from 'react-dom'
 import './InventoryContextMenu.css'
 
 export function InventoryContextMenu({ actions, actionIndex, position, onRun, onHover, onClose }) {
-  return (
+  return createPortal(
     <div
       className="context-menu-overlay"
       onClick={onClose}
@@ -23,6 +24,7 @@ export function InventoryContextMenu({ actions, actionIndex, position, onRun, on
           </button>
         ))}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
