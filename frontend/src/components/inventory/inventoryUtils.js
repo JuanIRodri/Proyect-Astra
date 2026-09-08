@@ -1,4 +1,4 @@
-export const GRID_COLUMNS = 6
+export const GRID_COLUMNS = 8
 export const SLOT_COUNT = 48
 export const EQUIPMENT_SLOTS = [
   { key: 'pecho', label: 'Pecho', icon: '🛡' },

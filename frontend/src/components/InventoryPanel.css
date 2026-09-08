@@ -344,7 +344,7 @@ button.inventory-equipment-slot:focus-visible {
   display: grid;
   max-height: 30rem;
   overflow-y: auto;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 0.55rem;
   padding: 0.15rem 0.35rem 0.15rem 0.15rem;
   scrollbar-color: var(--inventory-accent) rgba(148, 163, 184, 0.14);
