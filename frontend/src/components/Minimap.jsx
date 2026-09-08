@@ -3,9 +3,9 @@ import { GRID_WIDTH, GRID_HEIGHT, PARTY_COLORS, WALL_TILES } from '../game/const
 import { usePartyPositions } from '../hooks/usePartyPositions'
 import './Minimap.css'
 
-const MINIMAP_WIDTH = 144
-const MINIMAP_HEIGHT = 88
-const BORDER = 2
+const MINIMAP_WIDTH = 216
+const MINIMAP_HEIGHT = 132
+const BORDER = 3
 const BACKGROUND_COLOR = 'rgba(17, 24, 39, 0.92)'
 const GRID_COLOR = 'rgba(55, 80, 106, 0.55)'
 const WALL_COLOR = '#3d5264'
@@ -60,13 +60,13 @@ export function Minimap() {
     positions.forEach((position, index) => {
       const x = BORDER + position.x * scaleX + scaleX / 2
       const y = BORDER + position.y * scaleY + scaleY / 2
-      const radius = index === leaderIndex ? 3.4 : 2.6
+      const radius = index === leaderIndex ? 5 : 3.8
 
       context.beginPath()
       context.arc(x, y, radius, 0, Math.PI * 2)
       context.fillStyle = toCssColor(PARTY_COLORS[index] || PARTY_COLORS[0])
       context.fill()
-      context.lineWidth = index === leaderIndex ? 1.4 : 1
+      context.lineWidth = index === leaderIndex ? 2.2 : 1.4
       context.strokeStyle = index === leaderIndex ? LEADER_COLOR : 'rgba(255, 255, 255, 0.45)'
       context.stroke()
     })
