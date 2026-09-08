@@ -1,7 +1,7 @@
 .inventory-panel {
   --inventory-accent: var(--accent-gold);
   --inventory-accent-soft: rgba(212, 169, 91, 0.14);
-  width: min(94vw, 900px);
+  width: min(96vw, 1240px);
   overflow: visible;
   padding: 1.35rem;
   border: 1px solid var(--inventory-accent);
