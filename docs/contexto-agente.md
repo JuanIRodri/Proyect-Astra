@@ -64,6 +64,8 @@ El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
 - La navegación con WASD/flechas salta a los objetos que coinciden con el filtro activo; los que no coinciden se atenúan.
 - Mientras el inventario o el editor está abierto, el input de Phaser queda bloqueado (`game/inputLock.js`: `lockInput`/`unlockInput`/`isInputLocked`), por lo que el grupo no se mueve ni responden atajos de la escena hasta cerrar el panel.
 - El panel mide `min(96vw, 1240px)` con una cuadrícula de 8 columnas (48 ranuras en 6 filas); la navegación por teclado sigue usando `GRID_COLUMNS`.
+- Doble clic sobre un objeto de la mochila lo equipa (si es equipable) o lo consume (si es consumible). Doble clic sobre una ranura de equipamiento desequipa el objeto al primer hueco libre de la mochila.
+- Arrastre con el mouse también funciona en ambos sentidos: soltar un objeto de la mochila sobre la ranura de equipo correcta lo equipa (no en otra ranura), y arrastrar un objeto equipado sobre un hueco de la mochila lo desequipa directo a ese hueco. El backend usa una variante de desequipado a ranura concreta (`POST /personajes/:id/equipamiento/:ranura/desequipar/:ranuraDestino`, transacción).
 
 La seleccion numerica fue probada desde el navegador para el personaje 2 y funciona. La confirmacion funcional final corresponde al usuario.
 El cambio de color por clase fue confirmado visualmente por el usuario.
@@ -73,6 +75,7 @@ El peso total y la capacidad se muestran en el pie, pero la capacidad de peso NO
 El equipamiento con `G` fue confirmado por el usuario: equipar/desequipar con `E`, soltar con `Q` y dividir pilas con `R` funcionando.
 El movimiento continuo fue probado y confirmado por el usuario.
 Confirmado por el usuario: contador de objetos por personaje en el aside, pie del panel solo con el aviso de estado, filtros con `F`/`Shift+F`, auto-orden con `O`, bloqueo de input con el panel abierto, ancho de panel ampliado, grilla de 8 columnas y el traspaso con `T` (modo que pregunta a qué personaje enviar con `1/2/3`, Escape cancela).
+- El drag y el doble clic quedan pendientes de confirmación visual del usuario.
 
 ## Planning posterior del inventario
 

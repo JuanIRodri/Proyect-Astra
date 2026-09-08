@@ -8,6 +8,8 @@ export function InventoryDetail({
   selectedEquipmentSlot,
   equipmentBonuses,
   onSelectEquipmentSlot,
+  onDoubleClickEquipmentSlot,
+  onDropEquip,
 }) {
   return (
     <div className="inventory-detail">
@@ -55,6 +57,18 @@ export function InventoryDetail({
                 key={slot.key}
                 type="button"
                 onClick={() => onSelectEquipmentSlot(slot.key)}
+                onDoubleClick={() => onDoubleClickEquipmentSlot(slot.key)}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData('text/plain', `equip-${slot.key}`)
+                  event.dataTransfer.effectAllowed = 'move'
+                }}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  const data = event.dataTransfer.getData('text/plain')
+                  if (/^\d+$/.test(data)) onDropEquip(Number(data), slot.key)
+                }}
                 title={`Ver detalles de ${equippedItem.name}`}
                 aria-label={`${slot.label}: ${equippedItem.name}. Pulsar para ver detalles`}
               >
@@ -68,6 +82,12 @@ export function InventoryDetail({
                 key={slot.key}
                 type="button"
                 onClick={() => onSelectEquipmentSlot(slot.key)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  const data = event.dataTransfer.getData('text/plain')
+                  if (/^\d+$/.test(data)) onDropEquip(Number(data), slot.key)
+                }}
                 aria-label={`${slot.label}: vacío`}
               >
                 <span className="inventory-equipment-slot-icon" aria-hidden="true">{slot.icon}</span>

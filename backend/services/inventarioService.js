@@ -243,6 +243,41 @@ async function transferirObjeto(idPersonaje, ranura, destinoIdPersonaje) {
     });
 }
 
+async function desequiparObjetoEnRanura(idPersonaje, ranura, ranuraDestino) {
+    return withTransaction(async (conn) => {
+        const targetSlot = Number(ranuraDestino);
+        if (!Number.isInteger(targetSlot) || targetSlot < 0 || targetSlot >= SLOT_COUNT) {
+            throw new AppError(400, 'La ranura de destino no es válida');
+        }
+
+        const [equipment] = await conn.query(`
+            SELECT e.idObjeto, o.clave, o.nombre
+            FROM Equipamiento e
+            JOIN Objeto o ON e.idObjeto = o.idObjeto
+            WHERE e.idPersonaje = ? AND e.ranura = ?
+        `, [idPersonaje, ranura]);
+        if (equipment.length === 0) {
+            throw new AppError(400, 'Ranura de equipamiento vacía');
+        }
+
+        const [occupied] = await conn.query(
+            'SELECT ranura FROM Inventario WHERE idPersonaje = ? AND ranura = ?',
+            [idPersonaje, targetSlot],
+        );
+        if (occupied.length > 0) {
+            throw new AppError(400, 'Ese espacio de la mochila está ocupado');
+        }
+
+        await conn.query('DELETE FROM Equipamiento WHERE idPersonaje = ? AND ranura = ?', [idPersonaje, ranura]);
+        await conn.query(
+            'INSERT INTO Inventario (idPersonaje, ranura, idObjeto, cantidad) VALUES (?, ?, ?, 1)',
+            [idPersonaje, targetSlot, equipment[0].idObjeto],
+        );
+
+        return { message: `${equipment[0].nombre} desequipado`, ranura: targetSlot };
+    });
+}
+
 module.exports = {
     getInventario,
     getEquipamiento,
@@ -250,5 +285,6 @@ module.exports = {
     usarObjeto,
     equiparObjeto,
     desequiparObjeto,
+    desequiparObjetoEnRanura,
     transferirObjeto,
 };

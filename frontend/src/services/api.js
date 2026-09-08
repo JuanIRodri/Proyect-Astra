@@ -49,4 +49,9 @@ export const transferirObjeto = async (id, slotIndex, destinoId) => {
   return response.data;
 };
 
+export const desequiparObjetoEnRanura = async (id, equipmentSlot, targetSlotIndex) => {
+  const response = await api.post(`/personajes/${id}/equipamiento/${equipmentSlot}/desequipar/${targetSlotIndex}`);
+  return response.data;
+};
+
 export default api;

@@ -51,6 +51,10 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
     setContextMenuActionIndex,
     handleOpenContextMenu,
     handleCloseContextMenu,
+    handleDoubleClickSlot,
+    handleEquipToSlot,
+    handleUnequipToSlot,
+    handleDoubleClickEquipment,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,
@@ -85,9 +89,11 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
           slotRefs={slotRefs}
           onSelectSlot={handleSelectSlot}
           onOpenDetails={handleOpenDetails}
+          onDoubleClickSlot={handleDoubleClickSlot}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDrop={handleDrop}
+          onDropEquipped={handleUnequipToSlot}
           onContextMenu={handleOpenContextMenu}
         />
         <InventoryDetail
@@ -97,6 +103,8 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
           selectedEquipmentSlot={selectedEquipmentSlot}
           equipmentBonuses={equipmentBonuses}
           onSelectEquipmentSlot={handleSelectEquipmentSlot}
+          onDoubleClickEquipmentSlot={handleDoubleClickEquipment}
+          onDropEquip={handleEquipToSlot}
         />
       </div>
 

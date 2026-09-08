@@ -10,9 +10,11 @@ export function InventoryGrid({
   slotRefs,
   onSelectSlot,
   onOpenDetails,
+  onDoubleClickSlot,
   onDragStart,
   onDragEnd,
   onDrop,
+  onDropEquipped,
   onContextMenu,
 }) {
   return (
@@ -29,6 +31,7 @@ export function InventoryGrid({
             }
             onSelectSlot(slotIndex)
           }}
+          onDoubleClick={() => onDoubleClickSlot(slotIndex)}
           onContextMenu={(event) => {
             event.preventDefault()
             onContextMenu(slotIndex, event.clientX, event.clientY, window.innerWidth, window.innerHeight)
@@ -43,7 +46,12 @@ export function InventoryGrid({
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
-            onDrop(Number(event.dataTransfer.getData('text/plain')), slotIndex)
+            const data = event.dataTransfer.getData('text/plain')
+            if (data.startsWith('equip-')) {
+              onDropEquipped(data.slice(5), slotIndex)
+              return
+            }
+            onDrop(Number(data), slotIndex)
           }}
           aria-label={`${item.name}, cantidad ${item.quantity}`}
         >
@@ -57,10 +65,16 @@ export function InventoryGrid({
           key={`empty-${slotIndex}`}
           ref={(element) => { slotRefs.current[slotIndex] = element }}
           onClick={() => onSelectSlot(slotIndex)}
+          onDoubleClick={() => onDoubleClickSlot(slotIndex)}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
-            onDrop(Number(event.dataTransfer.getData('text/plain')), slotIndex)
+            const data = event.dataTransfer.getData('text/plain')
+            if (data.startsWith('equip-')) {
+              onDropEquipped(data.slice(5), slotIndex)
+              return
+            }
+            onDrop(Number(data), slotIndex)
           }}
           aria-label={`Espacio vacío ${slotIndex + 1}`}
         />

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   desequiparObjeto,
+  desequiparObjetoEnRanura,
   equiparObjeto,
   getEquipamiento,
   getInventario,
@@ -154,55 +155,57 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setCursorSlotIndex(targetSlotIndex)
   }, [items, updateInventory])
 
-  const handleUseSelected = useCallback(async () => {
-    if (!selectedItem) {
+  const handleUseSelected = useCallback(async (slotIndex = selectedSlotIndex) => {
+    const item = items[slotIndex]
+    if (!item) {
       setNotice('Selecciona un objeto antes de usarlo.')
       return
     }
-    if (!selectedItem.consumible) {
+    if (!item.consumible) {
       setNotice('Este objeto no se puede consumir.')
       return
     }
 
     try {
-      const result = await usarObjeto(activeCharacterId, selectedSlotIndex)
-      const nextItems = setQuantity(items, selectedSlotIndex, result.quantity)
+      const result = await usarObjeto(activeCharacterId, slotIndex)
+      const nextItems = setQuantity(items, slotIndex, result.quantity)
       setInventories((currentInventories) => ({
         ...currentInventories,
         [activeCharacterId]: nextItems,
       }))
       const effectNotice = result.effect?.vida ? ` Efecto: +${result.effect.vida} vida.` : ''
-      setNotice(`${selectedItem.name} consumido.${effectNotice}`)
+      setNotice(`${item.name} consumido.${effectNotice}`)
     } catch {
       setNotice('No se pudo consumir el objeto.')
     }
-  }, [activeCharacterId, items, selectedItem, selectedSlotIndex])
+  }, [activeCharacterId, items, selectedSlotIndex])
 
-  const handleEquipSelected = useCallback(async () => {
-    if (!selectedItem?.tipoEquipamiento) {
+  const handleEquipSelected = useCallback(async (slotIndex = selectedSlotIndex) => {
+    const item = items[slotIndex]
+    if (!item?.tipoEquipamiento) {
       setNotice('Selecciona un objeto equipable.')
       return
     }
 
     try {
-      await equiparObjeto(activeCharacterId, selectedSlotIndex)
+      await equiparObjeto(activeCharacterId, slotIndex)
       setInventories((currentInventories) => ({
         ...currentInventories,
-        [activeCharacterId]: removeItem(items, selectedSlotIndex),
+        [activeCharacterId]: removeItem(items, slotIndex),
       }))
       setEquipmentByCharacter((currentEquipment) => ({
         ...currentEquipment,
         [activeCharacterId]: {
           ...(currentEquipment[activeCharacterId] || {}),
-          [selectedItem.tipoEquipamiento]: selectedItem,
+          [item.tipoEquipamiento]: item,
         },
       }))
       setHeldSlotIndex(null)
-      setNotice(`${selectedItem.name} equipado en ${selectedItem.tipoEquipamiento}.`)
+      setNotice(`${item.name} equipado en ${item.tipoEquipamiento}.`)
     } catch (error) {
       setNotice(error.response?.data?.error || 'No se pudo equipar el objeto.')
     }
-  }, [activeCharacterId, items, selectedItem, selectedSlotIndex])
+  }, [activeCharacterId, items, selectedSlotIndex])
 
   const handleUnequip = useCallback(async (equipmentSlot) => {
     try {
@@ -234,6 +237,80 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setShowItemDetails((isVisible) => !isVisible)
   }, [detailItem])
 
+  const handleDoubleClickSlot = useCallback((slotIndex) => {
+    const item = items[slotIndex]
+    if (!item) return
+    if (item.tipoEquipamiento) {
+      handleEquipSelected(slotIndex)
+    } else if (item.consumible) {
+      handleUseSelected(slotIndex)
+    }
+  }, [handleEquipSelected, handleUseSelected, items])
+
+  const handleEquipToSlot = useCallback(async (slotIndex, equipmentSlotKey) => {
+    const item = items[slotIndex]
+    if (!item?.tipoEquipamiento) {
+      setNotice('Selecciona un objeto equipable.')
+      return
+    }
+    if (item.tipoEquipamiento !== equipmentSlotKey) {
+      setNotice('Solo se puede equipar en la ranura correspondiente.')
+      return
+    }
+    try {
+      await equiparObjeto(activeCharacterId, slotIndex)
+      setInventories((currentInventories) => ({
+        ...currentInventories,
+        [activeCharacterId]: removeItem(items, slotIndex),
+      }))
+      setEquipmentByCharacter((currentEquipment) => ({
+        ...currentEquipment,
+        [activeCharacterId]: {
+          ...(currentEquipment[activeCharacterId] || {}),
+          [equipmentSlotKey]: item,
+        },
+      }))
+      setHeldSlotIndex(null)
+      setNotice(`${item.name} equipado en ${equipmentSlotKey}.`)
+    } catch (error) {
+      setNotice(error.response?.data?.error || 'No se pudo equipar el objeto.')
+    }
+  }, [activeCharacterId, items])
+
+  const handleUnequipToSlot = useCallback(async (equipmentSlotKey, targetSlotIndex) => {
+    const equipmentItem = equipment[equipmentSlotKey]
+    if (!equipmentItem) {
+      setNotice('Esa ranura de equipamiento está vacía.')
+      return
+    }
+    try {
+      await desequiparObjetoEnRanura(activeCharacterId, equipmentSlotKey, targetSlotIndex)
+      setEquipmentByCharacter((currentEquipment) => {
+        const next = { ...(currentEquipment[activeCharacterId] || {}) }
+        delete next[equipmentSlotKey]
+        return { ...currentEquipment, [activeCharacterId]: next }
+      })
+      const nextItems = items.map((item, itemIndex) => (
+        itemIndex === targetSlotIndex ? equipmentItem : item
+      ))
+      setInventories((currentInventories) => ({
+        ...currentInventories,
+        [activeCharacterId]: nextItems,
+      }))
+      setHeldSlotIndex(null)
+      setSelectedEquipmentSlot(null)
+      setNavigationArea('inventory')
+      setShowItemDetails(false)
+      setNotice(`${equipmentItem.name} desequipado y dejado en la mochila.`)
+    } catch (error) {
+      setNotice(error.response?.data?.error || 'No se pudo desequipar el objeto.')
+    }
+  }, [activeCharacterId, equipment, items])
+
+  const handleDoubleClickEquipment = useCallback((equipmentSlotKey) => {
+    handleUnequip(equipmentSlotKey)
+  }, [handleUnequip])
+
   const handleToggleEquipment = useCallback(() => {
     if (navigationArea === 'equipment') {
       setNavigationArea('inventory')
@@ -250,6 +327,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       setNotice('Navegación en el equipamiento.')
     }
     setTransferPromptActive(false)
+    setContextMenu(null)
   }, [equipmentCursorIndex, navigationArea])
 
   const moveSelection = useCallback((rowDelta, columnDelta) => {
@@ -527,6 +605,10 @@ handleSplit,
     setContextMenuActionIndex,
     handleOpenContextMenu,
     handleCloseContextMenu,
+    handleDoubleClickSlot,
+    handleEquipToSlot,
+    handleUnequipToSlot,
+    handleDoubleClickEquipment,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,
