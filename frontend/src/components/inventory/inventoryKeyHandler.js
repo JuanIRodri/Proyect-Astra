@@ -29,6 +29,7 @@ export function createInventoryKeyHandler(config) {
     handleMoveItem,
     handleCharacterChange,
     handleOrderItems,
+    handleTransferSelected,
     handleCycleCategory,
     handleCycleRarity,
     moveSelection,
@@ -108,6 +109,13 @@ export function createInventoryKeyHandler(config) {
       event.preventDefault()
       event.stopPropagation()
       handleOrderItems()
+      return
+    }
+
+    if (key === 't') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleTransferSelected()
       return
     }
 

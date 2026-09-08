@@ -5,6 +5,7 @@ const KEY_HINTS = [
   { key: 'V', label: 'Detalles' },
   { key: 'G', label: 'Equipo' },
   { key: 'O', label: 'Ordenar' },
+  { key: 'T', label: 'Traspaso' },
   { key: 'F', label: 'Categoría' },
   { key: '⇧F', label: 'Rareza' },
   { key: 'I', label: 'Salir' },

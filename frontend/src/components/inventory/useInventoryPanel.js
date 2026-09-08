@@ -5,6 +5,7 @@ import {
   getEquipamiento,
   getInventario,
   saveInventario,
+  transferirObjeto,
   usarObjeto,
 } from '../../services/api'
 import {
@@ -294,6 +295,43 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     updateInventory(sortInventory(items), 'Mochila ordenada: pilas unidas y objetos acomodados.')
   }, [items, updateInventory])
 
+  const handleTransferSelected = useCallback(async () => {
+    if (navigationArea !== 'inventory') {
+      setNotice('Sal primero del equipamiento para transferir un objeto.')
+      return
+    }
+    if (!selectedItem) {
+      setNotice('Selecciona un objeto antes de transferirlo.')
+      return
+    }
+    const others = characterList.filter((character) => character.idPersonaje !== activeCharacterId)
+    if (others.length === 0) {
+      setNotice('No hay otros personajes a quienes transferir.')
+      return
+    }
+    for (const target of others) {
+      try {
+        await transferirObjeto(activeCharacterId, selectedSlotIndex, target.idPersonaje)
+        setInventories((current) => {
+          const next = { ...current, [activeCharacterId]: removeItem(items, selectedSlotIndex) }
+          delete next[target.idPersonaje]
+          return next
+        })
+        setSelectedSlotIndex((current) => Math.max(0, current - 1))
+        setCursorSlotIndex((current) => Math.max(0, current - 1))
+        setHeldSlotIndex(null)
+        setNotice(`${selectedItem.name} enviado a ${target.nombre}.`)
+        return
+      } catch (error) {
+        const message = error.response?.data?.error || ''
+        if (message.includes('no tiene espacio')) continue
+        setNotice(message || 'No se pudo transferir el objeto.')
+        return
+      }
+    }
+    setNotice('Ningún personaje tiene espacio para ese objeto.')
+  }, [activeCharacterId, characterList, items, navigationArea, selectedItem, selectedSlotIndex])
+
   const handleCharacterChange = (characterIndex) => {
     onActiveCharacterChange(characterIndex)
     setSelectedSlotIndex(0)
@@ -333,11 +371,12 @@ handleSplit,
       handleMoveItem,
       handleCharacterChange,
       handleOrderItems,
+      handleTransferSelected,
       handleCycleCategory,
       handleCycleRarity,
       moveSelection,
     }),
-    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleSplit, handleToggleDetails, handleToggleEquipment, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem],
+    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem],
   )
 
   useEffect(() => {

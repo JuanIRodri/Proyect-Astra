@@ -56,3 +56,8 @@ exports.desequiparObjeto = asyncHandler(async (req, res) => {
     const result = await inventarioService.desequiparObjeto(req.params.id, req.params.ranura);
     res.json(result);
 });
+
+exports.transferirObjeto = asyncHandler(async (req, res) => {
+    const result = await inventarioService.transferirObjeto(req.params.id, req.params.ranura, req.body.destinoId);
+    res.json(result);
+});

@@ -60,13 +60,19 @@ El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
 - El equipo puesto no se cuenta en el peso de la mochila; su bonificación de Fuerza sí aumenta la capacidad.
 - Filtros por categoría y rareza en la cabecera del inventario, con contador de objetos visibles y botón para limpiar filtros. Atajos de teclado: `F` cicla la categoría y `Shift+F` la rareza (dan la vuelta por las opciones).
 - Auto-orden de la mochila con la tecla `O`: une pilas del mismo objeto (respetando el máximo por pila) y acomoda la cuadrícula por categoría/nombre/rareza.
+- Traspaso de la pila seleccionada con la tecla `T`: se envía al siguiente personaje del grupo que tenga espacio (se junta en pilas del mismo objeto y, si hace falta, ocupa el primer slot vacío; si el destino no tiene lugar, prueba con el siguiente y avisa si ninguno puede recibirlo). El backend lo hace en una transacción (`POST /personajes/:id/inventario/:ranura/transferir`).
 - La navegación con WASD/flechas salta a los objetos que coinciden con el filtro activo; los que no coinciden se atenúan.
 - Mientras el inventario o el editor está abierto, el input de Phaser queda bloqueado (`game/inputLock.js`: `lockInput`/`unlockInput`/`isInputLocked`), por lo que el grupo no se mueve ni responden atajos de la escena hasta cerrar el panel.
+- El panel mide `min(96vw, 1240px)` con una cuadrícula de 8 columnas (48 ranuras en 6 filas); la navegación por teclado sigue usando `GRID_COLUMNS`.
 
 La seleccion numerica fue probada desde el navegador para el personaje 2 y funciona. La confirmacion funcional final corresponde al usuario.
-El cambio de color por clase fue probado tecnicamente en navegador y queda pendiente de confirmacion visual del usuario.
+El cambio de color por clase fue confirmado visualmente por el usuario.
 La persistencia, el consumo y la capacidad quedan pendientes de prueba manual del usuario.
+El consumo con `E` fue confirmado por el usuario (la cantidad de la pila baja y el objeto desaparece al llegar a 0).
+El peso total y la capacidad se muestran en el pie, pero la capacidad de peso NO bloquea mover/acomodar objetos dentro del inventario: el jugador puede dejar un objeto aunque esté sobre el límite, para transferirlo a otro personaje que sí tenga capacidad. El límite se aplicará al recoger objetos desde la exploración (pendiente, en el planning).
+El equipamiento con `G` fue confirmado por el usuario: equipar/desequipar con `E`, soltar con `Q` y dividir pilas con `R` funcionando.
 El movimiento continuo fue probado y confirmado por el usuario.
+Confirmado por el usuario: contador de objetos por personaje en el aside, pie del panel solo con el aviso de estado, filtros con `F`/`Shift+F`, auto-orden con `O`, bloqueo de input con el panel abierto, ancho de panel ampliado y grilla de 8 columnas.
 
 ## Planning posterior del inventario
 
