@@ -17,6 +17,7 @@ import { drawBoard } from './board'
 import { createMovementKeys, moveParty } from './movement'
 import { createKeyHandler } from './input'
 import { emitCharacterEditorRequest } from './gameEvents'
+import { isInputLocked } from './inputLock'
 
 export class ExplorationScene extends Phaser.Scene {
   constructor() {
@@ -52,6 +53,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   update(_, delta) {
     if (!this.movementKeys || !this.party?.length) return
+    if (isInputLocked()) return
 
     if (moveParty(this, delta)) {
       updateLeaderMarker(this.party, this.leaderMarker, this.leaderIndex)

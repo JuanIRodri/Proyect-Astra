@@ -3,6 +3,7 @@ import { PhaserGame } from './PhaserGame'
 import { CharacterForm } from './CharacterForm'
 import { InventoryPanel } from './InventoryPanel'
 import { CharacterSelector } from './CharacterSelector'
+import { lockInput, unlockInput } from '../game/inputLock'
 
 export function ExplorationView({ personajes, onUpdateCharacter }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
@@ -36,6 +37,14 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
     window.addEventListener('keydown', handleCloseShortcut)
     return () => window.removeEventListener('keydown', handleCloseShortcut)
   }, [editingCharacter])
+
+  useEffect(() => {
+    const reasons = []
+    if (inventoryOpen) reasons.push('inventory')
+    if (editingCharacter) reasons.push('editor')
+    reasons.forEach(lockInput)
+    return () => reasons.forEach(unlockInput)
+  }, [inventoryOpen, editingCharacter])
 
   return (
     <section className="phaser-game-shell">

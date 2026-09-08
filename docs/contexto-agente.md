@@ -60,6 +60,7 @@ El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
 - Filtros por categoría y rareza en la cabecera del inventario, con contador de objetos visibles y botón para limpiar filtros.
 - Auto-orden de la mochila con la tecla `O`: une pilas del mismo objeto (respetando el máximo por pila) y acomoda la cuadrícula por categoría/nombre/rareza.
 - La navegación con WASD/flechas salta a los objetos que coinciden con el filtro activo; los que no coinciden se atenúan.
+- Mientras el inventario o el editor está abierto, el input de Phaser queda bloqueado (`game/inputLock.js`: `lockInput`/`unlockInput`/`isInputLocked`), por lo que el grupo no se mueve ni responden atajos de la escena hasta cerrar el panel.
 
 La seleccion numerica fue probada desde el navegador para el personaje 2 y funciona. La confirmacion funcional final corresponde al usuario.
 El cambio de color por clase fue probado tecnicamente en navegador y queda pendiente de confirmacion visual del usuario.
