@@ -19,6 +19,9 @@ export function createInventoryKeyHandler(config) {
     setHeldSlotIndex,
     setEquipmentCursorIndex,
     setSelectedEquipmentSlot,
+    handleRequestTransfer,
+    transferPromptActive,
+    setTransferPromptActive,
     handleDropSelected,
     handleToggleEquipment,
     handleUnequip,
@@ -54,6 +57,23 @@ export function createInventoryKeyHandler(config) {
     }
 
     const key = event.key.toLowerCase()
+
+    if (transferPromptActive) {
+      if (key === 'escape') {
+        event.preventDefault()
+        event.stopPropagation()
+        setTransferPromptActive(false)
+        setNotice('Traspaso cancelado.')
+        return
+      }
+      const targetIndex = getLeaderIndex(event)
+      if (targetIndex !== undefined && targetIndex < characterListLength) {
+        event.preventDefault()
+        event.stopPropagation()
+        handleTransferSelected(targetIndex)
+        return
+      }
+    }
 
     if (key === 'i' || key === 'escape') {
       event.preventDefault()
@@ -115,7 +135,7 @@ export function createInventoryKeyHandler(config) {
     if (key === 't') {
       event.preventDefault()
       event.stopPropagation()
-      handleTransferSelected()
+      handleRequestTransfer()
       return
     }
 

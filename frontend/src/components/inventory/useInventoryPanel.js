@@ -49,6 +49,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const [equipmentCursorIndex, setEquipmentCursorIndex] = useState(0)
   const [filterCategory, setFilterCategory] = useState('todos')
   const [filterRarity, setFilterRarity] = useState('todos')
+  const [transferPromptActive, setTransferPromptActive] = useState(false)
   const slotRefs = useRef([])
   const [notice, setNotice] = useState('Usa WASD y selecciona objetos con Enter.')
   const activeCharacter = characterList[activeCharacterIndex]
@@ -246,6 +247,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       setShowItemDetails(false)
       setNotice('Navegación en el equipamiento.')
     }
+    setTransferPromptActive(false)
   }, [equipmentCursorIndex, navigationArea])
 
   const moveSelection = useCallback((rowDelta, columnDelta) => {
@@ -295,7 +297,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     updateInventory(sortInventory(items), 'Mochila ordenada: pilas unidas y objetos acomodados.')
   }, [items, updateInventory])
 
-  const handleTransferSelected = useCallback(async () => {
+  const handleRequestTransfer = useCallback(() => {
     if (navigationArea !== 'inventory') {
       setNotice('Sal primero del equipamiento para transferir un objeto.')
       return
@@ -304,33 +306,42 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       setNotice('Selecciona un objeto antes de transferirlo.')
       return
     }
-    const others = characterList.filter((character) => character.idPersonaje !== activeCharacterId)
-    if (others.length === 0) {
-      setNotice('No hay otros personajes a quienes transferir.')
+    setTransferPromptActive(true)
+    setNotice(`¿A quién enviar ${selectedItem.name}? Elegí 1, 2 o 3 (Escape cancela).`)
+  }, [navigationArea, selectedItem])
+
+  const handleTransferSelected = useCallback(async (targetCharacterIndex) => {
+    const target = characterList[targetCharacterIndex]
+    if (!target) {
+      setTransferPromptActive(false)
       return
     }
-    for (const target of others) {
-      try {
-        await transferirObjeto(activeCharacterId, selectedSlotIndex, target.idPersonaje)
-        setInventories((current) => {
-          const next = { ...current, [activeCharacterId]: removeItem(items, selectedSlotIndex) }
-          delete next[target.idPersonaje]
-          return next
-        })
-        setSelectedSlotIndex((current) => Math.max(0, current - 1))
-        setCursorSlotIndex((current) => Math.max(0, current - 1))
-        setHeldSlotIndex(null)
-        setNotice(`${selectedItem.name} enviado a ${target.nombre}.`)
-        return
-      } catch (error) {
-        const message = error.response?.data?.error || ''
-        if (message.includes('no tiene espacio')) continue
-        setNotice(message || 'No se pudo transferir el objeto.')
-        return
-      }
+    if (target.idPersonaje === activeCharacterId) {
+      setTransferPromptActive(false)
+      setNotice('No puedes enviarte un objeto a vos mismo.')
+      return
     }
-    setNotice('Ningún personaje tiene espacio para ese objeto.')
-  }, [activeCharacterId, characterList, items, navigationArea, selectedItem, selectedSlotIndex])
+    if (!selectedItem) {
+      setTransferPromptActive(false)
+      return
+    }
+    try {
+      await transferirObjeto(activeCharacterId, selectedSlotIndex, target.idPersonaje)
+      setInventories((current) => {
+        const next = { ...current, [activeCharacterId]: removeItem(items, selectedSlotIndex) }
+        delete next[target.idPersonaje]
+        return next
+      })
+      setSelectedSlotIndex((current) => Math.max(0, current - 1))
+      setCursorSlotIndex((current) => Math.max(0, current - 1))
+      setHeldSlotIndex(null)
+      setTransferPromptActive(false)
+      setNotice(`${selectedItem.name} enviado a ${target.nombre}.`)
+    } catch (error) {
+      setTransferPromptActive(false)
+      setNotice(error.response?.data?.error || 'No se pudo transferir el objeto.')
+    }
+  }, [activeCharacterId, characterList, items, selectedItem, selectedSlotIndex])
 
   const handleCharacterChange = (characterIndex) => {
     onActiveCharacterChange(characterIndex)
@@ -340,6 +351,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setShowItemDetails(false)
     setSelectedEquipmentSlot(null)
     setNavigationArea('inventory')
+    setTransferPromptActive(false)
     setNotice('Usa WASD y selecciona objetos con Enter.')
   }
 
@@ -371,12 +383,15 @@ handleSplit,
       handleMoveItem,
       handleCharacterChange,
       handleOrderItems,
+      handleRequestTransfer,
       handleTransferSelected,
       handleCycleCategory,
       handleCycleRarity,
       moveSelection,
+      transferPromptActive,
+      setTransferPromptActive,
     }),
-    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem],
+    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, transferPromptActive],
   )
 
   useEffect(() => {
@@ -394,6 +409,7 @@ handleSplit,
     setHeldSlotIndex(null)
     setShowItemDetails(false)
     setSelectedEquipmentSlot(null)
+    setTransferPromptActive(false)
     setNavigationArea('inventory')
   }
 
