@@ -1,4 +1,4 @@
-import { PARTY_COLORS } from '../game/constants'
+import { getPartyColorForClass } from '../game/constants'
 import { usePartyPositions } from '../hooks/usePartyPositions'
 import './GroupHud.css'
 
@@ -26,7 +26,7 @@ export function GroupHud({ personajes }) {
           >
             <span
               className="group-hud-dot"
-              style={{ background: toCssColor(PARTY_COLORS[index] || PARTY_COLORS[0]) }}
+              style={{ background: toCssColor(getPartyColorForClass(character.clase)) }}
               aria-hidden="true"
             />
             <div className="group-hud-info">

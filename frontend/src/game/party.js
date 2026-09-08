@@ -1,5 +1,5 @@
 import {
-  PARTY_COLORS,
+  getPartyColorForClass,
   PARTY_POSITIONS,
   TILE_SIZE,
   TOKEN_RADIUS,
@@ -11,10 +11,11 @@ const FOLLOWER_STROKE = 0x18202b
 const STROKE_WIDTH = 3
 
 export function buildPartyData(personajes = []) {
-  return personajes.slice(0, 3).map((personaje, index) => ({
+  return personajes.slice(0, 3).map((personaje) => ({
     id: personaje.idPersonaje,
     name: personaje.nombre || `Héroe #${personaje.idPersonaje}`,
-    color: PARTY_COLORS[index],
+    clase: personaje.clase,
+    color: getPartyColorForClass(personaje.clase),
   }))
 }
 

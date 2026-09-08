@@ -2,7 +2,24 @@ export const TILE_SIZE = 48
 export const GRID_WIDTH = 36
 export const GRID_HEIGHT = 22
 
-export const PARTY_COLORS = [0xd9a441, 0x65c6d8, 0xd66d75]
+export const PARTY_CLASS_COLORS = {
+  guerrero: 0xef4444,
+  mago: 0x3b82f6,
+  picaro: 0xa855f7,
+  paladin: 0xeab308,
+  cazador: 0x22c55e,
+  aventurero: 0xc5a059,
+}
+
+export function getPartyColorForClass(clase) {
+  const key = (clase || 'aventurero')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+  return PARTY_CLASS_COLORS[key] || PARTY_CLASS_COLORS.aventurero
+}
+
 export const PARTY_POSITIONS = [
   { x: 5, y: 4 },
   { x: 4, y: 4 },

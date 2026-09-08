@@ -136,7 +136,7 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
         onOpenCharacterEditor={handleOpenCharacterEditor}
         onToggleInventory={handleToggleInventory}
       />
-      <Minimap />
+      <Minimap personajes={personajes} />
       <GroupHud personajes={personajes} />
       {pauseOpen && (
         <PauseMenu

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { GRID_WIDTH, GRID_HEIGHT, PARTY_COLORS, WALL_TILES } from '../game/constants'
+import { GRID_WIDTH, GRID_HEIGHT, WALL_TILES, getPartyColorForClass } from '../game/constants'
 import { usePartyPositions } from '../hooks/usePartyPositions'
 import './Minimap.css'
 
@@ -15,7 +15,7 @@ function toCssColor(hex) {
   return `#${hex.toString(16).padStart(6, '0')}`
 }
 
-export function Minimap() {
+export function Minimap({ personajes = [] }) {
   const canvasRef = useRef(null)
   const { positions, leaderIndex } = usePartyPositions()
 
@@ -61,16 +61,17 @@ export function Minimap() {
       const x = BORDER + position.x * scaleX + scaleX / 2
       const y = BORDER + position.y * scaleY + scaleY / 2
       const radius = index === leaderIndex ? 5 : 3.8
+      const character = personajes[index]
 
       context.beginPath()
       context.arc(x, y, radius, 0, Math.PI * 2)
-      context.fillStyle = toCssColor(PARTY_COLORS[index] || PARTY_COLORS[0])
+      context.fillStyle = toCssColor(getPartyColorForClass(character?.clase))
       context.fill()
       context.lineWidth = index === leaderIndex ? 2.2 : 1.4
       context.strokeStyle = index === leaderIndex ? LEADER_COLOR : 'rgba(255, 255, 255, 0.45)'
       context.stroke()
     })
-  }, [positions, leaderIndex])
+  }, [positions, leaderIndex, personajes])
 
   return (
     <div className="minimap" aria-label="Mapa de la zona">

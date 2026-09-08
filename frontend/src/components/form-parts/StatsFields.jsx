@@ -11,35 +11,20 @@ const STAT_LABELS = {
 
 export function StatsFields({ form, availablePoints, totalPoints, adjustStat, handleAutoDistribute, handleResetStats, submitRef }) {
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [focusZone, setFocusZone] = useState('stats');
   const rowRefs = useRef([]);
 
   const focusRow = useCallback((index) => {
     setFocusedIndex(index);
-    setFocusZone('stats');
     rowRefs.current[index]?.focus();
   }, []);
 
   useEffect(() => {
-    if (focusZone === 'stats') {
-      rowRefs.current[focusedIndex]?.focus();
-    } else {
-      submitRef?.current?.focus();
-    }
-  }, [focusedIndex, focusZone, submitRef]);
+    rowRefs.current[focusedIndex]?.focus();
+  }, [focusedIndex]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       const key = event.key.toLowerCase();
-
-      if (focusZone === 'actions') {
-        if (key === 'w' || key === 'arrowup') {
-          event.preventDefault();
-          focusRow(STAT_FIELDS.length - 1);
-        }
-        return;
-      }
-
       const stat = STAT_FIELDS[focusedIndex];
 
       if (key === 'w' || key === 'arrowup') {
@@ -49,11 +34,7 @@ export function StatsFields({ form, availablePoints, totalPoints, adjustStat, ha
       }
       if (key === 's' || key === 'arrowdown') {
         event.preventDefault();
-        if (focusedIndex === STAT_FIELDS.length - 1) {
-          setFocusZone('actions');
-        } else {
-          setFocusedIndex((index) => (index + 1) % STAT_FIELDS.length);
-        }
+        setFocusedIndex((index) => (index + 1) % STAT_FIELDS.length);
         return;
       }
       if (key === 'a' || key === 'arrowleft' || key === '-') {
@@ -67,9 +48,9 @@ export function StatsFields({ form, availablePoints, totalPoints, adjustStat, ha
         return;
       }
       if (key === 'enter' || key === ' ') {
-        event.preventDefault();
-        rowRefs.current[focusedIndex]?.click();
-        return;
+        event.preventDefault()
+        submitRef?.current?.click()
+        return
       }
       if (key === 'r') {
         event.preventDefault();
@@ -84,7 +65,7 @@ export function StatsFields({ form, availablePoints, totalPoints, adjustStat, ha
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, focusZone, focusRow, adjustStat, handleResetStats, handleAutoDistribute]);
+  }, [focusedIndex, focusRow, adjustStat, handleResetStats, handleAutoDistribute, submitRef]);
 
   return (
     <div className="stats-assignment">
@@ -95,7 +76,7 @@ export function StatsFields({ form, availablePoints, totalPoints, adjustStat, ha
       <div className="stats-fields-grid">
         {STAT_FIELDS.map((stat, index) => (
           <div
-            className={`stat-assign-row ${focusZone === 'stats' && index === focusedIndex ? 'is-focused' : ''}`}
+            className={`stat-assign-row ${index === focusedIndex ? 'is-focused' : ''}`}
             key={stat}
             ref={(node) => { rowRefs.current[index] = node }}
             tabIndex={-1}
@@ -127,8 +108,9 @@ export function StatsFields({ form, availablePoints, totalPoints, adjustStat, ha
       <p className="stats-keys-hint">
         <span><strong>Mover:</strong> W/S · ↑/↓</span>
         <span><strong>Asignar:</strong> A/D · ←/→ · +/-</span>
-        <span><strong>R</strong> desasignar · <strong>T</strong> auto</span>
-        <span><strong>↓</strong> a Guardar · <strong>Enter</strong> confirmar</span>
+        <span><strong>R:</strong> desasignar todo</span>
+        <span><strong>T:</strong> repartir puntos automáticamente</span>
+        <span><strong>Enter/espacio:</strong> guardar</span>
       </p>
     </div>
   );
