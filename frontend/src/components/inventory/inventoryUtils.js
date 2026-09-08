@@ -1,4 +1,4 @@
-export const GRID_COLUMNS = 6
+export const GRID_COLUMNS = 8
 export const SLOT_COUNT = 48
 export const EQUIPMENT_SLOTS = [
   { key: 'pecho', label: 'Pecho', icon: '🛡' },
@@ -64,4 +64,35 @@ export function getNextEquipmentIndex(currentIndex, rowDelta, columnDelta) {
   const nextRow = Math.max(0, Math.min(2, currentRow + rowDelta))
   const nextColumn = Math.max(0, Math.min(columns - 1, currentColumn + columnDelta))
   return (nextRow * columns) + nextColumn
+}
+
+export function getFilterOptions(items, field) {
+  const values = []
+  items.forEach((item) => {
+    if (!item?.[field]) return
+    if (!values.includes(item[field])) values.push(item[field])
+  })
+  return values.sort((a, b) => a.localeCompare(b, 'es'))
+}
+
+export function getFilteredIndexes(items, category, rarity) {
+  const matches = []
+  items.forEach((item, index) => {
+    if (!item) return
+    const matchesCategory = !category || category === 'todos' || item.category === category
+    const matchesRarity = !rarity || rarity === 'todos' || item.rarity === rarity
+    if (matchesCategory && matchesRarity) matches.push(index)
+  })
+  return matches
+}
+
+export function getNextFilteredSlotIndex(currentIndex, rowDelta, columnDelta, matchingSet) {
+  if (!matchingSet || matchingSet.size === 0) return currentIndex
+  const baseStep = ((rowDelta * GRID_COLUMNS) + columnDelta) || 1
+  let nextIndex = getNextSlotIndex(currentIndex, rowDelta, columnDelta)
+  for (let steps = 0; steps < SLOT_COUNT; steps += 1) {
+    if (matchingSet.has(nextIndex)) return nextIndex
+    nextIndex = (nextIndex + baseStep + SLOT_COUNT) % SLOT_COUNT
+  }
+  return currentIndex
 }

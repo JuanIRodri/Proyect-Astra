@@ -99,12 +99,13 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 - [x] Aplicar bonificaciones de equipamiento a las cinco estadisticas.
 - [x] Agregar boton en el inventario para cambiar a la vista de equipamiento (tecla `G`).
 - [x] Excluir el equipo puesto del peso de la mochila.
+- [x] Añadir filtros por categoria y rareza al inventario.
+- [x] Auto-orden de la mochila: unir pilas del mismo objeto y acomodar la cuadricula (tecla `O`).
 - [x] Confirmar movimiento continuo en 360 grados con diagonales y seguidores suaves.
 
 ### Pendiente de implementacion
-- [ ] Añadir filtros por categoria y rareza al inventario.
 - [ ] Decidir si se añaden ranuras de aretes, collar u otros accesorios.
-- [ ] Aplicar los efectos de consumo a los recursos de vida/maná del personaje.
+- [x] Aplicar los efectos de consumo a los recursos de vida/maná del personaje (pendiente de confirmación visual).
 - [ ] Diseñar y cargar un mapa de prueba exportado desde Tiled.
 - [ ] Leer capas de colision desde un mapa Tiled.
 - [ ] Reajustar la camara al personaje lider.

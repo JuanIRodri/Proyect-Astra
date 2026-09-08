@@ -1,13 +1,24 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PhaserGame } from './PhaserGame'
 import { CharacterForm } from './CharacterForm'
 import { InventoryPanel } from './InventoryPanel'
 import { CharacterSelector } from './CharacterSelector'
+import { lockInput, unlockInput } from '../game/inputLock'
 
 export function ExplorationView({ personajes, onUpdateCharacter }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(0)
+  const [transferToken, setTransferToken] = useState(0)
+  const inventoryRef = useRef(null)
+
+  const handleRequestTransfer = useCallback((slotIndex, targetCharacterIndex) => {
+    inventoryRef.current?.transferFromSlot(slotIndex, targetCharacterIndex)
+  }, [])
+
+  const handleTransferComplete = useCallback(() => {
+    setTransferToken((current) => current + 1)
+  }, [])
 
   const handleOpenCharacterEditor = useCallback((characterId) => {
     const character = personajes.find((personaje) => personaje.idPersonaje === characterId)
@@ -37,6 +48,14 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
     return () => window.removeEventListener('keydown', handleCloseShortcut)
   }, [editingCharacter])
 
+  useEffect(() => {
+    const reasons = []
+    if (inventoryOpen) reasons.push('inventory')
+    if (editingCharacter) reasons.push('editor')
+    reasons.forEach(lockInput)
+    return () => reasons.forEach(unlockInput)
+  }, [inventoryOpen, editingCharacter])
+
   return (
     <section className="phaser-game-shell">
       <PhaserGame
@@ -50,11 +69,15 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
             personajes={personajes}
             activeCharacterIndex={activeCharacterIndex}
             onSelect={setActiveCharacterIndex}
+            onRequestTransfer={handleRequestTransfer}
+            refreshToken={transferToken}
           />
           <InventoryPanel
+            ref={inventoryRef}
             personajes={personajes}
             activeCharacterIndex={activeCharacterIndex}
             onActiveCharacterChange={setActiveCharacterIndex}
+            onTransferComplete={handleTransferComplete}
             onClose={() => setInventoryOpen(false)}
           />
         </div>

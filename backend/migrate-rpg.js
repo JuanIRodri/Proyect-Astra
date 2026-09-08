@@ -156,8 +156,32 @@ async function migrate() {
         inteligencia INT DEFAULT 10,
         constitucion INT DEFAULT 10,
         agilidad INT DEFAULT 10,
+        vidaActual INT DEFAULT 0,
+        manaActual INT DEFAULT 0,
         CONSTRAINT fk_estadistica_personaje FOREIGN KEY (idPersonaje) REFERENCES Personaje (idPersonaje) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Asegurar que las columnas de recursos existan si la tabla ya existía
+    const resourceColumns = [
+      { name: 'vidaActual', definition: 'INT DEFAULT 0' },
+      { name: 'manaActual', definition: 'INT DEFAULT 0' },
+    ];
+
+    for (const col of resourceColumns) {
+      try {
+        await connection.query(`ALTER TABLE Estadistica ADD COLUMN ${col.name} ${col.definition}`);
+      } catch (err) {
+        if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+      }
+    }
+
+    // Backfill inicial: llenar recursos de personajes ya existentes (columna recién agregada en 0)
+    await connection.query(`
+      UPDATE Estadistica
+      SET vidaActual = 30 + constitucion * 5,
+          manaActual = 20 + inteligencia * 5
+      WHERE vidaActual = 0 AND manaActual = 0
     `);
 
     await connection.query(`
@@ -273,10 +297,13 @@ async function migrate() {
       const diff = totalPoints - ((fuerza - 10) + (destreza - 10) + (inteligencia - 10) + (constitucion - 10) + (agilidad - 10));
       fuerza += diff;
 
+      const vidaMax = 30 + constitucion * 5;
+      const manaMax = 20 + inteligencia * 5;
+
       await connection.query(`
-        INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `, [p.idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad]);
+        INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad, vidaActual, manaActual)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [p.idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad, vidaMax, manaMax]);
     }
 
     const objetosIniciales = [

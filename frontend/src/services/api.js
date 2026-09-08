@@ -44,4 +44,14 @@ export const desequiparObjeto = async (id, equipmentSlot) => {
   return response.data;
 };
 
+export const transferirObjeto = async (id, slotIndex, destinoId) => {
+  const response = await api.post(`/personajes/${id}/inventario/${slotIndex}/transferir`, { destinoId });
+  return response.data;
+};
+
+export const desequiparObjetoEnRanura = async (id, equipmentSlot, targetSlotIndex) => {
+  const response = await api.post(`/personajes/${id}/equipamiento/${equipmentSlot}/desequipar/${targetSlotIndex}`);
+  return response.data;
+};
+
 export default api;

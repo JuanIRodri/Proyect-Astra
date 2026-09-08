@@ -24,7 +24,10 @@ async function list() {
             n.Forma as Nariz_Forma,
             cn.Cantidad as Cuernos_Cantidad, cn.Tamanio as Cuernos_Tamanio, cn.Color as Cuernos_Color,
             t.Forma as Torso_Forma, t.Bello as Torso_Bello,
-            e.fuerza, e.destreza, e.inteligencia, e.constitucion, e.agilidad
+            e.fuerza, e.destreza, e.inteligencia, e.constitucion, e.agilidad,
+            e.vidaActual, e.manaActual,
+            (30 + e.constitucion * 5) AS vidaMax,
+            (20 + e.inteligencia * 5) AS manaMax
         ${PERSONAJE_BASE_FROM}
         LEFT JOIN Estadistica e ON p.idPersonaje = e.idPersonaje;
     `);
@@ -45,7 +48,10 @@ async function detail(id) {
             t.Forma as Torso_Forma, t.Tamanio as Torso_Tamanio, t.Bello as Torso_Bello,
             br_f.Tipo as Brazo_Tipo, br_f.color as Brazo_Color, br.Cantidad as Brazo_Cantidad,
             pi.Tipo as Pierna_Tipo, pi.Tamanio as Pierna_Tamanio,
-            e.fuerza, e.destreza, e.inteligencia, e.constitucion, e.agilidad
+            e.fuerza, e.destreza, e.inteligencia, e.constitucion, e.agilidad,
+            e.vidaActual, e.manaActual,
+            (30 + e.constitucion * 5) AS vidaMax,
+            (20 + e.inteligencia * 5) AS manaMax
         ${PERSONAJE_BASE_FROM}
         JOIN Cejas ce ON o.idCejas = ce.idCejas
         JOIN Pestanias pe ON o.idPestanias = pe.idPestanias
@@ -90,15 +96,17 @@ async function update(id, data) {
         }
 
         await conn.query(`
-            INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad, vidaActual, manaActual)
+            VALUES (?, ?, ?, ?, ?, ?, 30 + ? * 5, 20 + ? * 5)
             ON DUPLICATE KEY UPDATE
               fuerza = VALUES(fuerza),
               destreza = VALUES(destreza),
               inteligencia = VALUES(inteligencia),
               constitucion = VALUES(constitucion),
-              agilidad = VALUES(agilidad)
-        `, [id, fuerza, destreza, inteligencia, constitucion, agilidad]);
+              agilidad = VALUES(agilidad),
+              vidaActual = LEAST(vidaActual, 30 + VALUES(constitucion) * 5),
+              manaActual = LEAST(manaActual, 20 + VALUES(inteligencia) * 5)
+        `, [id, fuerza, destreza, inteligencia, constitucion, agilidad, constitucion, inteligencia]);
 
         await conn.query(`
             UPDATE Personaje p
@@ -177,9 +185,9 @@ async function create(data) {
             [nombre, clase, nivel, altura, musculatura, cuerpo.insertId],
         );
 
-        await conn.query(
-            'INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad) VALUES (?, ?, ?, ?, ?, ?)',
-            [personaje.insertId, fuerza, destreza, inteligencia, constitucion, agilidad],
+await conn.query(
+            'INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad, vidaActual, manaActual) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [personaje.insertId, fuerza, destreza, inteligencia, constitucion, agilidad, 30 + constitucion * 5, 20 + inteligencia * 5],
         );
 
         return { id: personaje.insertId, message: 'Personaje creado con estructura completa y personalizada' };

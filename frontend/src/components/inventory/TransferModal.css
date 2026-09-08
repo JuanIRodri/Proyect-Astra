@@ -1,0 +1,137 @@
+.transfer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 8, 18, 0.72);
+  backdrop-filter: blur(3px);
+  animation: transfer-fade-in 0.15s ease-out;
+}
+
+.transfer-modal {
+  width: min(92vw, 340px);
+  padding: 1.25rem;
+  border: 1px solid var(--inventory-accent);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #111827, #0b1120);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  color: var(--accent-gold);
+}
+
+.transfer-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.85rem;
+}
+
+.transfer-modal-item-icon {
+  font-size: 1.35rem;
+}
+
+.transfer-modal-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.transfer-modal-item-qty {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.transfer-modal-title {
+  margin: 0 0 0.9rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.transfer-character-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.transfer-character-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.transfer-character-option:hover:not(:disabled) {
+  border-color: var(--inventory-accent);
+  background: var(--inventory-accent-soft);
+}
+
+.transfer-character-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.transfer-character-number {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.transfer-character-self {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.transfer-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.transfer-modal-hint {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.transfer-modal-close {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.transfer-modal-close:hover {
+  border-color: var(--inventory-accent);
+  color: var(--inventory-accent);
+}
+
+@keyframes transfer-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

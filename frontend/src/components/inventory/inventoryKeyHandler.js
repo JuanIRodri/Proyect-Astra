@@ -15,10 +15,22 @@ export function createInventoryKeyHandler(config) {
     onClose,
     setNotice,
     setShowItemDetails,
+    showItemDetails,
+    handleCloseDetails,
     setSelectedSlotIndex,
     setHeldSlotIndex,
     setEquipmentCursorIndex,
     setSelectedEquipmentSlot,
+    handleRequestTransfer,
+    transferPromptActive,
+    setTransferPromptActive,
+    contextMenuActive,
+    contextMenuActionIndex,
+    setContextMenuActionIndex,
+    contextMenuSubmenuIndex,
+    setContextMenuSubmenuIndex,
+    contextMenuActions,
+    handleCloseContextMenu,
     handleDropSelected,
     handleToggleEquipment,
     handleUnequip,
@@ -26,8 +38,14 @@ export function createInventoryKeyHandler(config) {
     handleUseSelected,
     handleToggleDetails,
     handleSplit,
+    handleRequestSplit,
+    activeCharacterIndex,
     handleMoveItem,
     handleCharacterChange,
+    handleOrderItems,
+    handleTransferSelected,
+    handleCycleCategory,
+    handleCycleRarity,
     moveSelection,
   } = config
 
@@ -43,7 +61,108 @@ export function createInventoryKeyHandler(config) {
   }
 
   return (event) => {
+    const targetNode = event.target
+    if (targetNode && typeof targetNode.tagName === 'string' &&
+      (targetNode.tagName === 'INPUT' || targetNode.tagName === 'SELECT' || targetNode.classList?.contains('inventory-filter-control'))) {
+      return
+    }
+
     const key = event.key.toLowerCase()
+
+    if (contextMenuActive) {
+      event.preventDefault()
+      event.stopPropagation()
+      const selectedAction = contextMenuActions[contextMenuActionIndex]
+      const hasSubmenu = Boolean(selectedAction?.submenu?.length)
+      const submenuOpen = hasSubmenu && contextMenuSubmenuIndex !== null
+
+      if (key === 'escape') {
+        if (submenuOpen) {
+          setContextMenuSubmenuIndex(null)
+        } else {
+          handleCloseContextMenu()
+        }
+        return
+      }
+
+      if (submenuOpen) {
+        if (key === 'arrowleft' || key === 'a') {
+          setContextMenuSubmenuIndex(null)
+          return
+        }
+        if (key === 'arrowdown' || key === 's') {
+          setContextMenuSubmenuIndex((index) => (index + 1) % selectedAction.submenu.length)
+          return
+        }
+        if (key === 'arrowup' || key === 'w') {
+          setContextMenuSubmenuIndex((index) => (index - 1 + selectedAction.submenu.length) % selectedAction.submenu.length)
+          return
+        }
+        if (key === 'enter' || key === ' ') {
+          selectedAction.submenu[contextMenuSubmenuIndex]?.run()
+          handleCloseContextMenu()
+          return
+        }
+        return
+      }
+
+      const openSubmenu = () => {
+        if (hasSubmenu) {
+          setContextMenuSubmenuIndex(0)
+          return true
+        }
+        return false
+      }
+
+      if (key === 'enter' || key === ' ') {
+        if (!openSubmenu()) {
+          selectedAction?.run()
+          handleCloseContextMenu()
+        }
+        return
+      }
+      if (key === 'arrowright' || key === 'd') {
+        if (!openSubmenu()) {
+          setContextMenuActionIndex((index) => (index + 1) % contextMenuActions.length)
+        }
+        return
+      }
+      if (key === 'arrowdown' || key === 's') {
+        setContextMenuActionIndex((index) => (index + 1) % contextMenuActions.length)
+        return
+      }
+      if (key === 'arrowup' || key === 'w' || key === 'arrowleft' || key === 'a') {
+        setContextMenuActionIndex((index) => (index - 1 + contextMenuActions.length) % contextMenuActions.length)
+        return
+      }
+      return
+    }
+
+    if (showItemDetails) {
+      event.preventDefault()
+      event.stopPropagation()
+      if (key === 'escape') {
+        handleCloseDetails()
+      }
+      return
+    }
+
+    if (transferPromptActive) {
+      if (key === 'escape') {
+        event.preventDefault()
+        event.stopPropagation()
+        setTransferPromptActive(false)
+        setNotice('Traspaso cancelado.')
+        return
+      }
+      const targetIndex = getLeaderIndex(event)
+      if (targetIndex !== undefined && targetIndex < characterListLength) {
+        event.preventDefault()
+        event.stopPropagation()
+        handleTransferSelected(targetIndex)
+        return
+      }
+    }
 
     if (key === 'i' || key === 'escape') {
       event.preventDefault()
@@ -95,11 +214,55 @@ export function createInventoryKeyHandler(config) {
       return
     }
 
+    if (key === 'c') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleRequestSplit()
+      return
+    }
+
+    if (key === 'o') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleOrderItems()
+      return
+    }
+
+    if (key === 't') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleRequestTransfer()
+      return
+    }
+
+    if (event.shiftKey && key === 'f') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleCycleRarity()
+      return
+    }
+
+    if (key === 'f') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleCycleCategory()
+      return
+    }
+
     const characterIndex = getLeaderIndex(event)
     if (characterIndex !== undefined && characterIndex < characterListLength) {
       event.preventDefault()
       event.stopPropagation()
       handleCharacterChange(characterIndex)
+      return
+    }
+
+    if (key === 'tab') {
+      event.preventDefault()
+      event.stopPropagation()
+      const direction = event.shiftKey ? -1 : 1
+      const nextIndex = (activeCharacterIndex + direction + characterListLength) % characterListLength
+      handleCharacterChange(nextIndex)
       return
     }
 

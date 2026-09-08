@@ -1,8 +1,11 @@
 import { emitInventoryToggle } from './gameEvents'
 import { getLeaderIndex } from './hotkeys'
+import { isInputLocked } from './inputLock'
 
 export function createKeyHandler(scene) {
   return (event) => {
+    if (isInputLocked()) return
+
     const key = event.key.toLowerCase()
     const code = event.code.toLowerCase()
     const leader = getLeaderIndex(event)

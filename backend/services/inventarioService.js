@@ -1,6 +1,8 @@
 const { query, withTransaction } = require('../utils/asyncDb');
 const { AppError } = require('../utils/errors');
 
+const SLOT_COUNT = 48;
+
 const INVENTARIO_SELECT = `
     SELECT
         i.ranura,
@@ -101,9 +103,29 @@ async function usarObjeto(idPersonaje, ranura) {
             await conn.query('DELETE FROM Inventario WHERE idPersonaje = ? AND ranura = ?', [idPersonaje, ranura]);
         }
 
+        const [estadistica] = await conn.query(`
+            SELECT constitucion, inteligencia, vidaActual, manaActual
+            FROM Estadistica
+            WHERE idPersonaje = ?
+        `, [idPersonaje]);
+
+        let vidaActual = estadistica[0]?.vidaActual ?? 0;
+        let manaActual = estadistica[0]?.manaActual ?? 0;
+
+        if (item.efectoVida !== 0) {
+            const vidaMax = 30 + (estadistica[0]?.constitucion ?? 10) * 5;
+            vidaActual = Math.min(vidaMax, vidaActual + item.efectoVida);
+        }
+
+        await conn.query(`
+            UPDATE Estadistica
+            SET vidaActual = ?, manaActual = ?
+            WHERE idPersonaje = ?
+        `, [vidaActual, manaActual, idPersonaje]);
+
         return {
             message: `${item.nombre} consumido`,
-            effect: { vida: item.efectoVida },
+            effect: { vida: item.efectoVida, vidaActual, manaActual },
             quantity: nextQuantity,
         };
     });
@@ -170,6 +192,112 @@ async function desequiparObjeto(idPersonaje, ranura) {
     });
 }
 
+async function transferirObjeto(idPersonaje, ranura, destinoIdPersonaje) {
+    return withTransaction(async (conn) => {
+        const sourceId = Number(idPersonaje);
+        const targetId = Number(destinoIdPersonaje);
+        const slot = Number(ranura);
+
+        if (!Number.isInteger(sourceId) || !Number.isInteger(targetId) || !Number.isInteger(slot)) {
+            throw new AppError(400, 'Datos de transferencia inválidos');
+        }
+        if (targetId === sourceId) {
+            throw new AppError(400, 'No puedes transferir un objeto al mismo personaje');
+        }
+
+        const [validTarget] = await conn.query('SELECT idPersonaje FROM Personaje WHERE idPersonaje = ?', [targetId]);
+        if (validTarget.length === 0) {
+            throw new AppError(404, 'El personaje de destino no existe');
+        }
+
+        const [sourceRows] = await conn.query(`
+            SELECT i.idObjeto, i.cantidad, o.nombre, o.maxPila
+            FROM Inventario i
+            JOIN Objeto o ON i.idObjeto = o.idObjeto
+            WHERE i.idPersonaje = ? AND i.ranura = ?
+        `, [sourceId, slot]);
+        if (sourceRows.length === 0) {
+            throw new AppError(404, 'Objeto no encontrado');
+        }
+
+        const item = sourceRows[0];
+        let remaining = item.cantidad;
+
+        const [destPiles] = await conn.query(
+            'SELECT ranura, cantidad FROM Inventario WHERE idPersonaje = ? AND idObjeto = ? ORDER BY ranura',
+            [targetId, item.idObjeto],
+        );
+        for (const pile of destPiles) {
+            if (remaining <= 0) break;
+            const room = item.maxPila - pile.cantidad;
+            const take = Math.min(room, remaining);
+            if (take > 0) {
+                await conn.query(
+                    'UPDATE Inventario SET cantidad = cantidad + ? WHERE idPersonaje = ? AND ranura = ?',
+                    [take, targetId, pile.ranura],
+                );
+                remaining -= take;
+            }
+        }
+
+        if (remaining > 0) {
+            const [usedRows] = await conn.query(
+                'SELECT ranura FROM Inventario WHERE idPersonaje = ? ORDER BY ranura',
+                [targetId],
+            );
+            const usedSlots = new Set(usedRows.map((row) => row.ranura));
+            let targetSlot = 0;
+            while (usedSlots.has(targetSlot)) targetSlot += 1;
+            if (targetSlot >= SLOT_COUNT) {
+                throw new AppError(400, 'El personaje de destino no tiene espacio');
+            }
+            await conn.query(
+                'INSERT INTO Inventario (idPersonaje, ranura, idObjeto, cantidad) VALUES (?, ?, ?, ?)',
+                [targetId, targetSlot, item.idObjeto, remaining],
+            );
+        }
+
+        await conn.query('DELETE FROM Inventario WHERE idPersonaje = ? AND ranura = ?', [sourceId, slot]);
+
+        return { message: `${item.nombre} transferido`, cantidad: item.cantidad };
+    });
+}
+
+async function desequiparObjetoEnRanura(idPersonaje, ranura, ranuraDestino) {
+    return withTransaction(async (conn) => {
+        const targetSlot = Number(ranuraDestino);
+        if (!Number.isInteger(targetSlot) || targetSlot < 0 || targetSlot >= SLOT_COUNT) {
+            throw new AppError(400, 'La ranura de destino no es válida');
+        }
+
+        const [equipment] = await conn.query(`
+            SELECT e.idObjeto, o.clave, o.nombre
+            FROM Equipamiento e
+            JOIN Objeto o ON e.idObjeto = o.idObjeto
+            WHERE e.idPersonaje = ? AND e.ranura = ?
+        `, [idPersonaje, ranura]);
+        if (equipment.length === 0) {
+            throw new AppError(400, 'Ranura de equipamiento vacía');
+        }
+
+        const [occupied] = await conn.query(
+            'SELECT ranura FROM Inventario WHERE idPersonaje = ? AND ranura = ?',
+            [idPersonaje, targetSlot],
+        );
+        if (occupied.length > 0) {
+            throw new AppError(400, 'Ese espacio de la mochila está ocupado');
+        }
+
+        await conn.query('DELETE FROM Equipamiento WHERE idPersonaje = ? AND ranura = ?', [idPersonaje, ranura]);
+        await conn.query(
+            'INSERT INTO Inventario (idPersonaje, ranura, idObjeto, cantidad) VALUES (?, ?, ?, 1)',
+            [idPersonaje, targetSlot, equipment[0].idObjeto],
+        );
+
+        return { message: `${equipment[0].nombre} desequipado`, ranura: targetSlot };
+    });
+}
+
 module.exports = {
     getInventario,
     getEquipamiento,
@@ -177,4 +305,6 @@ module.exports = {
     usarObjeto,
     equiparObjeto,
     desequiparObjeto,
+    desequiparObjetoEnRanura,
+    transferirObjeto,
 };

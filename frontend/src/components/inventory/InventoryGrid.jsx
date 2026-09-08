@@ -1,21 +1,39 @@
+import { useEffect, useRef } from 'react'
+import './InventoryGrid.css'
+
 export function InventoryGrid({
   items,
   selectedSlotIndex,
   cursorSlotIndex,
   heldSlotIndex,
   draggedSlotIndex,
+  filteredOutIndexes,
   slotRefs,
   onSelectSlot,
   onOpenDetails,
-  onDragStart,
+  onDoubleClickSlot,
+  onDragStartWithSplit,
   onDragEnd,
-  onDrop,
+  onDropGrid,
+  onContextMenu,
+  onHoverItem,
+  onLeave,
+  onWheel,
 }) {
+  const gridRef = useRef(null)
+
+  useEffect(() => {
+    const grid = gridRef.current
+    if (!grid || !onWheel) return undefined
+    grid.addEventListener('wheel', onWheel, { passive: false })
+    return () => grid.removeEventListener('wheel', onWheel)
+  }, [onWheel])
+
   return (
-    <div className="inventory-grid" aria-label="Objetos del inventario">
+    <div className="inventory-grid" ref={gridRef} aria-label="Objetos del inventario">
       {items.map((item, slotIndex) => item ? (
         <button
-          className={`inventory-slot ${slotIndex === selectedSlotIndex ? 'is-selected' : ''} ${slotIndex === cursorSlotIndex ? 'is-cursor' : ''} ${slotIndex === heldSlotIndex ? 'is-held' : ''} ${slotIndex === draggedSlotIndex ? 'is-dragging' : ''}`}
+          className={`inventory-slot ${slotIndex === selectedSlotIndex ? 'is-selected' : ''} ${slotIndex === cursorSlotIndex ? 'is-cursor' : ''} ${slotIndex === heldSlotIndex ? 'is-held' : ''} ${slotIndex === draggedSlotIndex ? 'is-dragging' : ''} ${filteredOutIndexes?.has(slotIndex) ? 'is-filtered-out' : ''}`}
           key={`${item.id}-${slotIndex}`}
           ref={(element) => { slotRefs.current[slotIndex] = element }}
           onClick={() => {
@@ -25,17 +43,26 @@ export function InventoryGrid({
             }
             onSelectSlot(slotIndex)
           }}
+          onDoubleClick={() => onDoubleClickSlot(slotIndex)}
+          onMouseEnter={() => onHoverItem(item)}
+          onMouseLeave={onLeave}
+          onContextMenu={(event) => {
+            event.preventDefault()
+            onContextMenu(slotIndex, event.clientX, event.clientY, window.innerWidth, window.innerHeight)
+          }}
           draggable
           onDragStart={(event) => {
+            const split = event.shiftKey || event.ctrlKey || event.metaKey
             event.dataTransfer.setData('text/plain', String(slotIndex))
             event.dataTransfer.effectAllowed = 'move'
-            onDragStart(slotIndex)
+            onDragStartWithSplit(slotIndex, split)
           }}
           onDragEnd={onDragEnd}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
-            onDrop(Number(event.dataTransfer.getData('text/plain')), slotIndex)
+            const data = event.dataTransfer.getData('text/plain')
+            onDropGrid(data, slotIndex)
           }}
           aria-label={`${item.name}, cantidad ${item.quantity}`}
         >
@@ -49,10 +76,13 @@ export function InventoryGrid({
           key={`empty-${slotIndex}`}
           ref={(element) => { slotRefs.current[slotIndex] = element }}
           onClick={() => onSelectSlot(slotIndex)}
+          onDoubleClick={() => onDoubleClickSlot(slotIndex)}
+          onMouseLeave={onLeave}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
-            onDrop(Number(event.dataTransfer.getData('text/plain')), slotIndex)
+            const data = event.dataTransfer.getData('text/plain')
+            onDropGrid(data, slotIndex)
           }}
           aria-label={`Espacio vacío ${slotIndex + 1}`}
         />

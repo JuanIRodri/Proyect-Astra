@@ -1,9 +1,15 @@
+import './InventoryStats.css'
+
 const KEY_HINTS = [
   { key: 'E', label: 'Equipar · Usar', conditional: true },
   { key: 'Q', label: 'Soltar' },
   { key: 'R', label: 'Dividir' },
   { key: 'V', label: 'Detalles' },
   { key: 'G', label: 'Equipo' },
+  { key: 'O', label: 'Ordenar' },
+  { key: 'T', label: 'Traspaso' },
+  { key: 'F', label: 'Categoría' },
+  { key: '⇧F', label: 'Rareza' },
   { key: 'I', label: 'Salir' },
 ]
 
@@ -15,8 +21,6 @@ export function InventoryStats({
   weightState,
   notice,
   inventoryLoading,
-  activeCharacter,
-  itemCount,
   equipKeyActive,
 }) {
   return (
@@ -41,7 +45,7 @@ export function InventoryStats({
       </div>
 
       <footer className="inventory-footer">
-        <span className="inventory-footer-notice">{activeCharacter?.nombre || 'Personaje'} · {itemCount} objetos · {inventoryLoading ? 'Cargando inventario...' : notice}</span>
+        <span className="inventory-footer-notice">{inventoryLoading ? 'Cargando inventario...' : notice}</span>
         <span className="inventory-footer-keys">
           {KEY_HINTS.map(({ key, label, conditional }) => (
             <span key={key}>
