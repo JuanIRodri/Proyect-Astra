@@ -84,6 +84,15 @@
   font-weight: 700;
 }
 
+.character-selector-count {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.character-selector-count.is-active {
+  color: var(--accent-gold);
+}
+
 @media (max-width: 620px) {
   .inventory-layout {
     flex-direction: column;

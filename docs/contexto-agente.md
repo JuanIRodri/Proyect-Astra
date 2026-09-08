@@ -35,6 +35,7 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
 
 - Inventario separado por personaje.
+- El aside de personajes (`EQUIPO`) muestra la cantidad de objetos de cada personaje (se calcula desde la API al abrir el inventario); el pie del panel quedó solo con el aviso de estado.
 - Seleccion por teclado con `1`, `2` y `3`.
 - Navegacion y seleccion visual con `WASD` o flechas.
 - Seleccion y preparacion de objetos con `Enter` o espacio.

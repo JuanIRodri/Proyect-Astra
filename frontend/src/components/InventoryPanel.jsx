@@ -94,8 +94,6 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
         weightState={weightState}
         notice={notice}
         inventoryLoading={inventoryLoading}
-        activeCharacter={activeCharacter}
-        itemCount={itemCount}
         equipKeyActive={equipKeyActive}
       />
     </aside>

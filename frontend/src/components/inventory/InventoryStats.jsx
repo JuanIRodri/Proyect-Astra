@@ -18,8 +18,6 @@ export function InventoryStats({
   weightState,
   notice,
   inventoryLoading,
-  activeCharacter,
-  itemCount,
   equipKeyActive,
 }) {
   return (
@@ -44,7 +42,7 @@ export function InventoryStats({
       </div>
 
       <footer className="inventory-footer">
-        <span className="inventory-footer-notice">{activeCharacter?.nombre || 'Personaje'} · {itemCount} objetos · {inventoryLoading ? 'Cargando inventario...' : notice}</span>
+        <span className="inventory-footer-notice">{inventoryLoading ? 'Cargando inventario...' : notice}</span>
         <span className="inventory-footer-keys">
           {KEY_HINTS.map(({ key, label, conditional }) => (
             <span key={key}>
