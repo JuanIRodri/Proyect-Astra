@@ -50,6 +50,8 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const [filterCategory, setFilterCategory] = useState('todos')
   const [filterRarity, setFilterRarity] = useState('todos')
   const [transferPromptActive, setTransferPromptActive] = useState(false)
+  const [contextMenu, setContextMenu] = useState(null)
+  const [contextMenuActionIndex, setContextMenuActionIndex] = useState(0)
   const slotRefs = useRef([])
   const [notice, setNotice] = useState('Usa WASD y selecciona objetos con Enter.')
   const activeCharacter = characterList[activeCharacterIndex]
@@ -315,6 +317,40 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setNotice('Traspaso cancelado.')
   }, [])
 
+  const contextMenuActions = useMemo(() => {
+    if (!contextMenu) return []
+    const item = items[contextMenu.slotIndex]
+    const actions = []
+    if (item?.consumible) actions.push({ label: 'Usar', run: handleUseSelected })
+    if (item?.tipoEquipamiento) actions.push({ label: 'Equipar', run: handleEquipSelected })
+    actions.push({ label: 'Traspasar', run: handleRequestTransfer })
+    if (item && item.quantity > 1) actions.push({ label: 'Dividir', run: handleSplit })
+    actions.push({ label: 'Ver detalles', run: handleToggleDetails })
+    actions.push({ label: 'Soltar', run: handleDropSelected })
+    return actions
+  }, [contextMenu, handleDropSelected, handleEquipSelected, handleRequestTransfer, handleSplit, handleToggleDetails, handleUseSelected, items])
+
+  const handleOpenContextMenu = useCallback((slotIndex, clientX, clientY, limitX, limitY) => {
+    setSelectedSlotIndex(slotIndex)
+    setCursorSlotIndex(slotIndex)
+    setHeldSlotIndex(null)
+    setShowItemDetails(false)
+    setSelectedEquipmentSlot(null)
+    setNavigationArea('inventory')
+    setTransferPromptActive(false)
+    setContextMenuActionIndex(0)
+    setContextMenu({
+      slotIndex,
+      x: Math.max(4, Math.min(clientX, limitX - 170)),
+      y: Math.max(4, Math.min(clientY, limitY - 230)),
+    })
+  }, [])
+
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu(null)
+    setContextMenuActionIndex(0)
+  }, [])
+
   const handleTransferSelected = useCallback(async (targetCharacterIndex) => {
     const target = characterList[targetCharacterIndex]
     if (!target) {
@@ -395,8 +431,14 @@ handleSplit,
       moveSelection,
       transferPromptActive,
       setTransferPromptActive,
+      contextMenu,
+      contextMenuActive: contextMenu !== null,
+      contextMenuActionIndex,
+      setContextMenuActionIndex,
+      contextMenuActions,
+      handleCloseContextMenu,
     }),
-    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, transferPromptActive],
+    [contextMenu, contextMenuActionIndex, contextMenuActions, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCloseContextMenu, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, transferPromptActive],
   )
 
   useEffect(() => {
@@ -479,6 +521,12 @@ handleSplit,
     rarityOptions,
     filteredOutIndexes,
     filteredCount: matchingIndexes.length,
+    contextMenu,
+    contextMenuActions,
+    contextMenuActionIndex,
+    setContextMenuActionIndex,
+    handleOpenContextMenu,
+    handleCloseContextMenu,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,

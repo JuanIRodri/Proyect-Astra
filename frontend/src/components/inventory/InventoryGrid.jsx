@@ -13,6 +13,7 @@ export function InventoryGrid({
   onDragStart,
   onDragEnd,
   onDrop,
+  onContextMenu,
 }) {
   return (
     <div className="inventory-grid" aria-label="Objetos del inventario">
@@ -27,6 +28,10 @@ export function InventoryGrid({
               return
             }
             onSelectSlot(slotIndex)
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault()
+            onContextMenu(slotIndex, event.clientX, event.clientY, window.innerWidth, window.innerHeight)
           }}
           draggable
           onDragStart={(event) => {

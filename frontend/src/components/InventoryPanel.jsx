@@ -5,6 +5,7 @@ import { InventoryGrid } from './inventory/InventoryGrid'
 import { InventoryDetail } from './inventory/InventoryDetail'
 import { InventoryStats } from './inventory/InventoryStats'
 import { TransferModal } from './inventory/TransferModal'
+import { InventoryContextMenu } from './inventory/InventoryContextMenu'
 import './InventoryPanel.css'
 
 export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange }) {
@@ -44,6 +45,12 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
     rarityOptions,
     filteredOutIndexes,
     filteredCount,
+    contextMenu,
+    contextMenuActions,
+    contextMenuActionIndex,
+    setContextMenuActionIndex,
+    handleOpenContextMenu,
+    handleCloseContextMenu,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,
@@ -81,6 +88,7 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDrop={handleDrop}
+          onContextMenu={handleOpenContextMenu}
         />
         <InventoryDetail
           detailItem={detailItem}
@@ -102,6 +110,20 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
         inventoryLoading={inventoryLoading}
         equipKeyActive={equipKeyActive}
       />
+
+      {contextMenu && contextMenuActions.length > 0 && (
+        <InventoryContextMenu
+          actions={contextMenuActions}
+          actionIndex={contextMenuActionIndex}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onRun={(action) => {
+            action.run()
+            handleCloseContextMenu()
+          }}
+          onHover={setContextMenuActionIndex}
+          onClose={handleCloseContextMenu}
+        />
+      )}
 
       {transferPromptActive && (
         <TransferModal

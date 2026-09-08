@@ -22,6 +22,11 @@ export function createInventoryKeyHandler(config) {
     handleRequestTransfer,
     transferPromptActive,
     setTransferPromptActive,
+    contextMenuActive,
+    contextMenuActionIndex,
+    setContextMenuActionIndex,
+    contextMenuActions,
+    handleCloseContextMenu,
     handleDropSelected,
     handleToggleEquipment,
     handleUnequip,
@@ -57,6 +62,33 @@ export function createInventoryKeyHandler(config) {
     }
 
     const key = event.key.toLowerCase()
+
+    if (contextMenuActive) {
+      event.preventDefault()
+      event.stopPropagation()
+      if (key === 'escape') {
+        handleCloseContextMenu()
+        return
+      }
+      if (key === 'arrowdown' || key === 's' || key === 'arrowright' || key === 'd') {
+        if (contextMenuActions.length > 0) {
+          setContextMenuActionIndex((index) => (index + 1) % contextMenuActions.length)
+        }
+        return
+      }
+      if (key === 'arrowup' || key === 'w' || key === 'arrowleft' || key === 'a') {
+        if (contextMenuActions.length > 0) {
+          setContextMenuActionIndex((index) => (index - 1 + contextMenuActions.length) % contextMenuActions.length)
+        }
+        return
+      }
+      if (key === 'enter' || key === ' ') {
+        contextMenuActions[contextMenuActionIndex]?.run()
+        handleCloseContextMenu()
+        return
+      }
+      return
+    }
 
     if (transferPromptActive) {
       if (key === 'escape') {
