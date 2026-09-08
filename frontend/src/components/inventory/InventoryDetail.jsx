@@ -15,7 +15,7 @@ export function InventoryDetail({
 }) {
   return (
     <div className="inventory-detail">
-      {detailItem ? (
+      {showItemDetails && detailItem ? (
         <>
           <div className="inventory-detail-summary">
             <div className="inventory-detail-icon" aria-hidden="true">{detailItem.icon}</div>
@@ -24,26 +24,26 @@ export function InventoryDetail({
               <h3>{detailItem.name}</h3>
             </div>
           </div>
-          {showItemDetails && (
-            <div className="inventory-detail-expanded">
-              <p>{detailItem.description}</p>
-              <p className="inventory-item-weight">Peso por unidad: {detailItem.weight.toFixed(1)}</p>
-              {detailItem.tipoEquipamiento && (
-                <p className="inventory-item-bonuses">
-                  Equipo: {detailItem.tipoEquipamiento} · {[
-                    ['Fuerza', detailItem.bonusFuerza],
-                    ['Destreza', detailItem.bonusDestreza],
-                    ['Inteligencia', detailItem.bonusInteligencia],
-                    ['Constitución', detailItem.bonusConstitucion],
-                    ['Agilidad', detailItem.bonusAgilidad],
-                  ].filter(([, value]) => Number(value) !== 0).map(([stat, value]) => `${stat} ${value > 0 ? '+' : ''}${value}`).join(' · ')}
-                </p>
-              )}
-            </div>
-          )}
+          <div className="inventory-detail-expanded">
+            <p>{detailItem.description}</p>
+            <p className="inventory-item-weight">Peso por unidad: {detailItem.weight.toFixed(1)}</p>
+            {detailItem.tipoEquipamiento && (
+              <p className="inventory-item-bonuses">
+                Equipo: {detailItem.tipoEquipamiento} · {[
+                  ['Fuerza', detailItem.bonusFuerza],
+                  ['Destreza', detailItem.bonusDestreza],
+                  ['Inteligencia', detailItem.bonusInteligencia],
+                  ['Constitución', detailItem.bonusConstitucion],
+                  ['Agilidad', detailItem.bonusAgilidad],
+                ].filter(([, value]) => Number(value) !== 0).map(([stat, value]) => `${stat} ${value > 0 ? '+' : ''}${value}`).join(' · ')}
+              </p>
+            )}
+          </div>
         </>
       ) : (
-        <p className="inventory-empty-detail">Este espacio está vacío.</p>
+        <p className="inventory-empty-detail">
+          {detailItem ? `Pulsá V para ver los detalles de ${detailItem.name}.` : 'Este espacio está vacío.'}
+        </p>
       )}
       <section className="inventory-equipment" aria-label="Equipamiento del personaje">
         <div className="inventory-equipment-heading">
