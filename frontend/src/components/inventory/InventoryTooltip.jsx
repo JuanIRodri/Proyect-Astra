@@ -2,19 +2,32 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './InventoryTooltip.css'
 
+let lastMousePosition = { x: 0, y: 0 }
+if (typeof window !== 'undefined') {
+  window.addEventListener('mousemove', (event) => {
+    lastMousePosition = { x: event.clientX, y: event.clientY }
+  }, { passive: true })
+}
+
+const TOOLTIP_WIDTH = 210
+const TOOLTIP_HEIGHT = 130
+const OFFSET = 16
+
+function clampPosition(clientX, clientY) {
+  let x = clientX + OFFSET
+  let y = clientY + OFFSET
+  if (x + TOOLTIP_WIDTH > window.innerWidth) x = clientX - TOOLTIP_WIDTH - OFFSET
+  if (y + TOOLTIP_HEIGHT > window.innerHeight) y = clientY - TOOLTIP_HEIGHT - OFFSET
+  return { x, y }
+}
+
 export function InventoryTooltip({ item }) {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [position, setPosition] = useState(() => clampPosition(lastMousePosition.x, lastMousePosition.y))
 
   useEffect(() => {
     if (!item) return undefined
-    const onMouseMove = (event) => {
-      let x = event.clientX + 16
-      let y = event.clientY + 16
-      if (x + 210 > window.innerWidth) x = event.clientX - 226
-      if (y + 130 > window.innerHeight) y = event.clientY - 141
-      setPosition({ x, y })
-    }
-    window.addEventListener('mousemove', onMouseMove)
+    const onMouseMove = (event) => setPosition(clampPosition(event.clientX, event.clientY))
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
     return () => window.removeEventListener('mousemove', onMouseMove)
   }, [item])
 
