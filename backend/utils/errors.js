@@ -10,7 +10,7 @@ function asyncHandler(handler) {
         Promise.resolve(handler(req, res)).catch((error) => {
             const status = error instanceof AppError ? error.status : 500;
             if (status === 500) console.error(error);
-            res.status(status).json({ error: error.message || 'Database error' });
+            res.status(status).json({ error: error.message || 'Error de base de datos' });
         });
     };
 }
