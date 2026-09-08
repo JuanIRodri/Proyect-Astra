@@ -1,4 +1,5 @@
 import { usePartidas } from '../hooks/usePartidas'
+import { resetPartida } from '../services/api'
 import './MainMenu.css'
 
 function formatFecha(fecha) {
@@ -13,7 +14,7 @@ function formatFecha(fecha) {
 }
 
 export function MainMenu({ personajes, onStart }) {
-  const { partidas, loading, error } = usePartidas()
+  const { partidas, loading, error, fetchPartidas } = usePartidas()
 
   if (loading) {
     return <p className="loading-message">Cargando partidas...</p>
@@ -21,6 +22,12 @@ export function MainMenu({ personajes, onStart }) {
 
   if (error) {
     return <p className="error">{error}</p>
+  }
+
+  const handleDelete = async (partidaId) => {
+    if (!window.confirm('¿Borrar esta partida? Se perderá el progreso guardado.')) return
+    await resetPartida(partidaId).catch(() => {})
+    await fetchPartidas()
   }
 
   const partyNames = personajes.slice(0, 3).map((c) => c.nombre || `Héroe #${c.idPersonaje}`)
@@ -58,6 +65,14 @@ export function MainMenu({ personajes, onStart }) {
                 onClick={() => onStart(partida.idPartida, 'nueva')}
               >
                 Nueva partida
+              </button>
+              <button
+                type="button"
+                className="menu-btn menu-btn-borrar"
+                disabled={!partida.tieneGuardado}
+                onClick={() => handleDelete(partida.idPartida)}
+              >
+                Borrar
               </button>
             </div>
           </article>

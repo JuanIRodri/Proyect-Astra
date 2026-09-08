@@ -219,6 +219,35 @@
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.stat-assign-row.is-focused {
+  border-color: var(--inventory-accent);
+  background: rgba(212, 169, 91, 0.1);
+  box-shadow: 0 0 0 1px var(--inventory-accent);
+}
+
+.stats-keys-hint {
+  margin: 0.85rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.2rem;
+  text-align: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.stats-keys-hint span {
+  white-space: nowrap;
+}
+
+.stats-keys-hint strong {
+  color: var(--inventory-accent);
+  font-weight: 700;
 }
 
 .stat-assign-row label {

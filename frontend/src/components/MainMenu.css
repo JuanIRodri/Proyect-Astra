@@ -101,6 +101,16 @@
   background: rgba(148, 163, 184, 0.25);
 }
 
+.menu-btn-borrar {
+  background: rgba(224, 90, 99, 0.12);
+  color: #f0aeb2;
+}
+
+.menu-btn-borrar:not(:disabled):hover {
+  background: rgba(224, 90, 99, 0.28);
+  color: #ffd0d3;
+}
+
 .main-menu-party {
   color: var(--text-muted);
   font-size: 0.95rem;

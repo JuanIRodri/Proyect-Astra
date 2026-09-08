@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import './PauseMenu.css'
 
-const PAUSE_ACTIONS = ['continuar', 'guardar', 'borrar']
+const PAUSE_ACTIONS = ['continuar', 'guardar']
 
-export function PauseMenu({ onContinue, onSaveAndExit, onDelete, saving, deleting }) {
+export function PauseMenu({ onContinue, onSaveAndExit, saving }) {
   const [focusedIndex, setFocusedIndex] = useState(0)
   const actionRefs = useRef([])
 
@@ -57,16 +57,6 @@ export function PauseMenu({ onContinue, onSaveAndExit, onDelete, saving, deletin
             disabled={saving}
           >
             {saving ? 'Guardando...' : 'Guardar y salir'}
-          </button>
-          <button
-            type="button"
-            ref={(node) => { actionRefs.current[2] = node }}
-            className="pause-menu-btn pause-menu-btn-danger"
-            onClick={() => onDelete()}
-            onMouseEnter={() => setFocusedIndex(2)}
-            disabled={deleting}
-          >
-            {deleting ? 'Borrando...' : 'Borrar partida'}
           </button>
         </div>
         <p className="pause-menu-hint">W/S · flechas para moverte, Enter para elegir, ESC para continuar</p>
