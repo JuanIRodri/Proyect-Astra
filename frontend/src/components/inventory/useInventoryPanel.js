@@ -280,6 +280,16 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     }
   }, [filterCategory, items, navigationArea, selectedSlotIndex])
 
+  const handleCycleCategory = useCallback(() => {
+    const currentIndex = Math.max(0, categoryOptions.indexOf(filterCategory))
+    handleCategoryChange(categoryOptions[(currentIndex + 1) % categoryOptions.length])
+  }, [categoryOptions, filterCategory, handleCategoryChange])
+
+  const handleCycleRarity = useCallback(() => {
+    const currentIndex = Math.max(0, rarityOptions.indexOf(filterRarity))
+    handleRarityChange(rarityOptions[(currentIndex + 1) % rarityOptions.length])
+  }, [rarityOptions, filterRarity, handleRarityChange])
+
   const handleOrderItems = useCallback(() => {
     updateInventory(sortInventory(items), 'Mochila ordenada: pilas unidas y objetos acomodados.')
   }, [items, updateInventory])
@@ -323,9 +333,11 @@ handleSplit,
       handleMoveItem,
       handleCharacterChange,
       handleOrderItems,
+      handleCycleCategory,
+      handleCycleRarity,
       moveSelection,
     }),
-    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleSplit, handleToggleDetails, handleToggleEquipment, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem],
+    [cursorSlotIndex, detailItem, equipmentCursorIndex, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleSplit, handleToggleDetails, handleToggleEquipment, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem],
   )
 
   useEffect(() => {
@@ -395,6 +407,8 @@ handleSplit,
     filterRarity,
     handleCategoryChange,
     handleRarityChange,
+    handleCycleCategory,
+    handleCycleRarity,
     categoryOptions,
     rarityOptions,
     filteredOutIndexes,

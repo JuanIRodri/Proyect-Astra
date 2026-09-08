@@ -29,6 +29,8 @@ export function createInventoryKeyHandler(config) {
     handleMoveItem,
     handleCharacterChange,
     handleOrderItems,
+    handleCycleCategory,
+    handleCycleRarity,
     moveSelection,
   } = config
 
@@ -106,6 +108,20 @@ export function createInventoryKeyHandler(config) {
       event.preventDefault()
       event.stopPropagation()
       handleOrderItems()
+      return
+    }
+
+    if (event.shiftKey && key === 'f') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleCycleRarity()
+      return
+    }
+
+    if (key === 'f') {
+      event.preventDefault()
+      event.stopPropagation()
+      handleCycleCategory()
       return
     }
 

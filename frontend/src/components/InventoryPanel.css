@@ -598,6 +598,8 @@ button.inventory-equipment-slot:focus-visible {
 
 .inventory-footer-keys {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: 0.65rem;
   flex: 0 0 auto;

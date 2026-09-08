@@ -57,7 +57,7 @@ El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
 - Equipamiento persistente por personaje con ranuras de casco, pecho, pantalón, botas, arma y arma secundaria.
 - Bonificaciones de equipamiento para Fuerza, Destreza, Inteligencia, Constitución y Agilidad.
 - El equipo puesto no se cuenta en el peso de la mochila; su bonificación de Fuerza sí aumenta la capacidad.
-- Filtros por categoría y rareza en la cabecera del inventario, con contador de objetos visibles y botón para limpiar filtros.
+- Filtros por categoría y rareza en la cabecera del inventario, con contador de objetos visibles y botón para limpiar filtros. Atajos de teclado: `F` cicla la categoría y `Shift+F` la rareza (dan la vuelta por las opciones).
 - Auto-orden de la mochila con la tecla `O`: une pilas del mismo objeto (respetando el máximo por pila) y acomoda la cuadrícula por categoría/nombre/rareza.
 - La navegación con WASD/flechas salta a los objetos que coinciden con el filtro activo; los que no coinciden se atenúan.
 - Mientras el inventario o el editor está abierto, el input de Phaser queda bloqueado (`game/inputLock.js`: `lockInput`/`unlockInput`/`isInputLocked`), por lo que el grupo no se mueve ni responden atajos de la escena hasta cerrar el panel.
