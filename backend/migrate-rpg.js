@@ -244,9 +244,15 @@ async function migrate() {
       WHERE nombre IS NULL OR idCuerpo IS NULL
     `);
 
-    // 6. Recalcular Estadísticas
+    // 6. Cargar Estadísticas iniciales con la fórmula, solo si el personaje no tiene datos.
+    // Una vez cargadas, se respetan los valores editados por el usuario.
     const [personajes] = await connection.query('SELECT idPersonaje, clase, nivel FROM Personaje');
+    const [statsExistentes] = await connection.query('SELECT idPersonaje FROM Estadistica');
+    const statsYaCargadas = new Set(statsExistentes.map((stat) => stat.idPersonaje));
+
     for (const p of personajes) {
+      if (statsYaCargadas.has(p.idPersonaje)) continue;
+
       const totalPoints = 10 + (p.nivel - 1) * 3;
       let fuerza = 10, destreza = 10, inteligencia = 10, constitucion = 10, agilidad = 10;
       let weights = { f: 2, d: 2, i: 2, c: 2, a: 2 };
@@ -270,12 +276,6 @@ async function migrate() {
       await connection.query(`
         INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad)
         VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE 
-          fuerza = VALUES(fuerza),
-          destreza = VALUES(destreza),
-          inteligencia = VALUES(inteligencia),
-          constitucion = VALUES(constitucion),
-          agilidad = VALUES(agilidad)
       `, [p.idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad]);
     }
 
@@ -313,41 +313,40 @@ async function migrate() {
       WHERE o.tipoEquipamiento IS NOT NULL AND e.ranura <> o.tipoEquipamiento
     `);
 
-    const [objetos] = await connection.query('SELECT idObjeto, clave FROM Objeto');
-    const objetoIds = Object.fromEntries(objetos.map((objeto) => [objeto.clave, objeto.idObjeto]));
-    const inventarioInicial = [
-      ['astra-potion', 3],
-      ['ember-shard', 8],
-      ['field-ration', 5],
-      ['old-compass', 1],
-      ['iron-greatsword', 1],
-      ['warden-plate', 1],
-      ['mind-amulet', 1],
-      ['iron-helmet', 1],
-      ['ranger-pants', 1],
-      ['traveler-boots', 1]
-    ];
+    // El inventario inicial solo se siembra la primera vez: si ya hay filas,
+    // pertenecen a la partida del usuario y no se deben volver a crear objetos soltados.
+    const [inventarioTotal] = await connection.query('SELECT COUNT(*) AS total FROM Inventario');
+    if (Number(inventarioTotal[0].total) === 0) {
+      const [objetos] = await connection.query('SELECT idObjeto, clave FROM Objeto');
+      const objetoIds = Object.fromEntries(objetos.map((objeto) => [objeto.clave, objeto.idObjeto]));
+      const inventarioInicial = [
+        ['astra-potion', 3],
+        ['ember-shard', 8],
+        ['field-ration', 5],
+        ['old-compass', 1],
+        ['iron-greatsword', 1],
+        ['warden-plate', 1],
+        ['mind-amulet', 1],
+        ['iron-helmet', 1],
+        ['ranger-pants', 1],
+        ['traveler-boots', 1]
+      ];
 
-    for (const personaje of personajes) {
-      for (const [clave, cantidad] of inventarioInicial) {
-        const [existingItems] = await connection.query(
-          'SELECT ranura FROM Inventario WHERE idPersonaje = ? AND idObjeto = ?',
-          [personaje.idPersonaje, objetoIds[clave]],
-        );
-        if (existingItems.length > 0) continue;
+      for (const personaje of personajes) {
+        for (const [clave, cantidad] of inventarioInicial) {
+          const [occupiedSlots] = await connection.query(
+            'SELECT ranura FROM Inventario WHERE idPersonaje = ? ORDER BY ranura',
+            [personaje.idPersonaje],
+          );
+          const occupied = new Set(occupiedSlots.map((slot) => slot.ranura));
+          let ranura = 0;
+          while (occupied.has(ranura)) ranura += 1;
 
-        const [occupiedSlots] = await connection.query(
-          'SELECT ranura FROM Inventario WHERE idPersonaje = ? ORDER BY ranura',
-          [personaje.idPersonaje],
-        );
-        const occupied = new Set(occupiedSlots.map((slot) => slot.ranura));
-        let ranura = 0;
-        while (occupied.has(ranura)) ranura += 1;
-
-        await connection.query(`
-          INSERT INTO Inventario (idPersonaje, ranura, idObjeto, cantidad)
-          VALUES (?, ?, ?, ?)
-        `, [personaje.idPersonaje, ranura, objetoIds[clave], cantidad]);
+          await connection.query(`
+            INSERT INTO Inventario (idPersonaje, ranura, idObjeto, cantidad)
+            VALUES (?, ?, ?, ?)
+          `, [personaje.idPersonaje, ranura, objetoIds[clave], cantidad]);
+        }
       }
     }
 

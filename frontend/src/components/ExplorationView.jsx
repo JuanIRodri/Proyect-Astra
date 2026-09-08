@@ -44,8 +44,6 @@ export function ExplorationView({ personajes, onUpdateCharacter }) {
         onOpenCharacterEditor={handleOpenCharacterEditor}
         onToggleInventory={handleToggleInventory}
       />
-      {inventoryOpen && <InventoryPanel personajes={personajes} onClose={() => setInventoryOpen(false)} />}
-      <p className="phaser-status" role="status">{status}</p>
       {inventoryOpen && (
         <div className="inventory-layout">
           <CharacterSelector

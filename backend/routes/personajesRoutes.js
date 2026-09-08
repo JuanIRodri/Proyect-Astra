@@ -5,7 +5,7 @@ const personajesController = require('../controllers/personajesController');
 router.get('/', personajesController.getPersonajes);
 router.get('/:id/inventario', personajesController.getInventario);
 router.put('/:id/inventario', personajesController.saveInventario);
-router.post('/:id/inventario/:ranura/usar', personajesController.useInventarioObjeto);
+router.post('/:id/inventario/:ranura/usar', personajesController.usarObjeto);
 router.get('/:id/equipamiento', personajesController.getEquipamiento);
 router.post('/:id/inventario/:ranura/equipar', personajesController.equiparObjeto);
 router.post('/:id/equipamiento/:ranura/desequipar', personajesController.desequiparObjeto);

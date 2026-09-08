@@ -24,7 +24,7 @@ export const saveInventario = async (id, items) => {
   return response.data;
 };
 
-export const useInventarioObjeto = async (id, slotIndex) => {
+export const usarObjeto = async (id, slotIndex) => {
   const response = await api.post(`/personajes/${id}/inventario/${slotIndex}/usar`);
   return response.data;
 };

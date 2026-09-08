@@ -11,9 +11,9 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 - `frontend/src/components/PhaserGame.jsx` crea Phaser y conecta los eventos React-Phaser.
 - `frontend/src/game/ExplorationScene.js` controla mapa, movimiento, formacion y cambio de lider.
 - `frontend/src/game/gameEvents.js` centraliza los `CustomEvent` compartidos.
-- `frontend/src/components/InventoryPanel.jsx` controla la UI y el estado local del inventario.
+- `frontend/src/components/inventory/` modula el inventario: `useInventoryPanel.js` (estado y acciones), `inventoryUtils.js` (helpers puros), `inventoryOperations.js` (operaciones puras de items y cálculo de carga/bonos), `inventoryKeyHandler.js` (teclado) y los subcomponentes `InventoryHeader.jsx`, `InventoryGrid.jsx`, `InventoryDetail.jsx`, `InventoryStats.jsx`; `InventoryPanel.jsx` los compone. `inventoryKeyHandler.js` reutiliza `game/hotkeys.js` para los atajos de personaje.
 - `frontend/src/hooks/usePersonajes.js` y `frontend/src/services/api.js` gestionan los personajes y la API.
-- `backend/` contiene Express, controladores, rutas y conexion MySQL.
+- `backend/` contiene Express con capas separadas: rutas, controlador delgado, servicios (`personajesService.js`, `inventarioService.js`) y utilidades (`asyncDb.js`, `errors.js`) sobre un pool MySQL.
 - `sentencias-sql/` contiene el esquema, datos iniciales, consultas y vistas.
 - `start-app.sh` levanta Docker/MySQL, ejecuta la migracion, inicia backend y frontend.
 
@@ -24,13 +24,15 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 - Cambio de lider con `1`, `2` y `3`.
 - Movimiento con flechas y `WASD`.
 - Colisiones y camara de exploracion.
-- Edicion de estadisticas del lider con `U` y cierre con `Escape`.
-- Inventario visual abierto con `I`, implementado pero pendiente de confirmacion manual del usuario.
-- Eventos React-Phaser centralizados, implementados pero pendientes de confirmacion manual del usuario.
+- Edicion de estadisticas del lider con `U` y cierre con `Escape` (confirmado).
+- Inventario visual abierto con `I` (confirmado).
+- Eventos React-Phaser centralizados (confirmado).
+- Modularizacion confirmada por pruebas en navegador: backend en capas (`services/`, `utils/`, controlador delgado sobre pool MySQL), exploracion descompuesta en `game/*` (constants, board, party, movement, input, hotkeys) e inventario en `components/inventory/*`.
+- Persistencia de inventario y estadisticas entre reinicios: la migracion hace una carga inicial solo si las tablas estan vacias y no sobrescribe los datos del usuario (confirmado).
 
 ## Trabajo actual: inventario
 
-`InventoryPanel.jsx` ofrece:
+El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
 
 - Inventario separado por personaje.
 - Seleccion por teclado con `1`, `2` y `3`.
@@ -87,3 +89,5 @@ Requisitos: Docker, Node.js 18 o superior y `pnpm`.
 ## Regla de trabajo
 
 Antes de iniciar una tarea debo consultar este archivo, `docs/project-graph.md`, el documento de diseño y arquitectura y `README.md`. Los cambios implementados se dejan pendientes de confirmacion hasta que el usuario los pruebe en el navegador. No debo repetir tareas ya marcadas como completadas ni modificar partes no relacionadas.
+
+Siempre debo modularizar el codigo cuando sea posible: preferir archivos pequeños y con una sola responsabilidad (hooks, helpers puros, subcomponentes) y componerlos desde un punto de entrada, antes que acumular logica inline en archivos grandes.
