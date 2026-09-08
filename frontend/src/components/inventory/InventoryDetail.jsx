@@ -1,4 +1,5 @@
 import { EQUIPMENT_SLOTS } from './inventoryUtils'
+import './InventoryDetail.css'
 
 export function InventoryDetail({
   detailItem,

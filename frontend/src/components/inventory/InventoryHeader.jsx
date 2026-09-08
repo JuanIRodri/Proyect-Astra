@@ -1,3 +1,5 @@
+import './InventoryHeader.css'
+
 export function InventoryHeader({ activeCharacter, onClose }) {
   return (
     <div className="inventory-heading">

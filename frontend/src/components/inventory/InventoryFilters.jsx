@@ -1,3 +1,5 @@
+import './InventoryFilters.css'
+
 const CATEGORY_LABELS = {
   todos: 'Todas',
 }

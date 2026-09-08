@@ -4,11 +4,13 @@ import { InventoryFilters } from './inventory/InventoryFilters'
 import { InventoryGrid } from './inventory/InventoryGrid'
 import { InventoryDetail } from './inventory/InventoryDetail'
 import { InventoryStats } from './inventory/InventoryStats'
+import { TransferModal } from './inventory/TransferModal'
 import './InventoryPanel.css'
 
 export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange }) {
   const {
     activeCharacter,
+    characterList,
     classThemeKey,
     items,
     itemCount,
@@ -25,6 +27,10 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
     notice,
     inventoryLoading,
     equipKeyActive,
+    transferPromptActive,
+    handleTransferSelected,
+    handleCancelTransfer,
+    selectedItem,
     selectedSlotIndex,
     cursorSlotIndex,
     heldSlotIndex,
@@ -96,6 +102,16 @@ export function InventoryPanel({ onClose, personajes, activeCharacterIndex, onAc
         inventoryLoading={inventoryLoading}
         equipKeyActive={equipKeyActive}
       />
+
+      {transferPromptActive && (
+        <TransferModal
+          item={selectedItem}
+          characters={characterList}
+          activeCharacterId={activeCharacter.idPersonaje}
+          onTransfer={handleTransferSelected}
+          onCancel={handleCancelTransfer}
+        />
+      )}
     </aside>
   )
 }

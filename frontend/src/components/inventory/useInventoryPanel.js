@@ -307,8 +307,13 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       return
     }
     setTransferPromptActive(true)
-    setNotice(`¿A quién enviar ${selectedItem.name}? Elegí 1, 2 o 3 (Escape cancela).`)
+    setNotice(`Elegí el personaje al que enviar ${selectedItem.name}.`)
   }, [navigationArea, selectedItem])
+
+  const handleCancelTransfer = useCallback(() => {
+    setTransferPromptActive(false)
+    setNotice('Traspaso cancelado.')
+  }, [])
 
   const handleTransferSelected = useCallback(async (targetCharacterIndex) => {
     const target = characterList[targetCharacterIndex]
@@ -437,6 +442,7 @@ handleSplit,
 
   return {
     activeCharacter,
+    characterList,
     classThemeKey,
     items,
     itemCount,
@@ -453,6 +459,11 @@ handleSplit,
     notice,
     inventoryLoading,
     equipKeyActive,
+    transferPromptActive,
+    handleRequestTransfer,
+    handleTransferSelected,
+    handleCancelTransfer,
+    selectedItem,
     selectedSlotIndex,
     cursorSlotIndex,
     heldSlotIndex,

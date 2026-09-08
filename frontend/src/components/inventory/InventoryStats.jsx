@@ -1,3 +1,5 @@
+import './InventoryStats.css'
+
 const KEY_HINTS = [
   { key: 'E', label: 'Equipar · Usar', conditional: true },
   { key: 'Q', label: 'Soltar' },

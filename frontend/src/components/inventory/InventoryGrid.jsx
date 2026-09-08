@@ -1,3 +1,5 @@
+import './InventoryGrid.css'
+
 export function InventoryGrid({
   items,
   selectedSlotIndex,
