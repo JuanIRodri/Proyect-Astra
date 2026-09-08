@@ -71,6 +71,21 @@
   color: var(--accent-gold);
 }
 
+.pause-menu-btn-danger {
+  background: rgba(224, 90, 99, 0.14);
+  color: #f0aeb2;
+}
+
+.pause-menu-btn-danger:hover {
+  background: rgba(224, 90, 99, 0.25);
+  color: #ffd0d3;
+}
+
+.pause-menu-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
 .pause-menu-hint {
   margin: 0;
   color: var(--text-muted);

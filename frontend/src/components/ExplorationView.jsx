@@ -7,7 +7,7 @@ import { Minimap } from './Minimap'
 import { GroupHud } from './GroupHud'
 import { PauseMenu } from './PauseMenu'
 import { usePartyPositions } from '../hooks/usePartyPositions'
-import { savePartida } from '../services/api'
+import { savePartida, resetPartida } from '../services/api'
 import { lockInput, unlockInput } from '../game/inputLock'
 
 export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, inicioPartida }) {
@@ -15,6 +15,7 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
   const [inventoryOpen, setInventoryOpen] = useState(false)
   const [pauseOpen, setPauseOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(inicioPartida?.leaderIndex ?? 0)
   const [transferToken, setTransferToken] = useState(0)
   const inventoryRef = useRef(null)
@@ -113,6 +114,17 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
     onBackToMenu?.()
   }
 
+  const handleDeletePartida = async () => {
+    if (!window.confirm('¿Borrar esta partida? Se perderá el progreso guardado.')) return
+    setDeleting(true)
+    const partidaId = inicioPartida?.id
+    if (partidaId) {
+      await resetPartida(partidaId).catch(() => {})
+    }
+    setDeleting(false)
+    onBackToMenu?.()
+  }
+
   const partidaId = inicioPartida?.id
   useEffect(() => {
     if (!partidaId || !positions[leaderIndex]) return undefined
@@ -142,7 +154,9 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
         <PauseMenu
           onContinue={() => setPauseOpen(false)}
           onSaveAndExit={handleSaveAndExit}
+          onDelete={handleDeletePartida}
           saving={saving}
+          deleting={deleting}
         />
       )}
       {inventoryOpen && (

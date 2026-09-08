@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './CharacterForm.css';
 import { AppearanceFields } from './form-parts/AppearanceFields';
 import { StatsFields } from './form-parts/StatsFields';
+import { getClassThemeKey } from './inventory/inventoryUtils';
 
 const CLASES = ['Guerrero', 'Mago', 'Pícaro', 'Paladín', 'Cazador'];
 
@@ -93,12 +94,13 @@ export function CharacterForm({ onSubmit, onCancel, initialData, viewMode }) {
 
   return (
     <div className="detail-modal">
-      <div className="detail-content form-content">
+      <div className={`detail-content form-content inventory-class-${getClassThemeKey(form.clase)}`}>
         <button className="close-btn" onClick={onCancel}>&times;</button>
         <div className="detail-header">
+          <p className="inventory-kicker">Atributos</p>
           <h2>{isEditing ? `Editar a ${form.nombre}` : 'Nuevo Héroe'}</h2>
           <p className="subtitle">
-            {isEditing ? (viewMode === 'apariencia' ? 'Apariencia Física' : 'Atributos') : `Paso ${step} de 2`}
+            {isEditing ? (viewMode === 'apariencia' ? 'Apariencia Física' : `Puntos: ${availablePoints} / ${totalPoints}`) : `Paso ${step} de 2`}
           </p>
         </div>
 
