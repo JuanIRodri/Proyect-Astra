@@ -8,118 +8,6 @@
   overflow-y: auto;
 }
 
-.inventory-detail-summary {
-  display: grid;
-  min-height: 6rem;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.inventory-detail-summary + .inventory-detail-expanded {
-  margin-top: 0.4rem;
-  padding: 0.7rem;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.inventory-detail-summary .inventory-detail-icon {
-  margin-bottom: 0;
-}
-
-.inventory-detail-summary h3 {
-  margin: 0.25rem 0 0;
-}
-
-.inventory-detail-toggle {
-  padding: 0.42rem 0.6rem;
-  border: 1px solid var(--inventory-accent);
-  border-radius: 4px;
-  color: var(--inventory-accent);
-  background: var(--inventory-accent-soft);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.68rem;
-  font-weight: 600;
-}
-
-.inventory-detail-toggle:hover,
-.inventory-detail-toggle:focus-visible {
-  color: var(--text-main);
-  background: var(--inventory-accent);
-}
-
-.inventory-detail-expanded {
-  margin-top: 0.9rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  line-height: 1.55;
-}
-
-.inventory-detail-expanded p {
-  margin: 0;
-}
-
-.inventory-detail-icon {
-  margin-bottom: 1.25rem;
-  color: var(--accent-gold);
-  font-size: 2.6rem;
-  line-height: 1;
-}
-
-.inventory-detail h3 {
-  margin: 0.3rem 0 0.55rem;
-  color: var(--text-main);
-  font-size: 1.05rem;
-}
-
-.inventory-detail p:last-child {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  line-height: 1.55;
-}
-
-.inventory-detail .inventory-item-weight {
-  margin-top: 0.7rem;
-  color: var(--accent-gold);
-  font-size: 0.75rem;
-}
-
-.inventory-item-bonuses {
-  margin-top: 0.45rem;
-  color: var(--inventory-accent);
-  font-size: 0.72rem;
-}
-
-.inventory-empty-detail {
-  align-self: stretch;
-  margin: 0;
-  padding: 1rem;
-  border-left: 1px solid rgba(148, 163, 184, 0.18);
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.inventory-detail > .inventory-empty-detail {
-  flex: 1;
-  min-height: 6rem;
-  border: 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-  margin: 0;
-  padding: 1rem 0;
-}
-
-.inventory-detail-category {
-  margin: 0;
-  color: var(--inventory-accent);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 .inventory-equipment {
   flex: 1;
   margin-top: 1rem;
@@ -246,10 +134,5 @@ button.inventory-equipment-slot:focus-visible {
     border-top: 1px solid rgba(148, 163, 184, 0.18);
     border-left: 0;
     padding: 1rem 0 0;
-  }
-
-  .inventory-empty-detail {
-    border-top: 1px solid rgba(148, 163, 184, 0.18);
-    border-left: 0;
   }
 }

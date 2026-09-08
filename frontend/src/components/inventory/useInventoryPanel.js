@@ -239,6 +239,8 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setShowItemDetails((isVisible) => !isVisible)
   }, [detailItem])
 
+  const handleCloseDetails = useCallback(() => setShowItemDetails(false), [])
+
   const handleDoubleClickSlot = useCallback((slotIndex) => {
     const item = items[slotIndex]
     if (!item) return
@@ -497,6 +499,8 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       onClose,
       setNotice,
       setShowItemDetails,
+      showItemDetails,
+      handleCloseDetails,
       setSelectedSlotIndex,
       setHeldSlotIndex,
       setEquipmentCursorIndex,
@@ -525,7 +529,7 @@ handleSplit,
       contextMenuActions,
       handleCloseContextMenu,
     }),
-    [contextMenu, contextMenuActionIndex, contextMenuActions, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCloseContextMenu, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, transferPromptActive],
+    [contextMenu, contextMenuActionIndex, contextMenuActions, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, transferPromptActive, showItemDetails],
   )
 
   useEffect(() => {
@@ -623,6 +627,8 @@ handleSplit,
     equipment,
     detailItem,
     showItemDetails,
+    handleToggleDetails,
+    handleCloseDetails,
     equipmentBonuses,
     selectedEquipmentSlot,
     goldAmount,

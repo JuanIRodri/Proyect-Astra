@@ -6,6 +6,7 @@ import { InventoryGrid } from './inventory/InventoryGrid'
 import { InventoryDetail } from './inventory/InventoryDetail'
 import { InventoryStats } from './inventory/InventoryStats'
 import { TransferModal } from './inventory/TransferModal'
+import { DetailsModal } from './inventory/DetailsModal'
 import { InventoryContextMenu } from './inventory/InventoryContextMenu'
 import { InventoryTooltip } from './inventory/InventoryTooltip'
 import './InventoryPanel.css'
@@ -56,6 +57,7 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
     handleDoubleClickSlot,
     handleEquipToSlot,
     handleDoubleClickEquipment,
+    handleCloseDetails,
     handleSelectSlot,
     handleOpenDetails,
     handleSelectEquipmentSlot,
@@ -107,8 +109,6 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
           onLeave={clearHoverItem}
         />
         <InventoryDetail
-          detailItem={detailItem}
-          showItemDetails={showItemDetails}
           equipment={equipment}
           selectedEquipmentSlot={selectedEquipmentSlot}
           equipmentBonuses={equipmentBonuses}
@@ -153,6 +153,10 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
           onTransfer={handleTransferSelected}
           onCancel={handleCancelTransfer}
         />
+      )}
+
+      {showItemDetails && detailItem && (
+        <DetailsModal item={detailItem} onClose={handleCloseDetails} />
       )}
 
       {hoverItem && <InventoryTooltip item={hoverItem} />}

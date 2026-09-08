@@ -15,6 +15,8 @@ export function createInventoryKeyHandler(config) {
     onClose,
     setNotice,
     setShowItemDetails,
+    showItemDetails,
+    handleCloseDetails,
     setSelectedSlotIndex,
     setHeldSlotIndex,
     setEquipmentCursorIndex,
@@ -86,6 +88,15 @@ export function createInventoryKeyHandler(config) {
         contextMenuActions[contextMenuActionIndex]?.run()
         handleCloseContextMenu()
         return
+      }
+      return
+    }
+
+    if (showItemDetails) {
+      event.preventDefault()
+      event.stopPropagation()
+      if (key === 'escape') {
+        handleCloseDetails()
       }
       return
     }
