@@ -11,5 +11,9 @@ services:
     ports:
       - "3306:3306"
     volumes:
+      - astra-db-data:/var/lib/mysql
       - ./sentencias-sql/creaciones.sql:/docker-entrypoint-initdb.d/1-creaciones.sql
       - ./sentencias-sql/inserciones.sql:/docker-entrypoint-initdb.d/2-inserciones.sql
+
+volumes:
+  astra-db-data:
