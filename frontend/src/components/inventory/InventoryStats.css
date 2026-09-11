@@ -148,3 +148,20 @@
     max-width: none;
   }
 }
+
+@media (max-height: 780px) {
+  .inventory-footer {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+  }
+
+  .inventory-summary {
+    margin-top: 0.5rem;
+  }
+
+  .inventory-gold,
+  .inventory-weight {
+    min-height: 2.2rem;
+    padding: 0.3rem 0.5rem;
+  }
+}

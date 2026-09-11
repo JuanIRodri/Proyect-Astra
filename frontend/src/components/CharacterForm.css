@@ -2,6 +2,8 @@
 
 .form-content {
   width: min(92vw, 860px);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   padding: 1.6rem;
   gap: 0;
   border: 1px solid var(--inventory-accent);
@@ -223,11 +225,13 @@
 }
 
 .stats-keys-hint {
-  margin: 0.85rem 0 0;
+  margin: 0.25rem 0 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.4rem 1.2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
   text-align: center;
   font-size: 0.75rem;
   letter-spacing: 0.03em;
@@ -363,8 +367,86 @@
   width: 100%;
 }
 
+@media (max-width: 900px) {
+  .form-content {
+    padding: 1.2rem;
+  }
+
+  .form-content .detail-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .form-content .detail-header {
+    margin-bottom: 1rem;
+  }
+
+  .character-form {
+    gap: 0.9rem;
+  }
+
+  .stats-assignment {
+    padding: 0.9rem;
+  }
+}
+
 @media (max-width: 600px) {
+  .form-content {
+    padding: 1rem;
+  }
+
+  .form-content .close-btn {
+    top: 0.6rem;
+    right: 0.6rem;
+  }
+
+  .form-content .detail-header {
+    padding-right: 2rem;
+  }
+
+  .form-content .detail-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-submit {
+    width: 100%;
+  }
+
+  .points-pool {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .stat-assign-row {
+    gap: 0.4rem;
+    padding: 0.5rem;
+  }
+
   .appearance-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 720px) {
+  .form-content {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .form-content .character-form {
+    gap: 0.7rem;
+  }
+
+  .stats-assignment {
+    padding: 0.8rem;
   }
 }

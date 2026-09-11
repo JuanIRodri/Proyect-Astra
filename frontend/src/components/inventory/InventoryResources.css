@@ -59,3 +59,14 @@
     flex-direction: column;
   }
 }
+
+@media (max-height: 780px) {
+  .inventory-resources {
+    margin-top: 0.6rem;
+  }
+
+  .inventory-resource {
+    min-height: 2.2rem;
+    padding: 0.3rem 0.5rem;
+  }
+}
