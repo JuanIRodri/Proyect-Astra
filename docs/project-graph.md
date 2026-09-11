@@ -26,9 +26,15 @@ flowchart TD
     Components --> ExplorationView[ExplorationView.jsx\nvista separada de exploracion]
     Components --> PhaserGame[PhaserGame.jsx\npuente React -> Phaser]
     Components --> Inventory[components/inventory/\nInventoryPanel compone\nuseInventoryPanel.js\ninventoryUtils.js\ninventoryOperations.js\ninventoryKeyHandler.js\nInventoryHeader.jsx\nInventoryGrid.jsx\nInventoryDetail.jsx\nInventoryStats.jsx]
+    Components --> Hotbar[Hotbar.jsx\nbarra de acceso rapido (overlay y panel)]
+    Components --> ItemTooltip[ItemTooltip.jsx\nficha flotante de objeto]
     Components --> FormParts[components/form-parts/\nAppearanceFields.jsx\nStatsFields.jsx]
+    Components --> MainMenu[MainMenu.jsx\ncompositor del menu inicial]
+    Components --> MenuModules[components/mainmenu/\nMenuHome.jsx · MenuCargar.jsx · MenuNueva.jsx\nOpcionesStack.jsx · MenuOpciones.jsx\nMenuOpcionesAudio.jsx · MenuOpcionesVideo.jsx\nMenuOpcionesTeclas.jsx\nuseMenuNav.js · useOpciones.js · useOpcionesVideo.js\nuseTeclas.js · utils.js]
 
     Hooks --> UsePersonajes[usePersonajes.js\nestado y operaciones de personajes]
+    Hooks --> UseHotbar[useHotbar.js\nestado y persistencia de la hotbar]
+    Hooks --> UseItemTooltip[useItemTooltip.js\nestado del tooltip de objeto]
     Services --> Api[services/api.js\ncliente HTTP]
     Game --> Exploration[game/ExplorationScene.js\nescena Phaser 3]
     Game --> GameEvents[game/gameEvents.js\nCustomEvent compartidos]
@@ -71,6 +77,7 @@ flowchart TD
 | Necesidad | Ruta principal | Depende de |
 | --- | --- | --- |
 | Entrada de la interfaz | `frontend/src/App.jsx` | componentes, hook de personajes y Phaser |
+| Menu inicial | `frontend/src/components/MainMenu.jsx` | `mainmenu/MenuHome.jsx`, `MenuCargar.jsx`, `MenuNueva.jsx`, `MenuOpciones.jsx`, `MenuOpcionesVideo.jsx` |
 | Vista separada de exploracion | `frontend/src/components/ExplorationView.jsx` | `PhaserGame.jsx` |
 | Montar Phaser en React | `frontend/src/components/PhaserGame.jsx` | `frontend/src/game/ExplorationScene.js` |
 | Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `inventory/useInventoryPanel.js`, `gameEvents.js` |

@@ -44,6 +44,7 @@ Patrón de error: los servicios lanzan `AppError` (p. ej. 404/400); el controlad
 - El cluster de teclas `1/2/3` para líder está centralizado en `game/hotkeys.js` (`getLeaderIndex`) y se usa desde `game/input.js` e `InventoryPanel.jsx`.
 - El documento de diseño cuenta con una hoja de ruta con casillas `[x]` — completado, pendiente de confirmación y pendiente de implementación. No repetir tareas ya completadas ni reimplementar lo existente.
 - **Siempre modularizar cuando se pueda**: al implementar o refactorizar, dividir el código en módulos pequeños con una sola responsabilidad (un hook, helpers puros, subcomponentes) y componer desde un punto de entrada, en lugar de acumular lógica inline en archivos grandes.
+- **La UI debe ser responsive siempre**: cualquier panel, menú, modal u overlay nuevo (y los ajustes de los existentes) tiene que adaptarse al tamaño de ventana (breakpoints con `@media`, unidades fluidas tipo `min(…vw, Npx)` y scroll interno con `max-height`/`min-height: 0` donde aplique). No introducir anchos fijos que rompan en pantallas pequeñas ni paneles que se corten en ventanas bajas.
 - Los cambios implementados se dejan como "pendiente de confirmación" hasta que el usuario los pruebe en el navegador.
 
 ## Documentos de referencia (leer solo si hace falta)
