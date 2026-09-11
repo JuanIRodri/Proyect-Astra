@@ -254,9 +254,19 @@ async function migrate() {
         liderX INT DEFAULT NULL,
         liderY INT DEFAULT NULL,
         liderIndex INT DEFAULT 0,
+        posiciones JSON DEFAULT NULL,
         fechaGuardado DATETIME DEFAULT NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+
+    const [partidaColumns] = await connection.query(`
+      SELECT COLUMN_NAME
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Partida'
+    `);
+    if (!partidaColumns.some((column) => column.COLUMN_NAME === 'posiciones')) {
+      await connection.query('ALTER TABLE Partida ADD COLUMN posiciones JSON DEFAULT NULL');
+    }
 
     const [partidas] = await connection.query('SELECT COUNT(*) AS total FROM Partida');
     if (Number(partidas[0].total) === 0) {
