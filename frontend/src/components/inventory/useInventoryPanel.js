@@ -32,7 +32,7 @@ import {
 } from './inventoryOperations'
 import { createInventoryKeyHandler } from './inventoryKeyHandler'
 
-export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete }) {
+export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete, onHotbarSlotKey }) {
   const characterList = personajes.slice(0, 3)
   const [inventories, setInventories] = useState(() => Object.fromEntries(
     characterList.map((character) => [character.idPersonaje, createInventory()]),
@@ -56,7 +56,6 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const [contextMenu, setContextMenu] = useState(null)
   const [contextMenuActionIndex, setContextMenuActionIndex] = useState(0)
   const [contextMenuSubmenuIndex, setContextMenuSubmenuIndex] = useState(null)
-  const [hoverItem, setHoverItem] = useState(null)
   const slotRefs = useRef([])
   const [notice, setNotice] = useState('Usa WASD y selecciona objetos con Enter.')
   const activeCharacter = characterList[activeCharacterIndex]
@@ -221,8 +220,10 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
       }))
       const effectNotice = result.effect?.vida ? ` Efecto: +${result.effect.vida} vida (${nextResources.vidaActual}/${resources.vidaMax}).` : ''
       setNotice(`${item.name} consumido.${effectNotice}`)
+      return { name: item.name, quantity: result.quantity, effect: result.effect }
     } catch {
       setNotice('No se pudo consumir el objeto.')
+      return undefined
     }
   }, [activeCharacterId, items, selectedSlotIndex, resources])
 
@@ -577,6 +578,7 @@ handleDropSelected,
       handleTransferSelected,
       handleCycleCategory,
       handleCycleRarity,
+      handleHotbarKey: onHotbarSlotKey,
       moveSelection,
       transferPromptActive,
       setTransferPromptActive,
@@ -593,7 +595,7 @@ handleDropSelected,
       activeCharacterIndex,
       handleCloseContextMenu,
     }),
-    [activeCharacterIndex, contextMenu, contextMenuActionIndex, contextMenuActions, contextMenuSubmenuIndex, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCancelSplit, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestSplit, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, splitPromptActive, transferPromptActive, showItemDetails],
+    [activeCharacterIndex, contextMenu, contextMenuActionIndex, contextMenuActions, contextMenuSubmenuIndex, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCancelSplit, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, onHotbarSlotKey, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestSplit, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, splitPromptActive, transferPromptActive, showItemDetails],
   )
 
   useEffect(() => {
@@ -644,14 +646,6 @@ handleDropSelected,
     window.inventoryDrag = null
     setDraggedSlotIndex(null)
     setHeldSlotIndex(null)
-  }
-
-  const handleHoverItem = (item) => {
-    setHoverItem(item)
-  }
-
-  const clearHoverItem = () => {
-    setHoverItem(null)
   }
 
   const handleDrop = (sourceIndex, targetIndex) => {
@@ -755,9 +749,6 @@ handleDropSelected,
     handleDropGrid,
     handleDragStartWithSplit,
     handleTransferFromSlot,
-    hoverItem,
-    handleHoverItem,
-    clearHoverItem,
     splitPromptActive,
     handleConfirmSplit,
     handleCancelSplit,

@@ -5,10 +5,12 @@ import { InventoryPanel } from './InventoryPanel'
 import { CharacterSelector } from './CharacterSelector'
 import { Minimap } from './Minimap'
 import { GroupHud } from './GroupHud'
+import { Hotbar } from './Hotbar'
 import { PauseMenu } from './PauseMenu'
 import { usePartyPositions } from '../hooks/usePartyPositions'
 import { savePartida } from '../services/api'
 import { lockInput, unlockInput } from '../game/inputLock'
+import { GAME_EVENTS, subscribeToGameEvent } from '../game/gameEvents'
 
 export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, inicioPartida }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
@@ -85,25 +87,16 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
     return () => window.removeEventListener('keydown', handleOpenPause)
   }, [pauseOpen, inventoryOpen, editingCharacter])
 
-  useEffect(() => {
-    if (!pauseOpen) return undefined
-
-    const handleClosePause = (event) => {
-      if (event.key === 'Escape' || event.code === 'Escape') {
-        event.preventDefault()
-        setPauseOpen(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleClosePause)
-    return () => window.removeEventListener('keydown', handleClosePause)
-  }, [pauseOpen])
+  useEffect(() => subscribeToGameEvent(GAME_EVENTS.leaderChange, ({ index }) => {
+    if (Number.isInteger(index)) setActiveCharacterIndex(index)
+  }), [])
 
   const handleSaveAndExit = async () => {
     setSaving(true)
     const partidaId = inicioPartida?.id
     if (partidaId && positions[leaderIndex]) {
       await savePartida(partidaId, {
+        posiciones: positions,
         liderX: Math.round(positions[leaderIndex].x),
         liderY: Math.round(positions[leaderIndex].y),
         liderIndex: leaderIndex,
@@ -119,6 +112,7 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
 
     const timer = setTimeout(() => {
       savePartida(partidaId, {
+        posiciones: positions,
         liderX: Math.round(positions[leaderIndex].x),
         liderY: Math.round(positions[leaderIndex].y),
         liderIndex: leaderIndex,
@@ -138,6 +132,14 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
       />
       <Minimap personajes={personajes} />
       <GroupHud personajes={personajes} />
+      {!inventoryOpen && !editingCharacter && !pauseOpen && personajes[activeCharacterIndex] && (
+        <Hotbar
+          key={personajes[activeCharacterIndex].idPersonaje}
+          personajeId={personajes[activeCharacterIndex].idPersonaje}
+          useShortcuts
+          variant="overlay"
+        />
+      )}
       {pauseOpen && (
         <PauseMenu
           onContinue={() => setPauseOpen(false)}

@@ -68,42 +68,44 @@ export function StatsFields({ form, availablePoints, totalPoints, adjustStat, ha
   }, [focusedIndex, focusRow, adjustStat, handleResetStats, handleAutoDistribute, submitRef]);
 
   return (
-    <div className="stats-assignment">
-      <div className="points-pool">
-        <span>Puntos: <strong>{availablePoints}</strong> / {totalPoints}</span>
-        <button type="button" className="btn-auto-distribute" onClick={handleAutoDistribute}>🎲 Auto</button>
-      </div>
-      <div className="stats-fields-grid">
-        {STAT_FIELDS.map((stat, index) => (
-          <div
-            className={`stat-assign-row ${index === focusedIndex ? 'is-focused' : ''}`}
-            key={stat}
-            ref={(node) => { rowRefs.current[index] = node }}
-            tabIndex={-1}
-            onMouseEnter={() => focusRow(index)}
-          >
-            <label>{STAT_LABELS[stat]}</label>
-            <div className="stat-controls">
-              <button
-                type="button"
-                className="btn-stat-control"
-                onClick={() => adjustStat(stat, -1)}
-                disabled={form[stat] <= 10}
-              >
-                -
-              </button>
-              <span className="stat-value">{form[stat]}</span>
-              <button
-                type="button"
-                className="btn-stat-control"
-                onClick={() => adjustStat(stat, 1)}
-                disabled={availablePoints <= 0}
-              >
-                +
-              </button>
+    <>
+      <div className="stats-assignment">
+        <div className="points-pool">
+          <span>Puntos: <strong>{availablePoints}</strong> / {totalPoints}</span>
+          <button type="button" className="btn-auto-distribute" onClick={handleAutoDistribute}>🎲 Auto</button>
+        </div>
+        <div className="stats-fields-grid">
+          {STAT_FIELDS.map((stat, index) => (
+            <div
+              className={`stat-assign-row ${index === focusedIndex ? 'is-focused' : ''}`}
+              key={stat}
+              ref={(node) => { rowRefs.current[index] = node }}
+              tabIndex={-1}
+              onMouseEnter={() => focusRow(index)}
+            >
+              <label>{STAT_LABELS[stat]}</label>
+              <div className="stat-controls">
+                <button
+                  type="button"
+                  className="btn-stat-control"
+                  onClick={() => adjustStat(stat, -1)}
+                  disabled={form[stat] <= 10}
+                >
+                  -
+                </button>
+                <span className="stat-value">{form[stat]}</span>
+                <button
+                  type="button"
+                  className="btn-stat-control"
+                  onClick={() => adjustStat(stat, 1)}
+                  disabled={availablePoints <= 0}
+                >
+                  +
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       <p className="stats-keys-hint">
         <span><strong>Mover:</strong> W/S · ↑/↓</span>
@@ -112,6 +114,6 @@ export function StatsFields({ form, availablePoints, totalPoints, adjustStat, ha
         <span><strong>T:</strong> repartir puntos automáticamente</span>
         <span><strong>Enter/espacio:</strong> guardar</span>
       </p>
-    </div>
+    </>
   );
 }

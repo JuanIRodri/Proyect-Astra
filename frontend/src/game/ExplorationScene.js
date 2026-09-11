@@ -13,11 +13,12 @@ import {
   updateLeaderMarker,
   updatePartyLeaderStyling,
 } from './party'
-import { drawBoard } from './board'
+import { drawBoard, createGridOverlay } from './board'
 import { createMovementKeys, moveParty } from './movement'
 import { createKeyHandler } from './input'
-import { emitCharacterEditorRequest, emitPartyPositionUpdate } from './gameEvents'
+import { emitCharacterEditorRequest, emitLeaderChange, emitPartyPositionUpdate, GAME_EVENTS } from './gameEvents'
 import { isInputLocked } from './inputLock'
+import { loadVideoSettings } from './videoSettings'
 
 export class ExplorationScene extends Phaser.Scene {
   constructor() {
@@ -48,9 +49,54 @@ export class ExplorationScene extends Phaser.Scene {
     updatePartyLeaderStyling(this.party, this.leaderIndex)
     updateLeaderMarker(this.party, this.leaderMarker, this.leaderIndex)
 
+    this.applyVideoSettings()
+    this.subscribeVideoSettings()
+
     this.configureCamera()
     this.createInput()
     this.emitPartyPositionIfNeeded(true)
+  }
+
+  applyVideoSettings() {
+    this.videoSettings = loadVideoSettings()
+    const { overlayCuadricula, marcadorLider, reducirEfectos } = this.videoSettings
+
+    if (overlayCuadricula && !this.gridOverlay) {
+      this.gridOverlay = createGridOverlay(this)
+    } else if (!overlayCuadricula && this.gridOverlay) {
+      this.gridOverlay.destroy()
+      this.gridOverlay = null
+    }
+
+    if (!this.leaderMarker) return
+
+    const wantsPulse = marcadorLider && !reducirEfectos
+    this.leaderMarker.setVisible(marcadorLider)
+
+    if (wantsPulse && !this.markerTween) {
+      this.markerTween = this.tweens.add({
+        targets: this.leaderMarker,
+        alpha: { from: 0.55, to: 1 },
+        duration: 700,
+        yoyo: true,
+        repeat: -1,
+      })
+    }
+
+    if (!wantsPulse && this.markerTween) {
+      this.markerTween.stop()
+      this.markerTween.destroy()
+      this.markerTween = null
+      this.leaderMarker.setAlpha(1)
+    }
+  }
+
+  subscribeVideoSettings() {
+    const handler = () => this.applyVideoSettings()
+    window.addEventListener(GAME_EVENTS.videoSettingsChange, handler)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.removeEventListener(GAME_EVENTS.videoSettingsChange, handler)
+    })
   }
 
   createInput() {
@@ -94,6 +140,7 @@ export class ExplorationScene extends Phaser.Scene {
     updatePartyLeaderStyling(this.party, index)
     updateLeaderMarker(this.party, this.leaderMarker, index)
     this.cameras.main.startFollow(this.party[index], true, CAMERA_SMOOTHNESS, CAMERA_SMOOTHNESS)
+    emitLeaderChange(index)
     this.emitPartyPositionIfNeeded(true)
   }
 

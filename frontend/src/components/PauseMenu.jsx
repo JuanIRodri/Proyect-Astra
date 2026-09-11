@@ -1,19 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
+import { OpcionesStack } from './mainmenu/OpcionesStack'
 import './PauseMenu.css'
 
-const PAUSE_ACTIONS = ['continuar', 'guardar']
+const PAUSE_ACTIONS = ['continuar', 'opciones', 'guardar']
 
 export function PauseMenu({ onContinue, onSaveAndExit, saving }) {
+  const [view, setView] = useState('pausa')
   const [focusedIndex, setFocusedIndex] = useState(0)
   const actionRefs = useRef([])
 
   useEffect(() => {
+    if (view !== 'pausa') return undefined
     actionRefs.current[focusedIndex]?.focus()
-  }, [focusedIndex])
 
-  useEffect(() => {
     const handleKeyDown = (event) => {
       const key = event.key.toLowerCase()
+      if (key === 'escape') {
+        event.preventDefault()
+        onContinue()
+        return
+      }
       if (key === 'w' || key === 'arrowup') {
         event.preventDefault()
         setFocusedIndex((index) => (index - 1 + PAUSE_ACTIONS.length) % PAUSE_ACTIONS.length)
@@ -32,7 +38,15 @@ export function PauseMenu({ onContinue, onSaveAndExit, saving }) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [focusedIndex])
+  }, [view, focusedIndex, onContinue])
+
+  if (view === 'opciones') {
+    return (
+      <div className="pause-menu-backdrop">
+        <OpcionesStack onExit={() => setView('pausa')} />
+      </div>
+    )
+  }
 
   return (
     <div className="pause-menu-backdrop">
@@ -52,8 +66,17 @@ export function PauseMenu({ onContinue, onSaveAndExit, saving }) {
             type="button"
             ref={(node) => { actionRefs.current[1] = node }}
             className="pause-menu-btn pause-menu-btn-secondary"
-            onClick={() => onSaveAndExit()}
+            onClick={() => setView('opciones')}
             onMouseEnter={() => setFocusedIndex(1)}
+          >
+            Opciones
+          </button>
+          <button
+            type="button"
+            ref={(node) => { actionRefs.current[2] = node }}
+            className="pause-menu-btn pause-menu-btn-secondary"
+            onClick={() => onSaveAndExit()}
+            onMouseEnter={() => setFocusedIndex(2)}
             disabled={saving}
           >
             {saving ? 'Guardando...' : 'Guardar y salir'}

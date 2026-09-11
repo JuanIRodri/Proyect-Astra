@@ -3,6 +3,7 @@ import { ExplorationView } from './components/ExplorationView'
 import { MainMenu } from './components/MainMenu'
 import { getPartida, resetPartida } from './services/api'
 import { PARTY_POSITIONS } from './game/constants'
+import { getSafePositions } from './game/board'
 import { useCallback, useState } from 'react'
 import './App.css'
 
@@ -19,19 +20,22 @@ function App() {
   const handleStart = useCallback(async (partidaId, mode) => {
     if (mode === 'nueva') {
       await resetPartida(partidaId);
-      setActivePartida({ id: partidaId, positions: PARTY_POSITIONS, leaderIndex: 0 });
+      setActivePartida({ id: partidaId, positions: getSafePositions(PARTY_POSITIONS), leaderIndex: 0 });
       return;
     }
 
     const partida = await getPartida(partidaId);
+    const storedPositions = partida.posiciones?.length >= 3
+      ? partida.posiciones
+      : [
+          { x: partida.liderX, y: partida.liderY },
+          { x: partida.liderX - 1, y: partida.liderY },
+          { x: partida.liderX - 2, y: partida.liderY },
+        ];
     setActivePartida({
       id: partida.idPartida,
-      positions: [
-        { x: partida.liderX, y: partida.liderY },
-        { x: partida.liderX - 1, y: partida.liderY },
-        { x: partida.liderX - 2, y: partida.liderY },
-      ],
-      leaderIndex: partida.liderIndex,
+      positions: getSafePositions(storedPositions),
+      leaderIndex: partida.liderIndex ?? 0,
       mapa: partida.mapa,
     });
   }, []);

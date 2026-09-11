@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react'
+import { useItemTooltip } from '../../hooks/useItemTooltip'
+import { ItemTooltip } from '../ItemTooltip'
 import './InventoryGrid.css'
 
 export function InventoryGrid({
@@ -16,11 +18,10 @@ export function InventoryGrid({
   onDragEnd,
   onDropGrid,
   onContextMenu,
-  onHoverItem,
-  onLeave,
   onWheel,
 }) {
   const gridRef = useRef(null)
+  const { itemTooltip, showTooltip, moveTooltip, hideTooltip } = useItemTooltip()
 
   useEffect(() => {
     const grid = gridRef.current
@@ -44,8 +45,9 @@ export function InventoryGrid({
             onSelectSlot(slotIndex)
           }}
           onDoubleClick={() => onDoubleClickSlot(slotIndex)}
-          onMouseEnter={() => onHoverItem(item)}
-          onMouseLeave={onLeave}
+          onMouseEnter={(event) => showTooltip(event, item)}
+          onMouseMove={moveTooltip}
+          onMouseLeave={hideTooltip}
           onContextMenu={(event) => {
             event.preventDefault()
             onContextMenu(slotIndex, event.clientX, event.clientY, window.innerWidth, window.innerHeight)
@@ -77,7 +79,7 @@ export function InventoryGrid({
           ref={(element) => { slotRefs.current[slotIndex] = element }}
           onClick={() => onSelectSlot(slotIndex)}
           onDoubleClick={() => onDoubleClickSlot(slotIndex)}
-          onMouseLeave={onLeave}
+          onMouseLeave={hideTooltip}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
@@ -87,6 +89,7 @@ export function InventoryGrid({
           aria-label={`Espacio vacío ${slotIndex + 1}`}
         />
       ))}
+      <ItemTooltip item={itemTooltip?.item} x={itemTooltip?.x} y={itemTooltip?.y} />
     </div>
   )
 }

@@ -1,14 +1,11 @@
-export const LEADER_KEYS = {
-  '1': 0,
-  '2': 1,
-  '3': 2,
-  digit1: 0,
-  digit2: 1,
-  digit3: 2,
-}
+import { eventKeyToBinding, loadBindings } from './bindings'
 
 export function getLeaderIndex(event) {
-  const key = event.key.toLowerCase()
-  const code = event.code.toLowerCase()
-  return LEADER_KEYS[key] ?? LEADER_KEYS[code]
+  const bindings = loadBindings()
+  const key = eventKeyToBinding(event)
+  if (!key) return undefined
+  if (key === bindings.lider1) return 0
+  if (key === bindings.lider2) return 1
+  if (key === bindings.lider3) return 2
+  return undefined
 }

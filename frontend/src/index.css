@@ -23,6 +23,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  height: 100%;
+}
+
 body {
   margin: 0;
   display: flex;

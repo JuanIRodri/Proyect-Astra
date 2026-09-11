@@ -4,28 +4,38 @@ const { AppError } = require('../utils/errors');
 const DEFAULT_LIDER_X = 5;
 const DEFAULT_LIDER_Y = 4;
 
+const PARTIDA_COLUMNS = `
+    idPartida, nombre, mapa, liderX, liderY, liderIndex, posiciones, fechaGuardado
+`;
+
+function parsePosiciones(row) {
+    const raw = row.posiciones;
+    const posiciones = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return { ...row, posiciones: Array.isArray(posiciones) ? posiciones : null };
+}
+
 async function list() {
     const rows = await query(`
-        SELECT idPartida, nombre, mapa, liderX, liderY, liderIndex, fechaGuardado
+        SELECT ${PARTIDA_COLUMNS}
         FROM Partida
         ORDER BY idPartida
     `);
     return rows.map((row) => ({
-        ...row,
+        ...parsePosiciones(row),
         tieneGuardado: row.fechaGuardado !== null,
     }));
 }
 
 async function detail(id) {
     const rows = await query(`
-        SELECT idPartida, nombre, mapa, liderX, liderY, liderIndex, fechaGuardado
+        SELECT ${PARTIDA_COLUMNS}
         FROM Partida
         WHERE idPartida = ?
     `, [id]);
     if (rows.length === 0) {
         throw new AppError(404, 'Partida no encontrada');
     }
-    return { ...rows[0], tieneGuardado: rows[0].fechaGuardado !== null };
+    return { ...parsePosiciones(rows[0]), tieneGuardado: rows[0].fechaGuardado !== null };
 }
 
 async function save(id, data = {}) {
@@ -36,12 +46,13 @@ async function save(id, data = {}) {
         liderY = existe.liderY ?? DEFAULT_LIDER_Y,
         liderIndex = existe.liderIndex ?? 0,
     } = data;
+    const posiciones = data.posiciones ? JSON.stringify(data.posiciones) : existe.posiciones ?? null;
 
     const result = await query(`
         UPDATE Partida
-        SET mapa = ?, liderX = ?, liderY = ?, liderIndex = ?, fechaGuardado = NOW()
+        SET mapa = ?, liderX = ?, liderY = ?, liderIndex = ?, posiciones = ?, fechaGuardado = NOW()
         WHERE idPartida = ?
-    `, [mapa, liderX, liderY, liderIndex, id]);
+    `, [mapa, liderX, liderY, liderIndex, posiciones, id]);
     if (result.affectedRows === 0) {
         throw new AppError(404, 'Partida no encontrada');
     }
@@ -52,7 +63,7 @@ async function reset(id) {
     await detail(id);
     const result = await query(`
         UPDATE Partida
-        SET mapa = NULL, liderX = NULL, liderY = NULL, liderIndex = 0, fechaGuardado = NULL
+        SET mapa = NULL, liderX = NULL, liderY = NULL, liderIndex = 0, posiciones = NULL, fechaGuardado = NULL
         WHERE idPartida = ?
     `, [id]);
     if (result.affectedRows === 0) {
