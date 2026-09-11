@@ -1,4 +1,5 @@
 import { getLeaderIndex } from '../../game/hotkeys'
+import { HOTBAR_KEYS } from '../../game/hotbarConfig'
 import { EQUIPMENT_SLOTS, getNextEquipmentIndex } from './inventoryUtils'
 
 export function createInventoryKeyHandler(config) {
@@ -46,6 +47,7 @@ export function createInventoryKeyHandler(config) {
     handleTransferSelected,
     handleCycleCategory,
     handleCycleRarity,
+    handleHotbarKey,
     moveSelection,
   } = config
 
@@ -246,6 +248,14 @@ export function createInventoryKeyHandler(config) {
       event.preventDefault()
       event.stopPropagation()
       handleCycleCategory()
+      return
+    }
+
+    const hotbarSlotIndex = HOTBAR_KEYS.indexOf(key)
+    if (hotbarSlotIndex !== -1) {
+      event.preventDefault()
+      event.stopPropagation()
+      handleHotbarKey?.(hotbarSlotIndex)
       return
     }
 
