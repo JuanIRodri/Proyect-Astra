@@ -5,18 +5,29 @@ import {
   FOLLOWER_SPACING,
   FOLLOWER_SMOOTHING,
 } from './constants'
+import { loadBindings, toPhaserKeyName } from './bindings'
 
 export function createMovementKeys(scene) {
-  return scene.input.keyboard.addKeys({
-    up: Phaser.Input.Keyboard.KeyCodes.W,
-    down: Phaser.Input.Keyboard.KeyCodes.S,
-    left: Phaser.Input.Keyboard.KeyCodes.A,
-    right: Phaser.Input.Keyboard.KeyCodes.D,
+  const bindings = loadBindings()
+  const names = {
+    up: bindings.moverArriba
+      ? toPhaserKeyName(bindings.moverArriba)
+      : Phaser.Input.Keyboard.KeyCodes.UP,
+    down: bindings.moverAbajo
+      ? toPhaserKeyName(bindings.moverAbajo)
+      : Phaser.Input.Keyboard.KeyCodes.DOWN,
+    left: bindings.moverIzquierda
+      ? toPhaserKeyName(bindings.moverIzquierda)
+      : Phaser.Input.Keyboard.KeyCodes.LEFT,
+    right: bindings.moverDerecha
+      ? toPhaserKeyName(bindings.moverDerecha)
+      : Phaser.Input.Keyboard.KeyCodes.RIGHT,
     arrowUp: Phaser.Input.Keyboard.KeyCodes.UP,
     arrowDown: Phaser.Input.Keyboard.KeyCodes.DOWN,
     arrowLeft: Phaser.Input.Keyboard.KeyCodes.LEFT,
     arrowRight: Phaser.Input.Keyboard.KeyCodes.RIGHT,
-  })
+  }
+  return scene.input.keyboard.addKeys(names)
 }
 
 export function getMovementVector(keys) {

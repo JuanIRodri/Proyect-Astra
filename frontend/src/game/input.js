@@ -1,25 +1,28 @@
 import { emitInventoryToggle } from './gameEvents'
 import { getLeaderIndex } from './hotkeys'
 import { isInputLocked } from './inputLock'
+import { eventKeyToBinding, loadBindings } from './bindings'
 
 export function createKeyHandler(scene) {
   return (event) => {
     if (isInputLocked()) return
 
-    const key = event.key.toLowerCase()
-    const code = event.code.toLowerCase()
     const leader = getLeaderIndex(event)
     if (leader !== undefined) {
       scene.setLeader(leader)
       return
     }
 
-    if (key === 'u' || code === 'keyu') {
+    const bindings = loadBindings()
+    const key = eventKeyToBinding(event)
+    if (!key) return
+
+    if (key === bindings.editarStats) {
       scene.emitCharacterEditorRequest()
       return
     }
 
-    if (key === 'i' || code === 'keyi') {
+    if (key === bindings.inventario) {
       emitInventoryToggle()
     }
   }
