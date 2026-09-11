@@ -1,4 +1,6 @@
 import { EQUIPMENT_SLOTS } from './inventoryUtils'
+import { useItemTooltip } from '../../hooks/useItemTooltip'
+import { ItemTooltip } from '../ItemTooltip'
 import './InventoryDetail.css'
 
 export function InventoryDetail({
@@ -8,15 +10,13 @@ export function InventoryDetail({
   onSelectEquipmentSlot,
   onDoubleClickEquipmentSlot,
   onDropEquip,
-  onHoverItem,
-  onLeave,
 }) {
+  const { itemTooltip, showTooltip, moveTooltip, hideTooltip } = useItemTooltip()
   return (
     <div className="inventory-detail">
       <section className="inventory-equipment" aria-label="Equipamiento del personaje">
         <div className="inventory-equipment-heading">
           <p className="inventory-kicker">EQUIPAMIENTO</p>
-          <span>El equipo puesto no ocupa capacidad</span>
         </div>
         <div className="inventory-equipment-slots">
           {EQUIPMENT_SLOTS.map((slot) => {
@@ -28,8 +28,9 @@ export function InventoryDetail({
                 type="button"
                 onClick={() => onSelectEquipmentSlot(slot.key)}
                 onDoubleClick={() => onDoubleClickEquipmentSlot(slot.key)}
-                onMouseEnter={() => onHoverItem(equippedItem)}
-                onMouseLeave={onLeave}
+                onMouseEnter={(event) => showTooltip(event, equippedItem)}
+                onMouseMove={moveTooltip}
+                onMouseLeave={hideTooltip}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
                   event.preventDefault()
@@ -78,6 +79,7 @@ export function InventoryDetail({
           {Object.entries(equipmentBonuses).filter(([, value]) => value !== 0).map(([stat, value]) => ` ${stat} ${value > 0 ? '+' : ''}${value}`).join(' · ') || ' ninguna'}
         </p>
       </section>
+      <ItemTooltip item={itemTooltip?.item} x={itemTooltip?.x} y={itemTooltip?.y} />
     </div>
   )
 }

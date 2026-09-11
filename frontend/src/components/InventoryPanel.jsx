@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react'
 import { useInventoryPanel } from './inventory/useInventoryPanel'
 import { InventoryHeader } from './inventory/InventoryHeader'
 import { InventoryFilters } from './inventory/InventoryFilters'
@@ -9,11 +9,20 @@ import { InventoryResources } from './inventory/InventoryResources'
 import { TransferModal } from './inventory/TransferModal'
 import { DetailsModal } from './inventory/DetailsModal'
 import { InventoryContextMenu } from './inventory/InventoryContextMenu'
-import { InventoryTooltip } from './inventory/InventoryTooltip'
 import { SplitModal } from './inventory/SplitModal'
+import { Hotbar } from './Hotbar'
 import './InventoryPanel.css'
 
 export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete }, ref) {
+  const hotbarRef = useRef(null)
+  const hotbarSourceRef = useRef({ items: [], cursorSlotIndex: 0, selectedItem: null })
+
+  const handleHotbarSlotKey = useCallback((slotIndex) => {
+    const { items: currentItems, cursorSlotIndex: cursor, selectedItem: currentSelected } = hotbarSourceRef.current
+    const item = currentItems[cursor] || currentSelected
+    hotbarRef.current?.assignSlot(slotIndex, item)
+  }, [])
+
   const {
     activeCharacter,
     characterList,
@@ -70,14 +79,14 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
     handleDragStartWithSplit,
     handleDragEnd,
     handleDropGrid,
-    hoverItem,
-    handleHoverItem,
-    clearHoverItem,
+    handleUseSelected,
     handleTransferFromSlot,
     splitPromptActive,
     handleConfirmSplit,
     handleCancelSplit,
-  } = useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete })
+  } = useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete, onHotbarSlotKey: handleHotbarSlotKey })
+
+  hotbarSourceRef.current = { items, cursorSlotIndex, selectedItem }
 
   useImperativeHandle(ref, () => ({
     transferFromSlot: handleTransferFromSlot,
@@ -114,8 +123,6 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
           onDragEnd={handleDragEnd}
           onDropGrid={handleDropGrid}
           onContextMenu={handleOpenContextMenu}
-          onHoverItem={handleHoverItem}
-          onLeave={clearHoverItem}
           onWheel={handleGridWheel}
         />
         <InventoryDetail
@@ -125,8 +132,6 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
           onSelectEquipmentSlot={handleSelectEquipmentSlot}
           onDoubleClickEquipmentSlot={handleDoubleClickEquipment}
           onDropEquip={handleEquipToSlot}
-          onHoverItem={handleHoverItem}
-          onLeave={clearHoverItem}
         />
       </div>
 
@@ -141,6 +146,14 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
         notice={notice}
         inventoryLoading={inventoryLoading}
         equipKeyActive={equipKeyActive}
+      />
+
+      <Hotbar
+        ref={hotbarRef}
+        variant="panel"
+        personajeId={activeCharacter?.idPersonaje}
+        items={items}
+        onUseRequest={handleUseSelected}
       />
 
       {contextMenu && contextMenuActions.length > 0 && (
@@ -180,8 +193,6 @@ export const InventoryPanel = forwardRef(function InventoryPanel({ onClose, pers
       {showItemDetails && detailItem && (
         <DetailsModal item={detailItem} onClose={handleCloseDetails} />
       )}
-
-      {hoverItem && <InventoryTooltip item={hoverItem} />}
     </aside>
   )
 })
