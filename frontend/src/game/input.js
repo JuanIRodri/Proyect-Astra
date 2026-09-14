@@ -1,4 +1,4 @@
-import { emitInventoryToggle } from './gameEvents'
+import { emitInventoryToggle, emitMapToggle } from './gameEvents'
 import { getLeaderIndex } from './hotkeys'
 import { isInputLocked } from './inputLock'
 import { eventKeyToBinding, loadBindings } from './bindings'
@@ -24,6 +24,11 @@ export function createKeyHandler(scene) {
 
     if (key === bindings.inventario) {
       emitInventoryToggle()
+      return
+    }
+
+    if (key === bindings.mapa) {
+      emitMapToggle()
     }
   }
 }

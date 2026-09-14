@@ -35,7 +35,7 @@ export const TOKEN_RADIUS = 15
 export const LEADER_MARKER_SIZE = TILE_SIZE - 6
 
 export const CAMERA_ZOOM = 0.72
-export const CAMERA_SMOOTHNESS = 0.12
+export const CAMERA_SMOOTHNESS = 1
 
 export const WALL_TILES = [
   { x: 16, y: 7 },

@@ -4,6 +4,7 @@ export const GAME_EVENTS = Object.freeze({
   partyPositionUpdate: 'party-position-update',
   videoSettingsChange: 'video-settings-change',
   leaderChange: 'leader-change',
+  toggleMap: 'toggle-map',
 })
 
 export function emitGameEvent(eventName, detail) {
@@ -16,6 +17,10 @@ export function emitCharacterEditorRequest(characterId) {
 
 export function emitInventoryToggle() {
   emitGameEvent(GAME_EVENTS.toggleInventory, {})
+}
+
+export function emitMapToggle() {
+  emitGameEvent(GAME_EVENTS.toggleMap, {})
 }
 
 export function emitPartyPositionUpdate(positions, leaderIndex) {

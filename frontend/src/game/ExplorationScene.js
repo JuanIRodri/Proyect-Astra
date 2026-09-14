@@ -19,6 +19,9 @@ import { createKeyHandler } from './input'
 import { emitCharacterEditorRequest, emitLeaderChange, emitPartyPositionUpdate, GAME_EVENTS } from './gameEvents'
 import { isInputLocked } from './inputLock'
 import { loadVideoSettings } from './videoSettings'
+import { setPartyPositionsStore } from './partyPositionsStore'
+
+const MAP_EMIT_DISTANCE = 6
 
 export class ExplorationScene extends Phaser.Scene {
   constructor() {
@@ -36,7 +39,8 @@ export class ExplorationScene extends Phaser.Scene {
     this.leaderIndex = Number.isInteger(data?.leaderIndex) ? data.leaderIndex : 0
     this.partyOrder = [0, 1, 2].filter((index) => index !== this.leaderIndex)
     this.partyOrder.unshift(this.leaderIndex)
-    this.lastEmittedTile = null
+    this.lastEmitX = null
+    this.lastEmitY = null
   }
 
   create() {
@@ -48,6 +52,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.leaderMarker = leaderMarker
     updatePartyLeaderStyling(this.party, this.leaderIndex)
     updateLeaderMarker(this.party, this.leaderMarker, this.leaderIndex)
+    this.syncPositionsStore()
 
     this.applyVideoSettings()
     this.subscribeVideoSettings()
@@ -108,19 +113,33 @@ export class ExplorationScene extends Phaser.Scene {
     if (!this.movementKeys || !this.party?.length) return
     if (isInputLocked()) return
 
+    this.syncPositionsStore()
     if (moveParty(this, delta)) {
       updateLeaderMarker(this.party, this.leaderMarker, this.leaderIndex)
       this.emitPartyPositionIfNeeded(false)
     }
   }
 
+  syncPositionsStore() {
+    setPartyPositionsStore(
+      this.party.map((token) => ({
+        x: (token.x - TILE_SIZE / 2) / TILE_SIZE,
+        y: (token.y - TILE_SIZE / 2) / TILE_SIZE,
+      })),
+      this.leaderIndex,
+    )
+  }
+
   emitPartyPositionIfNeeded(force) {
     const leader = this.party[this.leaderIndex]
     if (!leader) return
-    const tileX = Math.floor(leader.x / TILE_SIZE)
-    const tileY = Math.floor(leader.y / TILE_SIZE)
-    if (!force && this.lastEmittedTile === `${tileX},${tileY}`) return
-    this.lastEmittedTile = `${tileX},${tileY}`
+    if (!force) {
+      const deltaX = leader.x - (this.lastEmitX ?? leader.x)
+      const deltaY = leader.y - (this.lastEmitY ?? leader.y)
+      if (Math.hypot(deltaX, deltaY) < MAP_EMIT_DISTANCE) return
+    }
+    this.lastEmitX = leader.x
+    this.lastEmitY = leader.y
     emitPartyPositionUpdate(
       this.party.map((token) => ({ x: token.x, y: token.y })),
       this.leaderIndex,
@@ -140,6 +159,7 @@ export class ExplorationScene extends Phaser.Scene {
     updatePartyLeaderStyling(this.party, index)
     updateLeaderMarker(this.party, this.leaderMarker, index)
     this.cameras.main.startFollow(this.party[index], true, CAMERA_SMOOTHNESS, CAMERA_SMOOTHNESS)
+    this.syncPositionsStore()
     emitLeaderChange(index)
     this.emitPartyPositionIfNeeded(true)
   }

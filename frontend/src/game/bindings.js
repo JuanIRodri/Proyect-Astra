@@ -11,6 +11,7 @@ export const BINDING_LABELS = {
   editarStats: 'Editar estadísticas',
   inventario: 'Inventario',
   interactuar: 'Interactuar',
+  mapa: 'Mapa',
 }
 
 export const BINDABLE_ACTIONS = Object.keys(BINDING_LABELS)
@@ -26,6 +27,7 @@ export const DEFAULT_BINDINGS = {
   editarStats: 'U',
   inventario: 'I',
   interactuar: 'E',
+  mapa: 'M',
 }
 
 export function loadBindings() {

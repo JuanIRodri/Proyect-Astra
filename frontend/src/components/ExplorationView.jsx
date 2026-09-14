@@ -7,6 +7,7 @@ import { Minimap } from './Minimap'
 import { GroupHud } from './GroupHud'
 import { Hotbar } from './Hotbar'
 import { PauseMenu } from './PauseMenu'
+import { MapView } from './map/MapView'
 import { usePartyPositions } from '../hooks/usePartyPositions'
 import { savePartida } from '../services/api'
 import { lockInput, unlockInput } from '../game/inputLock'
@@ -16,6 +17,7 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [inventoryOpen, setInventoryOpen] = useState(false)
   const [pauseOpen, setPauseOpen] = useState(false)
+  const [mapOpen, setMapOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(inicioPartida?.leaderIndex ?? 0)
   const [transferToken, setTransferToken] = useState(0)
@@ -67,12 +69,13 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
     if (inventoryOpen) reasons.push('inventory')
     if (editingCharacter) reasons.push('editor')
     if (pauseOpen) reasons.push('pause')
+    if (mapOpen) reasons.push('map')
     reasons.forEach(lockInput)
     return () => reasons.forEach(unlockInput)
-  }, [inventoryOpen, editingCharacter, pauseOpen])
+  }, [inventoryOpen, editingCharacter, pauseOpen, mapOpen])
 
   useEffect(() => {
-    if (pauseOpen || inventoryOpen || editingCharacter) {
+    if (pauseOpen || inventoryOpen || editingCharacter || mapOpen) {
       return undefined
     }
 
@@ -85,11 +88,17 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
 
     window.addEventListener('keydown', handleOpenPause)
     return () => window.removeEventListener('keydown', handleOpenPause)
-  }, [pauseOpen, inventoryOpen, editingCharacter])
+  }, [pauseOpen, inventoryOpen, editingCharacter, mapOpen])
 
   useEffect(() => subscribeToGameEvent(GAME_EVENTS.leaderChange, ({ index }) => {
     if (Number.isInteger(index)) setActiveCharacterIndex(index)
   }), [])
+
+  useEffect(() => subscribeToGameEvent(GAME_EVENTS.toggleMap, () => {
+    if (!inventoryOpen && !pauseOpen && !editingCharacter) {
+      setMapOpen((isOpen) => !isOpen)
+    }
+  }), [inventoryOpen, pauseOpen, editingCharacter])
 
   const handleSaveAndExit = async () => {
     setSaving(true)
@@ -130,9 +139,14 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
         onOpenCharacterEditor={handleOpenCharacterEditor}
         onToggleInventory={handleToggleInventory}
       />
-      <Minimap personajes={personajes} />
+      <Minimap
+        personajes={personajes}
+        positions={positions}
+        leaderIndex={leaderIndex}
+        keysDisabled={mapOpen || inventoryOpen || editingCharacter !== null || pauseOpen}
+      />
       <GroupHud personajes={personajes} />
-      {!inventoryOpen && !editingCharacter && !pauseOpen && personajes[activeCharacterIndex] && (
+      {!inventoryOpen && !editingCharacter && !pauseOpen && !mapOpen && personajes[activeCharacterIndex] && (
         <Hotbar
           key={personajes[activeCharacterIndex].idPersonaje}
           personajeId={personajes[activeCharacterIndex].idPersonaje}
@@ -145,6 +159,14 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
           onContinue={() => setPauseOpen(false)}
           onSaveAndExit={handleSaveAndExit}
           saving={saving}
+        />
+      )}
+      {mapOpen && (
+        <MapView
+          personajes={personajes}
+          positions={positions}
+          leaderIndex={leaderIndex}
+          onClose={() => setMapOpen(false)}
         />
       )}
       {inventoryOpen && (
