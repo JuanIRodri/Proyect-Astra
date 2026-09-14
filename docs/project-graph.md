@@ -39,7 +39,20 @@ flowchart TD
     Hooks --> UseItemTooltip[useItemTooltip.js\nestado del tooltip de objeto]
     Services --> Api[services/api.js\ncliente HTTP]
     Game --> Exploration[game/ExplorationScene.js\nescena Phaser 3]
-    Game --> MapCanvas[game/mapCanvas.js\ndibujado compartido del mapa]
+    Game --> Iso[game/isometric.js\nproyección iso 48×24]
+    Game --> Collision[game/collision.js\ncolisiones por hitbox de objeto]
+    Game --> Board[game/board.js\noverlay de cuadrícula y posiciones seguras]
+    Game --> Party[game/party.js\nfichas del grupo y marcador de líder]
+    Game --> Decor[game/decor.js\nárboles y arbustos 2.5D]
+    Game --> Movement[game/movement.js\nmovimiento continuo del grupo]
+    Game --> Input[game/input.js\natajos de la escena]
+    Game --> Hotkeys[game/hotkeys.js\nlíder 1/2/3]
+    Game --> Bindings[game/bindings.js\ntezas configurables]
+    Game --> InputLock[game/inputLock.js\nbloqueo de input]
+    Game --> VideoSettings[game/videoSettings.js\nvideo/overlay]
+    Game --> PartyPositions[game/partyPositionsStore.js\nposiciones en vivo del grupo]
+    Game --> HotbarConfig[game/hotbarConfig.js\nconfig de la hotbar]
+    Game --> MapCanvas[game/mapCanvas.js\ndibujado del mapa M y minimapa]
     Game --> GameEvents[game/gameEvents.js\nCustomEvent compartidos]
     ExplorationView --> PhaserGame
     ExplorationView --> Inventory
@@ -90,7 +103,13 @@ flowchart TD
 | Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `inventory/useInventoryPanel.js`, `gameEvents.js` |
 | Minimapa con zoom | `frontend/src/components/Minimap.jsx` | `map/useMapCanvasController.js`, `game/mapCanvas.js`, `usePartyPositions.js` |
 | Mapa completo (tecla M) | `frontend/src/components/map/MapView.jsx` | `map/useMapCanvasController.js`, `game/mapCanvas.js`, `usePartyPositions.js` |
-| Dibujado del mapa (grilla, paredes, grupo) | `frontend/src/game/mapCanvas.js` | `game/constants.js` |
+| Dibujado de mapas (diamante iso) | `frontend/src/game/mapCanvas.js` | `game/isometric.js`, `game/collision.js`, `game/constants.js` |
+| Proyeccion isometrica (48×24) | `frontend/src/game/isometric.js` | `game/constants.js` |
+| Colision (hitbox por objeto) | `frontend/src/game/collision.js` | `game/isometric.js`, `ExplorationScene.js`, `decor.js` |
+| Overlay de cuadricula y posiciones seguras | `frontend/src/game/board.js` | `game/collision.js`, `game/isometric.js` |
+| Fichas del grupo y marcador | `frontend/src/game/party.js` | `game/constants.js`, `isometric.js` |
+| Decoracion 2.5D (arboles/arbustos) | `frontend/src/game/decor.js` | `game/constants.js`, `isometric.js` |
+| Movimiento continuo del grupo | `frontend/src/game/movement.js` | `game/board.js`, `game/bindings.js` |
 | Logica del mapa y exploracion | `frontend/src/game/ExplorationScene.js` | Phaser 3 |
 | Eventos compartidos React-Phaser | `frontend/src/game/gameEvents.js` | `CustomEvent`, `PhaserGame.jsx`, `ExplorationScene.js` |
 | Estado y actualización de personajes | `frontend/src/hooks/usePersonajes.js` | `frontend/src/services/api.js` |
@@ -118,9 +137,8 @@ sequenceDiagram
     participant U as Usuario
 
     R->>P: Renderiza el contenedor
-    P->>S: Crea Phaser.Game con la escena
-    S-->>R: Emite exploration-status
-    U->>S: Presiona 1, 2, 3, flechas o WASD
-    S-->>R: Emite cambio de lider, movimiento o bloqueo
-    R-->>U: Muestra el estado de la prueba
+    P->>S: Crea Phaser.Game con la escena (posiciones y líder de la partida)
+    U->>S: Presiona 1/2/3 (líder), flechas/WASD (movimiento), U (editor), I (inventario), M (mapa)
+    S-->>R: Emite party-position-update, leader-change y open-character-editor
+    R-->>U: Muestra minimapa/mapa M (60 fps) y paneles de inventario/editor
 ```

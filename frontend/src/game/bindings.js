@@ -48,11 +48,6 @@ export function saveBindings(bindings) {
   }
 }
 
-export function resetBindings() {
-  saveBindings({ ...DEFAULT_BINDINGS })
-  return { ...DEFAULT_BINDINGS }
-}
-
 export function eventKeyToBinding(event) {
   const key = event.key
   if (key && key.length === 1 && /^[a-zA-Z0-9]$/.test(key)) return key.toUpperCase()

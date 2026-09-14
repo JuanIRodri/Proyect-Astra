@@ -30,7 +30,7 @@ export function createMovementKeys(scene) {
   return scene.input.keyboard.addKeys(names)
 }
 
-export function getMovementVector(keys) {
+function getMovementVector(keys) {
   const horizontal = Number(keys.right.isDown || keys.arrowRight.isDown)
     - Number(keys.left.isDown || keys.arrowLeft.isDown)
   const vertical = Number(keys.down.isDown || keys.arrowDown.isDown)

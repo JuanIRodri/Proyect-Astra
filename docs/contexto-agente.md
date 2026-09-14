@@ -85,9 +85,10 @@ Confirmado por el usuario: contador de objetos por personaje en el aside, pie de
 
 Iteración de interfaz sobre la exploración, empezando por un minimapa y un HUD de grupo fijo (ambos pendientes de confirmación visual del usuario):
 
-- `frontend/src/components/Minimap.jsx`/`.css`: radar en la esquina superior derecha sobre el canvas. Dibuja en un `<canvas>` el mundo completo escalado (36×22 tiles): fondo, grilla, muros de `WALL_TILES` y un punto por ficha del grupo con su color de `PARTY_COLORS`; el líder lleva un aro blanco y radio mayor.
+- `frontend/src/components/Minimap.jsx`/`.css`: radar sobre el canvas. Dibuja en un `<canvas>` el mundo completo en vista de **diamante isométrico**:
+  - Pedazo, contorno del mundo y capas de rombos; caminos y rocas bloqueadas (`game/collision.js`); punto por ficha del grupo con su color de clase (`getPartyColorForClass()`) y aro blanco para el líder. Dibujo compartido en `game/mapCanvas.js`.
 - `frontend/src/components/GroupHud.jsx`/`.css`: panel fijo en la esquina inferior izquierda con los 3 personajes (nombre, barra de Vida en rojo y barra de Maná en azul, con porcentaje real desde `vidaActual/vidaMax/manaActual/manaMax`); el líder se resalta con el color dorado del tema.
-- `frontend/src/hooks/usePartyPositions.js`: suscribe el evento `party-position-update` y mantiene las posiciones en coordenadas de tile (convierte los px del mundo con `worldToTile`) más el `leaderIndex`. El estado inicial sale de `PARTY_POSITIONS`.
+- `frontend/src/hooks/usePartyPositions.js`: suscribe el evento `party-position-update` y mantiene las posiciones en coordenadas de tile `(u, v)` (el puente `game/partyPositionsStore.js` guarda en vivo) más el `leaderIndex`. El estado inicial sale de `PARTY_POSITIONS`.
 - Puente Phaser→React: `gameEvents.js` ganó `partyPositionUpdate` y el emisor `emitPartyPositionUpdate(positions, leaderIndex)`. `ExplorationScene.js` lo dispara al crear la escena, al cambiar de líder (`setLeader`) y en `update` cuando el líder cambia de casilla (se cachea la última casilla para no spamear eventos en cada frame).
 - Ambas piezas se montan en `ExplorationView.jsx` junto a `<PhaserGame/>`; son overlays con `pointer-events: none` para no bloquear el input de la escena.
 

@@ -5,7 +5,6 @@ import { isoProject, isoWorldBounds, ISO_HALF_W, ISO_HALF_H } from './isometric'
 export const MIN_MAP_ZOOM = 1
 export const DEFAULT_MAP_ZOOM = 2
 export const MAP_ZOOM_LEVELS = [MIN_MAP_ZOOM, 1.25, 1.6, DEFAULT_MAP_ZOOM, 2.6, 3.2, 4]
-export const MAX_MAP_ZOOM = MAP_ZOOM_LEVELS[MAP_ZOOM_LEVELS.length - 1]
 
 const BACKGROUND_COLOR = '#172536'
 const GRID_COLOR = 'rgba(55, 80, 106, 0.55)'

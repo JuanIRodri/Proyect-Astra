@@ -1,5 +1,5 @@
-export const GRID_COLUMNS = 8
-export const SLOT_COUNT = 48
+const GRID_COLUMNS = 8
+const SLOT_COUNT = 48
 export const EQUIPMENT_SLOTS = [
   { key: 'pecho', label: 'Pecho', icon: '🛡' },
   { key: 'casco', label: 'Casco', icon: '⛑' },
@@ -13,7 +13,7 @@ export function createInventory() {
   return Array(SLOT_COUNT).fill(null)
 }
 
-export function normalizeItem(row) {
+function normalizeItem(row) {
   return {
     ...row,
     id: `${row.itemKey}-${row.ranura}`,
