@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react'
 import { GAME_EVENTS, subscribeToGameEvent } from '../game/gameEvents'
-import { PARTY_POSITIONS, TILE_SIZE } from '../game/constants'
-
-function worldToTile(x) {
-  return (x - TILE_SIZE / 2) / TILE_SIZE
-}
+import { PARTY_POSITIONS } from '../game/constants'
 
 export function usePartyPositions(partySize = 3, initialPositions, initialLeaderIndex = 0) {
   const [positions, setPositions] = useState(() => {
@@ -19,12 +15,7 @@ export function usePartyPositions(partySize = 3, initialPositions, initialLeader
     const unsubscribe = subscribeToGameEvent(
       GAME_EVENTS.partyPositionUpdate,
       ({ positions: nextPositions, leaderIndex: nextLeader }) => {
-        setPositions(
-          nextPositions.slice(0, partySize).map((position) => ({
-            x: worldToTile(position.x),
-            y: worldToTile(position.y),
-          })),
-        )
+        setPositions(nextPositions.slice(0, partySize).map((position) => ({ x: position.x, y: position.y })))
         setLeaderIndex(nextLeader)
       },
     )

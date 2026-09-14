@@ -33,12 +33,7 @@ export const FOLLOWER_SMOOTHING = 0.18
 
 export const TOKEN_RADIUS = 15
 export const LEADER_MARKER_SIZE = TILE_SIZE - 6
+export const WORLD_DEPTH_BASE = 1000
 
-export const CAMERA_ZOOM = 0.72
+export const CAMERA_ZOOM = 1
 export const CAMERA_SMOOTHNESS = 1
-
-export const WALL_TILES = [
-  { x: 16, y: 7 },
-  { x: 16, y: 8 },
-  { x: 16, y: 9 },
-]

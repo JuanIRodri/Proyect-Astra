@@ -15,9 +15,11 @@ export function PhaserGame({ personajes, inicioPartida, onOpenCharacterEditor, o
       parent: containerRef.current,
       width: 576,
       height: 384,
-      backgroundColor: '#172536',
+      backgroundColor: '#223a25',
       scene: [],
-      render: { antialias: false },
+      pixelArt: true,
+      roundPixels: true,
+      render: { antialias: false, roundPixels: true },
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,

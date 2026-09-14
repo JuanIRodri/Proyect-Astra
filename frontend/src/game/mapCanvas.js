@@ -1,4 +1,6 @@
-import { GRID_WIDTH, GRID_HEIGHT, WALL_TILES, getPartyColorForClass } from './constants'
+import { GRID_WIDTH, GRID_HEIGHT, getPartyColorForClass } from './constants'
+import { getBlockedTiles } from './collision'
+import { isoProject, isoWorldBounds, ISO_HALF_W, ISO_HALF_H } from './isometric'
 
 export const MIN_MAP_ZOOM = 1
 export const DEFAULT_MAP_ZOOM = 2
@@ -20,33 +22,38 @@ function toCssColor(hex) {
 }
 
 export function viewMetrics(width, height, zoom = MIN_MAP_ZOOM) {
-  const base = Math.min(width / GRID_WIDTH, height / GRID_HEIGHT)
+  const bounds = isoWorldBounds()
+  const isoWidth = bounds.maxX - bounds.minX
+  const isoHeight = bounds.maxY - bounds.minY
+  const base = Math.min(width / isoWidth, height / isoHeight)
   const scale = base * zoom
   return {
     base,
     scale,
-    visibleTilesW: width / scale,
-    visibleTilesH: height / scale,
+    visibleTilesW: width / (scale * ISO_HALF_W),
+    visibleTilesH: height / (scale * ISO_HALF_H),
   }
 }
 
 export function clampOffset(offset = { x: 0, y: 0 }, width, height, zoom = MIN_MAP_ZOOM) {
   const { visibleTilesW, visibleTilesH } = viewMetrics(width, height, zoom)
+  const maxU = Math.max(0, GRID_WIDTH - visibleTilesW)
+  const maxV = Math.max(0, GRID_HEIGHT - visibleTilesH)
   return {
-    x: clamp(offset.x, 0, Math.max(0, GRID_WIDTH - visibleTilesW)),
-    y: clamp(offset.y, 0, Math.max(0, GRID_HEIGHT - visibleTilesH)),
+    x: clamp(offset.x, 0, maxU),
+    y: clamp(offset.y, 0, maxV),
   }
 }
 
 export function calculateFollowOffset({ width, height, zoom = MIN_MAP_ZOOM, positions = [], leaderIndex = 0 }) {
-  if (zoom <= MIN_MAP_ZOOM) return clampOffset({ x: 0, y: 0 }, width, height, zoom)
   const position = positions[leaderIndex]
   if (!position) return clampOffset({ x: 0, y: 0 }, width, height, zoom)
-  const metrics = viewMetrics(width, height, zoom)
+  if (zoom <= MIN_MAP_ZOOM) return clampOffset({ x: 0, y: 0 }, width, height, zoom)
+  const { visibleTilesW, visibleTilesH } = viewMetrics(width, height, zoom)
   return clampOffset(
     {
-      x: position.x + 0.5 - metrics.visibleTilesW / 2,
-      y: position.y + 0.5 - metrics.visibleTilesH / 2,
+      x: position.x - visibleTilesW / 2,
+      y: position.y - visibleTilesH / 2,
     },
     width,
     height,
@@ -63,49 +70,60 @@ export function drawMapCanvas(context, {
   leaderIndex = 0,
   personajes = [],
 }) {
-  const { scale, visibleTilesW, visibleTilesH } = viewMetrics(width, height, zoom)
+  const { scale } = viewMetrics(width, height, zoom)
   const off = clampOffset(offset, width, height, zoom)
+  const base = isoWorldBounds()
+  const origin = isoProject(off.x, off.y)
 
   context.clearRect(0, 0, width, height)
   context.fillStyle = BACKGROUND_COLOR
   context.fillRect(0, 0, width, height)
 
-  const firstCol = Math.max(0, Math.floor(off.x))
-  const lastCol = Math.min(GRID_WIDTH, Math.ceil(off.x + visibleTilesW))
-  const firstRow = Math.max(0, Math.floor(off.y))
-  const lastRow = Math.min(GRID_HEIGHT, Math.ceil(off.y + visibleTilesH))
+  const project = (isoPoint) => ({
+    x: (isoPoint.x - origin.x - base.minX) * scale,
+    y: (isoPoint.y - origin.y - base.minY) * scale,
+  })
 
   context.strokeStyle = GRID_COLOR
   context.lineWidth = 1
-  context.beginPath()
-  for (let x = firstCol; x <= lastCol; x += 1) {
-    const px = Math.round((x - off.x) * scale) + 0.5
-    context.moveTo(px, 0)
-    context.lineTo(px, height)
+
+  for (let u = 0; u <= GRID_WIDTH; u += 1) {
+    const a = project(isoProject(u, 0))
+    const b = project(isoProject(u, GRID_HEIGHT - 1))
+    context.beginPath()
+    context.moveTo(a.x, a.y)
+    context.lineTo(b.x, b.y)
+    context.stroke()
   }
-  for (let y = firstRow; y <= lastRow; y += 1) {
-    const py = Math.round((y - off.y) * scale) + 0.5
-    context.moveTo(0, py)
-    context.lineTo(width, py)
+
+  for (let v = 0; v <= GRID_HEIGHT; v += 1) {
+    const a = project(isoProject(0, v))
+    const b = project(isoProject(GRID_WIDTH - 1, v))
+    context.beginPath()
+    context.moveTo(a.x, a.y)
+    context.lineTo(b.x, b.y)
+    context.stroke()
   }
-  context.stroke()
 
   context.fillStyle = WALL_COLOR
-  WALL_TILES.forEach((tile) => {
-    const left = (tile.x - off.x) * scale
-    const top = (tile.y - off.y) * scale
-    if (left + scale < 0 || top + scale < 0 || left > width || top > height) return
-    context.fillRect(left, top, scale, scale)
+  getBlockedTiles().forEach((tile) => {
+    const center = project(isoProject(tile.x, tile.y))
+    context.beginPath()
+    context.moveTo(center.x, center.y - ISO_HALF_H * scale)
+    context.lineTo(center.x + ISO_HALF_W * scale, center.y)
+    context.lineTo(center.x, center.y + ISO_HALF_H * scale)
+    context.lineTo(center.x - ISO_HALF_W * scale, center.y)
+    context.closePath()
+    context.fill()
   })
 
   positions.forEach((position, index) => {
     const isLeader = index === leaderIndex
-    const centerX = (position.x + 0.5 - off.x) * scale
-    const centerY = (position.y + 0.5 - off.y) * scale
+    const center = project(isoProject(position.x, position.y))
     const radius = isLeader ? Math.max(5, scale * 0.17) : Math.max(3.8, scale * 0.13)
 
     context.beginPath()
-    context.arc(centerX, centerY, radius, 0, Math.PI * 2)
+    context.arc(center.x, center.y, radius, 0, Math.PI * 2)
     context.fillStyle = toCssColor(getPartyColorForClass(personajes?.[index]?.clase))
     context.fill()
     context.lineWidth = isLeader ? 2.2 : 1.4

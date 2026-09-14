@@ -6,6 +6,7 @@ import {
   clampOffset,
   viewMetrics,
 } from '../../game/mapCanvas'
+import { isoUnproject } from '../../game/isometric'
 
 const WHEEL_THRESHOLD = 60
 
@@ -22,20 +23,13 @@ export function useMapCanvasController({
   followLeader = false, disablePan = false,
 }) {
   const [zoom, setZoom] = useState(initialZoom)
-  const [offset, setOffset] = useState(() => {
-    const position = positions[leaderIndex]
-    if (!position) return clampOffset({ x: 0, y: 0 }, width, height, initialZoom)
-    const metrics = viewMetrics(width, height, initialZoom)
-    return clampOffset(
-      {
-        x: position.x + 0.5 - metrics.visibleTilesW / 2,
-        y: position.y + 0.5 - metrics.visibleTilesH / 2,
-      },
-      width,
-      height,
-      initialZoom,
-    )
-  })
+  const [offset, setOffset] = useState(() => calculateFollowOffset({
+    width,
+    height,
+    zoom: initialZoom,
+    positions,
+    leaderIndex,
+  }))
   const zoomRef = useRef(zoom)
   const offsetRef = useRef(offset)
   const positionsRef = useRef(positions)
@@ -98,10 +92,9 @@ export function useMapCanvasController({
     const drag = dragRef.current
     if (!drag || drag.pointerId !== event.pointerId) return
     const { scale } = viewMetrics(width, height, zoomRef.current)
-    const deltaX = (event.clientX - drag.startX) / scale
-    const deltaY = (event.clientY - drag.startY) / scale
+    const delta = isoUnproject((event.clientX - drag.startX) / scale, (event.clientY - drag.startY) / scale)
     setOffset(clampOffset(
-      { x: drag.startOffset.x - deltaX, y: drag.startOffset.y - deltaY },
+      { x: drag.startOffset.x - delta.u, y: drag.startOffset.y - delta.v },
       width,
       height,
       zoomRef.current,
@@ -113,8 +106,10 @@ export function useMapCanvasController({
   }, [])
 
   const panBy = useCallback((dx, dy) => {
+    const { scale } = viewMetrics(width, height, zoomRef.current)
+    const delta = isoUnproject(dx / scale, dy / scale)
     const next = clampOffset(
-      { x: offsetRef.current.x + dx, y: offsetRef.current.y + dy },
+      { x: offsetRef.current.x + delta.u, y: offsetRef.current.y + delta.v },
       width,
       height,
       zoomRef.current,
