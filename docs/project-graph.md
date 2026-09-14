@@ -28,6 +28,8 @@ flowchart TD
     Components --> Inventory[components/inventory/\nInventoryPanel compone\nuseInventoryPanel.js\ninventoryUtils.js\ninventoryOperations.js\ninventoryKeyHandler.js\nInventoryHeader.jsx\nInventoryGrid.jsx\nInventoryDetail.jsx\nInventoryStats.jsx]
     Components --> Hotbar[Hotbar.jsx\nbarra de acceso rapido (overlay y panel)]
     Components --> ItemTooltip[ItemTooltip.jsx\nficha flotante de objeto]
+    Components --> Minimap[Minimap.jsx\nminimapa con zoom, rueda y drag]
+    Components --> MapModules[components/map/\nMapView.jsx\nuseMapCanvasController.js]
     Components --> FormParts[components/form-parts/\nAppearanceFields.jsx\nStatsFields.jsx]
     Components --> MainMenu[MainMenu.jsx\ncompositor del menu inicial]
     Components --> MenuModules[components/mainmenu/\nMenuHome.jsx · MenuCargar.jsx · MenuNueva.jsx\nOpcionesStack.jsx · MenuOpciones.jsx\nMenuOpcionesAudio.jsx · MenuOpcionesVideo.jsx\nMenuOpcionesTeclas.jsx\nuseMenuNav.js · useOpciones.js · useOpcionesVideo.js\nuseTeclas.js · utils.js]
@@ -37,9 +39,14 @@ flowchart TD
     Hooks --> UseItemTooltip[useItemTooltip.js\nestado del tooltip de objeto]
     Services --> Api[services/api.js\ncliente HTTP]
     Game --> Exploration[game/ExplorationScene.js\nescena Phaser 3]
+    Game --> MapCanvas[game/mapCanvas.js\ndibujado compartido del mapa]
     Game --> GameEvents[game/gameEvents.js\nCustomEvent compartidos]
     ExplorationView --> PhaserGame
     ExplorationView --> Inventory
+    ExplorationView --> Minimap
+    ExplorationView --> MapModules
+    Minimap --> MapModules
+    MapModules --> MapCanvas
     PhaserGame --> GameEvents
     PhaserGame --> Exploration
     Inventory --> InventoryState[inventory/useInventoryPanel.js\nestado y acciones]
@@ -81,6 +88,9 @@ flowchart TD
 | Vista separada de exploracion | `frontend/src/components/ExplorationView.jsx` | `PhaserGame.jsx` |
 | Montar Phaser en React | `frontend/src/components/PhaserGame.jsx` | `frontend/src/game/ExplorationScene.js` |
 | Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `inventory/useInventoryPanel.js`, `gameEvents.js` |
+| Minimapa con zoom | `frontend/src/components/Minimap.jsx` | `map/useMapCanvasController.js`, `game/mapCanvas.js`, `usePartyPositions.js` |
+| Mapa completo (tecla M) | `frontend/src/components/map/MapView.jsx` | `map/useMapCanvasController.js`, `game/mapCanvas.js`, `usePartyPositions.js` |
+| Dibujado del mapa (grilla, paredes, grupo) | `frontend/src/game/mapCanvas.js` | `game/constants.js` |
 | Logica del mapa y exploracion | `frontend/src/game/ExplorationScene.js` | Phaser 3 |
 | Eventos compartidos React-Phaser | `frontend/src/game/gameEvents.js` | `CustomEvent`, `PhaserGame.jsx`, `ExplorationScene.js` |
 | Estado y actualización de personajes | `frontend/src/hooks/usePersonajes.js` | `frontend/src/services/api.js` |

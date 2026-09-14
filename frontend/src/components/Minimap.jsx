@@ -1,77 +1,141 @@
 import { useEffect, useRef } from 'react'
-import { GRID_WIDTH, GRID_HEIGHT, WALL_TILES, getPartyColorForClass } from '../game/constants'
-import { usePartyPositions } from '../hooks/usePartyPositions'
+import { drawMapCanvas, calculateFollowOffset, DEFAULT_MAP_ZOOM } from '../game/mapCanvas'
+import { getPartyPositionsSnapshot } from '../game/partyPositionsStore'
+import { useMapCanvasController } from './map/useMapCanvasController'
 import './Minimap.css'
 
 const MINIMAP_WIDTH = 216
 const MINIMAP_HEIGHT = 132
-const BORDER = 3
-const BACKGROUND_COLOR = 'rgba(17, 24, 39, 0.92)'
-const GRID_COLOR = 'rgba(55, 80, 106, 0.55)'
-const WALL_COLOR = '#3d5264'
-const LEADER_COLOR = '#ffffff'
 
-function toCssColor(hex) {
-  return `#${hex.toString(16).padStart(6, '0')}`
+function positionsChanged(prev, next, nextLeader) {
+  if (!prev || prev.leader !== nextLeader || next.length !== prev.positions.length) return true
+  for (let i = 0; i < next.length; i += 1) {
+    if (next[i].x !== prev.positions[i].x || next[i].y !== prev.positions[i].y) return true
+  }
+  return false
 }
 
-export function Minimap({ personajes = [] }) {
+export function Minimap({
+  personajes = [],
+  keysDisabled = false,
+  positions: positionsProp,
+  leaderIndex: leaderIndexProp,
+}) {
   const canvasRef = useRef(null)
-  const { positions, leaderIndex } = usePartyPositions()
+  const zoomInRef = useRef(null)
+  const zoomOutRef = useRef(null)
+  const controller = useMapCanvasController({
+    width: MINIMAP_WIDTH,
+    height: MINIMAP_HEIGHT,
+    positions: positionsProp ?? [],
+    leaderIndex: leaderIndexProp ?? 0,
+    initialZoom: DEFAULT_MAP_ZOOM,
+    followLeader: true,
+    disablePan: true,
+  })
+  const {
+    zoom, onWheel, onPointerDown, onPointerMove, onPointerEnd, reset, stepZoom,
+  } = controller
+
+  const zoomRef = useRef(zoom)
+  const personajesRef = useRef(personajes)
+  const fallbackRef = useRef({ positions: positionsProp ?? [], leaderIndex: leaderIndexProp ?? 0 })
+
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
+  useEffect(() => { personajesRef.current = personajes }, [personajes])
+  useEffect(() => {
+    fallbackRef.current = { positions: positionsProp ?? [], leaderIndex: leaderIndexProp ?? 0 }
+  }, [positionsProp, leaderIndexProp])
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return undefined
-    const context = canvas.getContext('2d')
-    if (!context) return undefined
-
-    const scaleX = (MINIMAP_WIDTH - BORDER * 2) / GRID_WIDTH
-    const scaleY = (MINIMAP_HEIGHT - BORDER * 2) / GRID_HEIGHT
-
-    context.clearRect(0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT)
-    context.fillStyle = BACKGROUND_COLOR
-    context.fillRect(0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT)
-
-    context.strokeStyle = GRID_COLOR
-    context.lineWidth = 0.5
-    for (let x = 1; x < GRID_WIDTH; x += 1) {
-      context.beginPath()
-      context.moveTo(BORDER + x * scaleX, BORDER)
-      context.lineTo(BORDER + x * scaleX, MINIMAP_HEIGHT - BORDER)
-      context.stroke()
+    const handler = (event) => {
+      event.preventDefault()
+      onWheel(event)
     }
-    for (let y = 1; y < GRID_HEIGHT; y += 1) {
-      context.beginPath()
-      context.moveTo(BORDER, BORDER + y * scaleY)
-      context.lineTo(MINIMAP_WIDTH - BORDER, BORDER + y * scaleY)
-      context.stroke()
+    canvas.addEventListener('wheel', handler, { passive: false })
+    return () => canvas.removeEventListener('wheel', handler)
+  }, [onWheel])
+
+  useEffect(() => {
+    const zoomIn = zoomInRef.current
+    const zoomOut = zoomOutRef.current
+    if (!zoomIn || !zoomOut) return undefined
+    const onIn = (event) => {
+      event.stopPropagation()
+      stepZoom(1)
     }
+    const onOut = (event) => {
+      event.stopPropagation()
+      stepZoom(-1)
+    }
+    zoomIn.addEventListener('pointerdown', onIn)
+    zoomOut.addEventListener('pointerdown', onOut)
+    return () => {
+      zoomIn.removeEventListener('pointerdown', onIn)
+      zoomOut.removeEventListener('pointerdown', onOut)
+    }
+  }, [stepZoom])
 
-    context.fillStyle = WALL_COLOR
-    context.strokeStyle = LEADER_COLOR
-    context.lineWidth = 0.5
-    WALL_TILES.forEach((tile) => {
-      const wallX = BORDER + tile.x * scaleX
-      const wallY = BORDER + tile.y * scaleY
-      context.fillRect(wallX, wallY, scaleX, scaleY)
-      context.strokeRect(wallX, wallY, scaleX, scaleY)
-    })
+  useEffect(() => {
+    if (keysDisabled) return undefined
+    const handleKeyDown = (event) => {
+      const target = event.target
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault()
+        stepZoom(1)
+      } else if (event.key === '-' || event.key === '_' || event.key === '−') {
+        event.preventDefault()
+        stepZoom(-1)
+      } else if (event.key === '0') {
+        event.preventDefault()
+        reset()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [keysDisabled, stepZoom, reset])
 
-    positions.forEach((position, index) => {
-      const x = BORDER + position.x * scaleX + scaleX / 2
-      const y = BORDER + position.y * scaleY + scaleY / 2
-      const radius = index === leaderIndex ? 5 : 3.8
-      const character = personajes[index]
-
-      context.beginPath()
-      context.arc(x, y, radius, 0, Math.PI * 2)
-      context.fillStyle = toCssColor(getPartyColorForClass(character?.clase))
-      context.fill()
-      context.lineWidth = index === leaderIndex ? 2.2 : 1.4
-      context.strokeStyle = index === leaderIndex ? LEADER_COLOR : 'rgba(255, 255, 255, 0.45)'
-      context.stroke()
-    })
-  }, [positions, leaderIndex, personajes])
+  useEffect(() => {
+    let frameId = 0
+    let last = null
+    const drawFrame = () => {
+      frameId = requestAnimationFrame(drawFrame)
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const context = canvas.getContext('2d')
+      if (!context) return
+      const { positions: storePositions, leaderIndex: storeLeader } = getPartyPositionsSnapshot()
+      const hasStorePositions = storePositions.length > 0
+      const positions = hasStorePositions ? storePositions : fallbackRef.current.positions
+      const leaderIndex = hasStorePositions ? storeLeader : fallbackRef.current.leaderIndex
+      const currentZoom = zoomRef.current
+      if (!positionsChanged(last, positions, leaderIndex) && last?.zoom === currentZoom) return
+      const offset = calculateFollowOffset({
+        width: MINIMAP_WIDTH,
+        height: MINIMAP_HEIGHT,
+        zoom: currentZoom,
+        positions,
+        leaderIndex,
+      })
+      last = { positions, leader: leaderIndex, zoom: currentZoom }
+      drawMapCanvas(context, {
+        width: MINIMAP_WIDTH,
+        height: MINIMAP_HEIGHT,
+        zoom: currentZoom,
+        offset,
+        positions,
+        leaderIndex,
+        personajes: personajesRef.current,
+      })
+    }
+    frameId = requestAnimationFrame(drawFrame)
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId)
+    }
+  }, [])
 
   return (
     <div className="minimap" aria-label="Mapa de la zona">
@@ -80,7 +144,44 @@ export function Minimap({ personajes = [] }) {
         width={MINIMAP_WIDTH}
         height={MINIMAP_HEIGHT}
         className="minimap-canvas"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+        onDoubleClick={reset}
       />
+      <div className="minimap-zoom" aria-hidden="true">
+        <button
+          ref={zoomInRef}
+          type="button"
+          className="minimap-zoom-btn"
+          aria-label="Acercar mapa"
+        >
+          +
+        </button>
+        <button
+          ref={zoomOutRef}
+          type="button"
+          className="minimap-zoom-btn"
+          aria-label="Alejar mapa"
+        >
+          −
+        </button>
+      </div>
+      <span className="minimap-zoom-level" aria-hidden="true">
+        {zoom.toFixed(1)}×
+      </span>
+      {zoom > 1 && (
+        <button
+          type="button"
+          className="minimap-reset"
+          aria-label="Restablecer zoom"
+          onClick={reset}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          ×
+        </button>
+      )}
     </div>
   )
 }

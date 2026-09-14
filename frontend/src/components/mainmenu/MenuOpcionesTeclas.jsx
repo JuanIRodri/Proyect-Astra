@@ -16,6 +16,7 @@ const PAIRS = [
 ]
 
 const WIDE_ROWS = [
+  { id: 'mapa', label: 'Mapa', actionId: 'mapa' },
   { id: 'restablecer', label: 'Restablecer atajos', reset: true },
   { id: 'volver', label: 'Volver a opciones' },
 ]
@@ -45,6 +46,10 @@ export function MenuOpcionesTeclas({ onBack }) {
       return
     }
     const row = WIDE_ROWS[index - PAIRS.length]
+    if (row.actionId) {
+      startCapture(row.actionId)
+      return
+    }
     if (row.reset) {
       restoreDefaults()
       setNotice('Atajos restablecidos.')
@@ -222,6 +227,7 @@ export function MenuOpcionesTeclas({ onBack }) {
         {WIDE_ROWS.map((row, offset) => {
           const index = PAIRS.length + offset
           const focused = focus.index === index
+          const capturing = capturingId === row.actionId
           return (
             <button
               key={row.id}
@@ -232,7 +238,15 @@ export function MenuOpcionesTeclas({ onBack }) {
               onMouseEnter={() => setFocus({ index, col: 0 })}
             >
               <span className="main-menu-option-label">{row.label}</span>
-              <span className="main-menu-option-enter" aria-hidden="true">Enter</span>
+              <span className="main-menu-option-enter" aria-hidden="true">
+                {row.actionId ? (
+                  <kbd className={`main-menu-key is-binding${capturing ? ' is-capturing' : ''}`}>
+                    {prettifyBinding(bindings[row.actionId])}
+                  </kbd>
+                ) : (
+                  'Enter'
+                )}
+              </span>
             </button>
           )
         })}

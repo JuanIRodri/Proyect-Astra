@@ -108,13 +108,14 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 - [x] Añadir filtros por categoria y rareza al inventario.
 - [x] Auto-orden de la mochila: unir pilas del mismo objeto y acomodar la cuadricula (tecla `O`).
 - [x] Confirmar movimiento continuo en 360 grados con diagonales y seguidores suaves.
+- [x] Zoom en el minimapa (botones +/−, rueda del mouse, teclas `+`/`-`/`0`, doble clic/`×` para restablecer) y mapa completo desplegable con la tecla `M` (rebindeable desde Opciones → Atajos, default `M`): overlay responsive con canvas grande, zoom/paneo por rueda, drag y teclas (flechas, `+`/`-`, `0`), cierre con `M`/`ESC`. Ambos arrancan en **2.0×** centrados en el líder (alejable hasta 1.0×). El minimapa **sigue al líder en tiempo real** (dibujado a 60 fps vía `requestAnimationFrame` leyendo `game/partyPositionsStore.js`, sin re-renders de React al moverse) y el mapa M refleja la posición real al abrirlo. Dibujado compartido en `game/mapCanvas.js` (`calculateFollowOffset`/`drawMapCanvas`), controlador de cámara en `components/map/useMapCanvasController.js`, `MapView.jsx`/`MapView.css`, `Minimap.jsx`/`Minimap.css`. Confirmado visualmente.
 
 ### Pendiente de implementacion
 - [ ] Decidir si se añaden ranuras de aretes, collar u otros accesorios.
 - [x] Aplicar los efectos de consumo a los recursos de vida/maná del personaje (pendiente de confirmación visual).
 - [ ] Diseñar y cargar un mapa de prueba exportado desde Tiled.
 - [ ] Leer capas de colision desde un mapa Tiled.
-- [ ] Reajustar la camara al personaje lider.
+- [x] Reajustar la camara al personaje lider (`CAMERA_SMOOTHNESS` en `game/constants.js`, sicronización de cámara y marcador de líder al cambiar líder; confirmado visualmente).
 - [ ] Interaccion con el entorno mediante tecla `E` y checks de estadisticas.
 - [ ] Emitir notificaciones de checks fallidos hacia React.
 - [ ] Transicion a combate al colisionar con un enemigo.
