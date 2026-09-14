@@ -1,25 +1,21 @@
 import Phaser from 'phaser'
-import {
-  GRID_WIDTH,
-  GRID_HEIGHT,
-  TILE_SIZE,
-  MOVEMENT_SPEED,
-  CAMERA_ZOOM,
-  CAMERA_SMOOTHNESS,
-} from './constants'
+import { MOVEMENT_SPEED, CAMERA_ZOOM, CAMERA_SMOOTHNESS, WORLD_DEPTH_BASE } from './constants'
+import { isoUnproject, isoWorldBounds } from './isometric'
 import {
   buildPartyData,
   createParty,
   updateLeaderMarker,
   updatePartyLeaderStyling,
 } from './party'
-import { drawBoard, createGridOverlay } from './board'
+import { createGridOverlay } from './board'
+import { createDecor, DECOR_DATA } from './decor'
 import { createMovementKeys, moveParty } from './movement'
 import { createKeyHandler } from './input'
 import { emitCharacterEditorRequest, emitLeaderChange, emitPartyPositionUpdate, GAME_EVENTS } from './gameEvents'
 import { isInputLocked } from './inputLock'
 import { loadVideoSettings } from './videoSettings'
 import { setPartyPositionsStore } from './partyPositionsStore'
+import { setBlockedTiles } from './collision'
 
 const MAP_EMIT_DISTANCE = 6
 
@@ -43,9 +39,14 @@ export class ExplorationScene extends Phaser.Scene {
     this.lastEmitY = null
   }
 
+  preload() {
+    this.load.tilemapTiledJSON('mapa-prueba', 'maps/mapa-prueba.tmj')
+    this.load.image('placeholder-tiles', 'tiles/placeholder-v5.png')
+  }
+
   create() {
     this.partyData = buildPartyData(this.partyData)
-    drawBoard(this)
+    this.createTilemap()
 
     const { tokens, leaderMarker } = createParty(this, this.partyData, this.initialPositions)
     this.party = tokens
@@ -60,6 +61,31 @@ export class ExplorationScene extends Phaser.Scene {
     this.configureCamera()
     this.createInput()
     this.emitPartyPositionIfNeeded(true)
+  }
+
+  createTilemap() {
+    const map = this.make.tilemap({ key: 'mapa-prueba' })
+    const tileset = map.addTilesetImage('placeholder', 'placeholder-tiles')
+    this.sueloLayer = map.createLayer('suelo', tileset)
+    this.caminosLayer = map.createLayer('caminos', tileset, 0, 0)
+    this.obstaculosLayer = map.createLayer('obstaculos', tileset, 0, 0)
+    this.decor = createDecor(this, DECOR_DATA)
+    this.buildCollisions()
+  }
+
+  buildCollisions() {
+    if (!this.obstaculosLayer) return
+    const tiles = []
+    const data = this.obstaculosLayer.layer?.data ?? []
+    for (const row of data) {
+      for (const tile of row) {
+        if (tile?.index > 0) tiles.push({ x: tile.x, y: tile.y, kind: 'roca' })
+      }
+    }
+    DECOR_DATA.forEach((entry) => {
+      tiles.push({ x: entry.x, y: entry.y, kind: entry.kind })
+    })
+    setBlockedTiles(tiles)
   }
 
   applyVideoSettings() {
@@ -111,6 +137,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   update(_, delta) {
     if (!this.movementKeys || !this.party?.length) return
+    this.syncPartyDepths()
     if (isInputLocked()) return
 
     this.syncPositionsStore()
@@ -120,12 +147,18 @@ export class ExplorationScene extends Phaser.Scene {
     }
   }
 
+  syncPartyDepths() {
+    this.party.forEach((token) => {
+      token.setDepth(WORLD_DEPTH_BASE + token.y)
+    })
+  }
+
   syncPositionsStore() {
     setPartyPositionsStore(
-      this.party.map((token) => ({
-        x: (token.x - TILE_SIZE / 2) / TILE_SIZE,
-        y: (token.y - TILE_SIZE / 2) / TILE_SIZE,
-      })),
+      this.party.map((token) => {
+        const tile = isoUnproject(token.x, token.y)
+        return { x: tile.u, y: tile.v }
+      }),
       this.leaderIndex,
     )
   }
@@ -141,14 +174,19 @@ export class ExplorationScene extends Phaser.Scene {
     this.lastEmitX = leader.x
     this.lastEmitY = leader.y
     emitPartyPositionUpdate(
-      this.party.map((token) => ({ x: token.x, y: token.y })),
+      this.party.map((token) => {
+        const tile = isoUnproject(token.x, token.y)
+        return { x: tile.u, y: tile.v }
+      }),
       this.leaderIndex,
     )
   }
 
   configureCamera() {
     const camera = this.cameras.main
-    camera.setBounds(0, 0, GRID_WIDTH * TILE_SIZE, GRID_HEIGHT * TILE_SIZE)
+    const { minX, minY, maxX, maxY } = isoWorldBounds()
+    camera.setBounds(minX, minY, maxX - minX, maxY - minY)
+    camera.roundPixels = true
     camera.setZoom(CAMERA_ZOOM)
     camera.startFollow(this.party[this.leaderIndex], true, CAMERA_SMOOTHNESS, CAMERA_SMOOTHNESS)
   }

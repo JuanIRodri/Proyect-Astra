@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { drawMapCanvas, calculateFollowOffset, DEFAULT_MAP_ZOOM } from '../game/mapCanvas'
 import { getPartyPositionsSnapshot } from '../game/partyPositionsStore'
+import { getBlockedTilesVersion } from '../game/collision'
 import { useMapCanvasController } from './map/useMapCanvasController'
 import './Minimap.css'
 
@@ -112,7 +113,8 @@ export function Minimap({
       const positions = hasStorePositions ? storePositions : fallbackRef.current.positions
       const leaderIndex = hasStorePositions ? storeLeader : fallbackRef.current.leaderIndex
       const currentZoom = zoomRef.current
-      if (!positionsChanged(last, positions, leaderIndex) && last?.zoom === currentZoom) return
+      const blockedVersion = getBlockedTilesVersion()
+      if (!positionsChanged(last, positions, leaderIndex) && last?.zoom === currentZoom && last?.blockedVersion === blockedVersion) return
       const offset = calculateFollowOffset({
         width: MINIMAP_WIDTH,
         height: MINIMAP_HEIGHT,
@@ -120,7 +122,7 @@ export function Minimap({
         positions,
         leaderIndex,
       })
-      last = { positions, leader: leaderIndex, zoom: currentZoom }
+      last = { positions, leader: leaderIndex, zoom: currentZoom, blockedVersion }
       drawMapCanvas(context, {
         width: MINIMAP_WIDTH,
         height: MINIMAP_HEIGHT,
