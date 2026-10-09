@@ -85,58 +85,85 @@ async function update(id, data) {
         cuernos_cantidad, cuernos_tamanio, cuernos_color, torso_bello,
     } = data;
 
+    const basicColumns = [];
+    const basicValues = [];
+    if (nombre !== undefined) { basicColumns.push('nombre = ?'); basicValues.push(nombre); }
+    if (clase !== undefined) { basicColumns.push('clase = ?'); basicValues.push(clase); }
+    if (altura !== undefined) { basicColumns.push('altura = ?'); basicValues.push(altura); }
+    if (musculatura !== undefined) { basicColumns.push('musculatura = ?'); basicValues.push(musculatura); }
+
+    const allStatsPresent = [fuerza, destreza, inteligencia, constitucion, agilidad]
+        .every((value) => value !== undefined);
+
+    const appearanceColumns = [];
+    const appearanceValues = [];
+    const appearancePairs = [
+        [cabello_corte, 'ca.Corte = ?'],
+        [cabello_tinte, 'ca.Tinte = ?'],
+        [boca_forma, 'b.Forma = ?'],
+        [ojos_color, 'o.Color = ?'],
+        [ojos_forma, 'o.Forma = ?'],
+        [nariz_forma, 'n.Forma = ?'],
+        [cuernos_cantidad, 'cu.Cantidad = ?'],
+        [cuernos_tamanio, 'cu.Tamanio = ?'],
+        [cuernos_color, 'cu.Color = ?'],
+        [torso_forma, 't.Forma = ?'],
+        [torso_bello, 't.Bello = ?'],
+        [cabeza_forma, 'cb.Forma = ?'],
+    ];
+    appearancePairs.forEach(([value, column]) => {
+        if (value !== undefined) {
+            appearanceColumns.push(column);
+            appearanceValues.push(value);
+        }
+    });
+
+    if (basicColumns.length === 0 && !allStatsPresent && appearanceColumns.length === 0) {
+        throw new AppError(400, 'No hay campos válidos para actualizar');
+    }
+
     return withTransaction(async (conn) => {
-        const [basicResult] = await conn.query(`
-            UPDATE Personaje
-            SET nombre = ?, clase = ?, altura = ?, musculatura = ?
-            WHERE idPersonaje = ?
-        `, [nombre, clase, altura, musculatura, id]);
-        if (basicResult.affectedRows === 0) {
-            throw new AppError(404, 'Personaje no encontrado');
+        if (basicColumns.length > 0) {
+            const [basicResult] = await conn.query(`
+                UPDATE Personaje
+                SET ${basicColumns.join(', ')}
+                WHERE idPersonaje = ?
+            `, [...basicValues, id]);
+            if (basicResult.affectedRows === 0) {
+                throw new AppError(404, 'Personaje no encontrado');
+            }
         }
 
-        await conn.query(`
-            INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad, vidaActual, manaActual)
-            VALUES (?, ?, ?, ?, ?, ?, 30 + ? * 5, 20 + ? * 5)
-            ON DUPLICATE KEY UPDATE
-              fuerza = VALUES(fuerza),
-              destreza = VALUES(destreza),
-              inteligencia = VALUES(inteligencia),
-              constitucion = VALUES(constitucion),
-              agilidad = VALUES(agilidad),
-              vidaActual = LEAST(vidaActual, 30 + VALUES(constitucion) * 5),
-              manaActual = LEAST(manaActual, 20 + VALUES(inteligencia) * 5)
-        `, [id, fuerza, destreza, inteligencia, constitucion, agilidad, constitucion, inteligencia]);
+        if (allStatsPresent) {
+            await conn.query(`
+                INSERT INTO Estadistica (idPersonaje, fuerza, destreza, inteligencia, constitucion, agilidad, vidaActual, manaActual)
+                VALUES (?, ?, ?, ?, ?, ?, 30 + ? * 5, 20 + ? * 5)
+                ON DUPLICATE KEY UPDATE
+                  fuerza = VALUES(fuerza),
+                  destreza = VALUES(destreza),
+                  inteligencia = VALUES(inteligencia),
+                  constitucion = VALUES(constitucion),
+                  agilidad = VALUES(agilidad),
+                  vidaActual = LEAST(vidaActual, 30 + VALUES(constitucion) * 5),
+                  manaActual = LEAST(manaActual, 20 + VALUES(inteligencia) * 5)
+            `, [id, fuerza, destreza, inteligencia, constitucion, agilidad, constitucion, inteligencia]);
+        }
 
-        await conn.query(`
-            UPDATE Personaje p
-            JOIN Cuerpo cp ON p.idCuerpo = cp.idCuerpo
-            JOIN Cabeza cb ON cp.idCabeza = cb.idCabeza
-            JOIN Cabello ca ON cb.idCabello = ca.idCabello
-            JOIN Boca b ON cb.idBoca = b.idBoca
-            JOIN Ojos o ON cb.idOjos = o.idOjos
-            JOIN Nariz n ON cb.idNariz = n.idNariz
-            JOIN Cuernos cu ON cb.idCuernos = cu.idCuernos
-            JOIN Torso t ON cp.idTorso = t.idTorso
-            SET
-                ca.Corte = ?, ca.Tinte = ?,
-                b.Forma = ?,
-                o.Color = ?, o.Forma = ?,
-                n.Forma = ?,
-                cu.Cantidad = ?, cu.Tamanio = ?, cu.Color = ?,
-                t.Forma = ?, t.Bello = ?,
-                cb.Forma = ?
-            WHERE p.idPersonaje = ?
-        `, [
-            cabello_corte, cabello_tinte,
-            boca_forma,
-            ojos_color, ojos_forma,
-            nariz_forma,
-            cuernos_cantidad, cuernos_tamanio, cuernos_color,
-            torso_forma, torso_bello,
-            cabeza_forma,
-            id,
-        ]);
+        if (appearanceColumns.length > 0) {
+            await conn.query(`
+                UPDATE Personaje p
+                JOIN Cuerpo cp ON p.idCuerpo = cp.idCuerpo
+                JOIN Cabeza cb ON cp.idCabeza = cb.idCabeza
+                JOIN Cabello ca ON cb.idCabello = ca.idCabello
+                JOIN Boca b ON cb.idBoca = b.idBoca
+                JOIN Ojos o ON cb.idOjos = o.idOjos
+                JOIN Nariz n ON cb.idNariz = n.idNariz
+                JOIN Cuernos cu ON cb.idCuernos = cu.idCuernos
+                JOIN Torso t ON cp.idTorso = t.idTorso
+                SET ${appearanceColumns.join(', ')}
+                WHERE p.idPersonaje = ?
+            `, [...appearanceValues, id]);
+        }
 
         return { message: 'Personaje y apariencia actualizados con éxito' };
     });

@@ -45,9 +45,10 @@ DB_USER=root
 DB_PASSWORD=root
 DB_NAME=Maniqui
 PORT=3000
+CORS_ORIGINS=http://localhost:5173
 ```
 
-No subas este archivo si contiene credenciales reales.
+No subas este archivo si contiene credenciales reales. Hay una plantilla en `backend/.env.example`; `CORS_ORIGINS` es opcional y admite varios orígenes separados por coma.
 
 ## Ejecución manual
 
