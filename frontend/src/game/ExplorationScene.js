@@ -210,4 +210,8 @@ export class ExplorationScene extends Phaser.Scene {
 
     emitCharacterEditorRequest(character.id)
   }
+
+  updatePartyData(personajes) {
+    this.partyData = buildPartyData(personajes)
+  }
 }

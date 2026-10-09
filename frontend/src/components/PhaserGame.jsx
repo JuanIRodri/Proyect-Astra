@@ -1,11 +1,14 @@
 import { useEffect, useRef } from 'react'
 import Phaser from 'phaser'
-import { ExplorationScene } from '../game/ExplorationScene'
-import { GAME_EVENTS, subscribeToGameEvent } from '../game/gameEvents'
+import { ExplorationScene } from '@/game/ExplorationScene'
+import { GAME_EVENTS, subscribeToGameEvent } from '@/game/gameEvents'
 import './PhaserGame.css'
 
 export function PhaserGame({ personajes, inicioPartida, onOpenCharacterEditor, onToggleInventory }) {
   const containerRef = useRef(null)
+  const gameRef = useRef(null)
+  const sceneRef = useRef(null)
+  const initialPersonajesRef = useRef(personajes)
 
   useEffect(() => {
     if (!containerRef.current) return undefined
@@ -25,6 +28,7 @@ export function PhaserGame({ personajes, inicioPartida, onOpenCharacterEditor, o
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
     })
+    gameRef.current = game
 
     const unsubscribeEditor = subscribeToGameEvent(
       GAME_EVENTS.openCharacterEditor,
@@ -34,18 +38,25 @@ export function PhaserGame({ personajes, inicioPartida, onOpenCharacterEditor, o
       GAME_EVENTS.toggleInventory,
       onToggleInventory,
     )
-    game.scene.add('ExplorationScene', ExplorationScene, true, {
-      personajes,
+    const scene = game.scene.add('ExplorationScene', ExplorationScene, true, {
+      personajes: initialPersonajesRef.current,
       positions: inicioPartida?.positions ?? null,
       leaderIndex: inicioPartida?.leaderIndex ?? 0,
     })
+    sceneRef.current = scene
 
     return () => {
       unsubscribeEditor()
       unsubscribeInventory()
+      gameRef.current = null
+      sceneRef.current = null
       game.destroy(true)
     }
-  }, [onOpenCharacterEditor, onToggleInventory, personajes, inicioPartida])
+  }, [onOpenCharacterEditor, onToggleInventory, inicioPartida])
+
+  useEffect(() => {
+    sceneRef.current?.updatePartyData(personajes)
+  }, [personajes])
 
   return <div className="phaser-game" ref={containerRef} aria-label="Mapa de exploración" />
 }

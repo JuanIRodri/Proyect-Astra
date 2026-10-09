@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { GAME_EVENTS, subscribeToGameEvent } from '../game/gameEvents'
-import { PARTY_POSITIONS } from '../game/constants'
+import { GAME_EVENTS, subscribeToGameEvent } from '@/game/gameEvents'
+import { PARTY_POSITIONS } from '@/game/constants'
 
 export function usePartyPositions(partySize = 3, initialPositions, initialLeaderIndex = 0) {
   const [positions, setPositions] = useState(() => {

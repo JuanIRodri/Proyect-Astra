@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { drawMapCanvas, calculateFollowOffset, DEFAULT_MAP_ZOOM } from '../game/mapCanvas'
-import { getPartyPositionsSnapshot } from '../game/partyPositionsStore'
-import { getBlockedTilesVersion } from '../game/collision'
+import { drawMapCanvas, calculateFollowOffset, DEFAULT_MAP_ZOOM } from '@/game/mapCanvas'
+import { getPartyPositionsSnapshot } from '@/game/partyPositionsStore'
+import { getBlockedTilesVersion } from '@/game/collision'
 import { useMapCanvasController } from './map/useMapCanvasController'
 import './Minimap.css'
 

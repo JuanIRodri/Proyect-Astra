@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getInventario } from '../services/api'
+import { getInventario } from '@/services/api'
 import './CharacterSelector.css'
 
 export function CharacterSelector({ personajes, activeCharacterIndex, onSelect, onRequestTransfer, refreshToken = 0 }) {

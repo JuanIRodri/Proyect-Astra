@@ -8,10 +8,10 @@ import { GroupHud } from './GroupHud'
 import { Hotbar } from './Hotbar'
 import { PauseMenu } from './PauseMenu'
 import { MapView } from './map/MapView'
-import { usePartyPositions } from '../hooks/usePartyPositions'
-import { savePartida } from '../services/api'
-import { lockInput, unlockInput } from '../game/inputLock'
-import { GAME_EVENTS, subscribeToGameEvent } from '../game/gameEvents'
+import { usePartyPositions } from '@/hooks/usePartyPositions'
+import { savePartida } from '@/services/api'
+import { lockInput, unlockInput } from '@/game/inputLock'
+import { GAME_EVENTS, subscribeToGameEvent } from '@/game/gameEvents'
 
 export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, inicioPartida }) {
   const [editingCharacter, setEditingCharacter] = useState(null)
@@ -22,11 +22,16 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
   const [activeCharacterIndex, setActiveCharacterIndex] = useState(inicioPartida?.leaderIndex ?? 0)
   const [transferToken, setTransferToken] = useState(0)
   const inventoryRef = useRef(null)
+  const personajesRef = useRef(personajes)
   const { positions, leaderIndex } = usePartyPositions(
     3,
     inicioPartida?.positions ?? undefined,
     inicioPartida?.leaderIndex ?? 0,
   )
+
+  useEffect(() => {
+    personajesRef.current = personajes
+  }, [personajes])
 
   const handleRequestTransfer = useCallback((slotIndex, targetCharacterIndex) => {
     inventoryRef.current?.transferFromSlot(slotIndex, targetCharacterIndex)
@@ -37,9 +42,9 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
   }, [])
 
   const handleOpenCharacterEditor = useCallback((characterId) => {
-    const character = personajes.find((personaje) => personaje.idPersonaje === characterId)
+    const character = personajesRef.current.find((personaje) => personaje.idPersonaje === characterId)
     setEditingCharacter(character || null)
-  }, [personajes])
+  }, [])
 
   const handleToggleInventory = useCallback(() => {
     setInventoryOpen((isOpen) => !isOpen)
@@ -193,7 +198,6 @@ export function ExplorationView({ personajes, onUpdateCharacter, onBackToMenu, i
           initialData={editingCharacter}
           onSubmit={handleFormSubmit}
           onCancel={() => setEditingCharacter(null)}
-          viewMode="estadistica"
         />
       )}
     </section>

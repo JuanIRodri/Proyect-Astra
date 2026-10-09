@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { DEFAULT_BINDINGS, loadBindings, saveBindings } from '../../game/bindings'
+import { DEFAULT_BINDINGS, loadBindings, saveBindings } from '@/game/bindings'
 
 export function useTeclas() {
   const [bindings, setBindings] = useState(loadBindings)

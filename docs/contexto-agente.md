@@ -7,13 +7,14 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 ## Arquitectura que debo respetar
 
 - `frontend/src/App.jsx` compone el dashboard y la vista de exploracion.
-- `frontend/src/components/ExplorationView.jsx` conecta Phaser, el editor del lider y el inventario.
+- `frontend/src/components/ExplorationView.jsx` conecta Phaser, el editor de stats del lider y el inventario.
 - `frontend/src/components/PhaserGame.jsx` crea Phaser y conecta los eventos React-Phaser.
 - `frontend/src/game/ExplorationScene.js` controla mapa, movimiento, formacion y cambio de lider.
 - `frontend/src/game/gameEvents.js` centraliza los `CustomEvent` compartidos.
+- `frontend/src/game/characterStats.js` concentra las stats iniciales y los pesos por clase (antes `classStats.js`); lo consume `CharacterForm.jsx`. La fórmula está duplicada con `backend/migrate-rpg.js` y debe mantenerse en sincronía.
 - `frontend/src/components/inventory/` modula el inventario: `useInventoryPanel.js` (estado y acciones), `inventoryUtils.js` (helpers puros), `inventoryOperations.js` (operaciones puras de items y cálculo de carga/bonos), `inventoryKeyHandler.js` (teclado) y los subcomponentes `InventoryHeader.jsx`, `InventoryGrid.jsx`, `InventoryDetail.jsx`, `InventoryStats.jsx` y `TransferModal.jsx`; `InventoryPanel.jsx` los compone. Cada subcomponente tiene su propio `.css` (`InventoryPanel.css` conserva el layout y el tema por clase; `TransferModal.css` el modal); `inventoryKeyHandler.js` reutiliza `game/hotkeys.js` para los atajos de personaje.
 - `frontend/src/hooks/usePersonajes.js` y `frontend/src/services/api.js` gestionan los personajes y la API.
-- `backend/` contiene Express con capas separadas: rutas, controlador delgado, servicios (`personajesService.js`, `inventarioService.js`) y utilidades (`asyncDb.js`, `errors.js`) sobre un pool MySQL.
+- `backend/` contiene Express con capas separadas: rutas, controlador delgado con validación (`utils/validate.js`), servicios (`personajesService.js`, `inventarioService.js`) y utilidades (`asyncDb.js`, `errors.js`, `validate.js`) sobre un pool MySQL. `index.js` configura CORS (whitelist por `CORS_ORIGINS`), un handler 404 y el middleware central de errores.
 - `sentencias-sql/` contiene el esquema, datos iniciales, consultas y vistas.
 - `start-app.sh` levanta Docker/MySQL, ejecuta la migracion, inicia backend y frontend.
 
@@ -27,7 +28,7 @@ Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena 
 - Edicion de estadisticas del lider con `U` y cierre con `Escape` (confirmado).
 - Inventario visual abierto con `I` (confirmado).
 - Eventos React-Phaser centralizados (confirmado).
-- Modularizacion confirmada por pruebas en navegador: backend en capas (`services/`, `utils/`, controlador delgado sobre pool MySQL), exploracion descompuesta en `game/*` (constants, board, party, movement, input, hotkeys) e inventario en `components/inventory/*`.
+- Modularizacion confirmada por pruebas en navegador: backend en capas (`services/`, `utils/`, controlador delgado sobre pool MySQL), exploracion descompuesta en `game/*` (constants, board, party, movement, input, hotkeys, characterStats) e inventario en `components/inventory/*`.
 - Persistencia de inventario y estadisticas entre reinicios: la migracion hace una carga inicial solo si las tablas estan vacias y no sobrescribe los datos del usuario (confirmado).
 
 ## Trabajo actual: inventario
@@ -108,6 +109,16 @@ Sistema de guardado **ligero** (snapshot de exploración, no volcado de toda la 
 - Colores del grupo (fichas de Phaser, puntos del minimapa y HUD) derivados de la **clase** de cada personaje, no del índice: `PARTY_CLASS_COLORS` + `getPartyColorForClass()` en `game/constants.js` (mismos tonos que el tema del inventario: Guerrero rojo, Mago azul, Paladín dorado, Pícaro púrpura, Cazador verde; `aventurero` como fallback). `buildPartyData`, `Minimap` (recibe `personajes`) y `GroupHud` lo consultan por `personaje.clase`.
 
 Todo queda pendiente de confirmación visual del usuario.
+
+## Trabajo actual: calidad y robustez (rama `feature/mejoras-calidad`)
+
+- Lint del frontend en cero (excluye los módulos de `mainmenu/` que siguen en otra rama): se corrigieron `react-hooks/set-state-in-effect` en `usePersonajes.js` (fetch en `useCallback` + flag `cancelled` en el efecto) y `useInventoryPanel.js` (`equipment` con `useMemo`, `inventoryLoading` con valor inicial `true`, `handleCharacterChange` en `useCallback`). `pnpm exec eslint src` → exit 0 y `pnpm run build` OK.
+- Apariencia/altura fuera del formulario: `CharacterForm.jsx` quedó solo-stats (sin modo `vista`, sin `AppearanceFields.jsx`, que fue eliminado) y el backend solo actualiza los campos que llegan. La DB conserva esas columnas intactas.
+- Vitest montado (`frontend/vite.config.js`, script `pnpm test`): 55 tests de módulos puros (`characterStats`, `inventoryOperations`, `inventoryUtils`, `isometric`, `collision`, `board`). `characterStats` es el nuevo nombre de `classStats`.
+- CI agregado en `.github/workflows/ci.yml` (build + lint + tests en frontend; `node --check` en backend) y nuevo `backend/.env.example`.
+- Backend endurecido: CORS con whitelist (`CORS_ORIGINS`), middleware 404 y de errores, y validación server-side en `backend/utils/validate.js` (body con tipos/rangos/enums, params enteros, ranura de equipamiento por nombre, items de inventario con ranura 0-47). El controlador los aplica antes de llamar a los servicios.
+- Imports del frontend con alias `@/` → `src/` (config en `vite.config.js` y `jsconfig.json`); los imports entre directorios ya no usan rutas relativas.
+- Pendiente: que el usuario pruebe en el navegador, defina commits y el PR de `feature/mejoras-calidad`. Los cambios conviven con el WIP de `feature/mapa-tiled` (gamepad: `PhaserGame.jsx`, `ExplorationScene.js`, `ExplorationView.jsx` y el documento de diseño).
 
 ## Planning posterior del inventario
 

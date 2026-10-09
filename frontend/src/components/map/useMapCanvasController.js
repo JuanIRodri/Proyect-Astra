@@ -5,8 +5,8 @@ import {
   calculateFollowOffset,
   clampOffset,
   viewMetrics,
-} from '../../game/mapCanvas'
-import { isoUnproject } from '../../game/isometric'
+} from '@/game/mapCanvas'
+import { isoUnproject } from '@/game/isometric'
 
 const WHEEL_THRESHOLD = 60
 
