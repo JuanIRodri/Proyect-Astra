@@ -111,7 +111,7 @@ export function moveSingleItem(items, sourceSlotIndex, targetSlotIndex) {
   }
 }
 
-export function computeEquipmentBonuses(equipment) {
+function computeEquipmentBonuses(equipment) {
   return EQUIPMENT_SLOTS.reduce((bonuses, slot) => {
     const item = equipment[slot.key]
     if (!item) return bonuses

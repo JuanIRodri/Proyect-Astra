@@ -1,5 +1,5 @@
-import { getPartyColorForClass } from '../game/constants'
-import { usePartyPositions } from '../hooks/usePartyPositions'
+import { getPartyColorForClass } from '@/game/constants'
+import { usePartyPositions } from '@/hooks/usePartyPositions'
 import './GroupHud.css'
 
 function percent(actual, max) {

@@ -3,8 +3,8 @@ import {
   applyFullscreen,
   loadVideoSettings,
   saveVideoSettings,
-} from '../../game/videoSettings'
-import { emitVideoSettingsChange } from '../../game/gameEvents'
+} from '@/game/videoSettings'
+import { emitVideoSettingsChange } from '@/game/gameEvents'
 
 export function useOpcionesVideo() {
   const [video, setVideo] = useState(loadVideoSettings)

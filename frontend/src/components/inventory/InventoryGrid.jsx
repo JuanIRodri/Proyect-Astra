@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { useItemTooltip } from '../../hooks/useItemTooltip'
-import { ItemTooltip } from '../ItemTooltip'
+import { useItemTooltip } from '@/hooks/useItemTooltip'
+import { ItemTooltip } from '@/components/ItemTooltip'
 import './InventoryGrid.css'
 
 export function InventoryGrid({

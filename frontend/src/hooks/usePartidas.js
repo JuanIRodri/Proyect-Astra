@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getPartidas } from '../services/api';
+import { getPartidas } from '@/services/api';
 
 export function usePartidas() {
   const [partidas, setPartidas] = useState([]);

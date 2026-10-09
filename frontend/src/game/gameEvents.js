@@ -7,7 +7,7 @@ export const GAME_EVENTS = Object.freeze({
   toggleMap: 'toggle-map',
 })
 
-export function emitGameEvent(eventName, detail) {
+function emitGameEvent(eventName, detail) {
   window.dispatchEvent(new CustomEvent(eventName, { detail }))
 }
 

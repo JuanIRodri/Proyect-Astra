@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'astra-video'
 
-export const DEFAULT_VIDEO = {
+const DEFAULT_VIDEO = {
   pantallaCompleta: false,
   marcadorLider: true,
   overlayCuadricula: false,

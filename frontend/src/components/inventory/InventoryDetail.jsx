@@ -1,6 +1,6 @@
 import { EQUIPMENT_SLOTS } from './inventoryUtils'
-import { useItemTooltip } from '../../hooks/useItemTooltip'
-import { ItemTooltip } from '../ItemTooltip'
+import { useItemTooltip } from '@/hooks/useItemTooltip'
+import { ItemTooltip } from '@/components/ItemTooltip'
 import './InventoryDetail.css'
 
 export function InventoryDetail({

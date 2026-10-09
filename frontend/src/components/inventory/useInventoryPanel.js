@@ -8,7 +8,7 @@ import {
   saveInventario,
   transferirObjeto,
   usarObjeto,
-} from '../../services/api'
+} from '@/services/api'
 import {
   EQUIPMENT_SLOTS,
   createInventory,
@@ -44,7 +44,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   const [cursorSlotIndex, setCursorSlotIndex] = useState(0)
   const [heldSlotIndex, setHeldSlotIndex] = useState(null)
   const [draggedSlotIndex, setDraggedSlotIndex] = useState(null)
-  const [inventoryLoading, setInventoryLoading] = useState(false)
+  const [inventoryLoading, setInventoryLoading] = useState(true)
   const [equipmentByCharacter, setEquipmentByCharacter] = useState({})
   const [showItemDetails, setShowItemDetails] = useState(false)
   const [selectedEquipmentSlot, setSelectedEquipmentSlot] = useState(null)
@@ -70,7 +70,10 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   })
   const resources = resourcesByCharacter[activeCharacterId] || defaultResources(activeCharacter)
   const items = inventories[activeCharacterId] || createInventory()
-  const equipment = equipmentByCharacter[activeCharacterId] || {}
+  const equipment = useMemo(
+    () => equipmentByCharacter[activeCharacterId] || {},
+    [activeCharacterId, equipmentByCharacter],
+  )
   const selectedItem = items[selectedSlotIndex] || null
   const selectedEquipmentItem = selectedEquipmentSlot ? equipment[selectedEquipmentSlot] : null
   const detailItem = selectedEquipmentItem || selectedItem
@@ -101,7 +104,6 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
   useEffect(() => {
     if (!activeCharacterId) return undefined
     let cancelled = false
-    setInventoryLoading(true)
     Promise.all([getInventario(activeCharacterId), getEquipamiento(activeCharacterId)])
       .then(([rows, equipmentRows]) => {
         if (cancelled) return
@@ -532,8 +534,9 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     return actions
   }, [activeCharacterId, characterList, contextMenu, handleDropSelected, handleEquipSelected, handleRequestSplit, handleToggleDetails, handleTransferFromSlot, handleUseSelected, items])
 
-  const handleCharacterChange = (characterIndex) => {
+  const handleCharacterChange = useCallback((characterIndex) => {
     onActiveCharacterChange(characterIndex)
+    setInventoryLoading(true)
     setSelectedSlotIndex(0)
     setCursorSlotIndex(0)
     setHeldSlotIndex(null)
@@ -542,7 +545,7 @@ export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, o
     setNavigationArea('inventory')
     setTransferPromptActive(false)
     setNotice('Usa WASD y selecciona objetos con Enter.')
-  }
+  }, [onActiveCharacterChange])
 
   const handleKeyDown = useMemo(
     () => createInventoryKeyHandler({
@@ -595,7 +598,7 @@ handleDropSelected,
       activeCharacterIndex,
       handleCloseContextMenu,
     }),
-    [activeCharacterIndex, contextMenu, contextMenuActionIndex, contextMenuActions, contextMenuSubmenuIndex, cursorSlotIndex, detailItem, equipmentCursorIndex, handleCancelSplit, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, onHotbarSlotKey, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestSplit, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, splitPromptActive, transferPromptActive, showItemDetails],
+    [activeCharacterIndex, characterList.length, contextMenu, contextMenuActionIndex, contextMenuActions, contextMenuSubmenuIndex, cursorSlotIndex, equipmentCursorIndex, handleCancelSplit, handleCharacterChange, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, onHotbarSlotKey, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestSplit, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, splitPromptActive, transferPromptActive, showItemDetails],
   )
 
   useEffect(() => {

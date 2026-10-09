@@ -1,5 +1,5 @@
-import { getLeaderIndex } from '../../game/hotkeys'
-import { HOTBAR_KEYS } from '../../game/hotbarConfig'
+import { getLeaderIndex } from '@/game/hotkeys'
+import { HOTBAR_KEYS } from '@/game/hotbarConfig'
 import { EQUIPMENT_SLOTS, getNextEquipmentIndex } from './inventoryUtils'
 
 export function createInventoryKeyHandler(config) {

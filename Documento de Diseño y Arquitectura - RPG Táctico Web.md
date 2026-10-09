@@ -123,6 +123,14 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 - [ ] Implementar BFS para el rango de movimiento tactico.
 - [ ] Dibujar overlay de casillas alcanzables.
 - [ ] Permitir movimiento tactico y habilitar comandos de combate en React.
+- [ ] Soporte de joystick/gamepad (prioridad por Steam Deck): traducir gamepad → las mismas "acciones lógicas" que ya maneja el juego (movimiento, cambio de líder `1/2/3`, usar hotkeys `4-8`, abrir inventario/mapa/editor, navegar menús con confirmar/cancelar) para no tocar los `keydown` sueltos de React/Phaser/menús después. Usar `Phaser.input.gamepad` en la escena con fallback `navigator.getGamepads` para el resto de la UI web, y un módulo `game/joystick.js` que emita esas acciones. No profundizar ahora (ratón total, touch, vibración) hasta el playtest.
+
+### Pendiente de implementacion (hardening / empaquetado - para despues)
+- [ ] Validar entradas server-side en el backend: whitelist de campos, tipos y longitudes en `createPersonaje`/`updatePersonaje` e inventario (hoy el body va directo a SQL parametrizado).
+- [ ] Restringir CORS a una whitelist de origenes (hoy `app.use(cors())` acepta todo).
+- [ ] Version de escritorio: reemplazar MySQL por SQLite embebido (mismo schema y capa de acceso) y envolver frontend (build de Vite) + backend con Electron o Tauri.
+- [ ] Version de escritorio: el backend debe escuchar solo en `127.0.0.1` (nada de `0.0.0.0`) y no embeber credenciales reales en el exe (generar configuracion local en el primer arranque).
+- [ ] Version de escritorio: firmar el instalador/exe (SmartScreen) antes de distribuir.
 
 ### Regla de seguimiento
 Antes de comenzar una tarea, consultar este documento y `docs/project-graph.md`. No repetir tareas marcadas como completadas. Al terminar una implementacion, dejarla como pendiente de confirmacion; marcarla como completada solo despues de que el usuario confirme la prueba funcional en el navegador.

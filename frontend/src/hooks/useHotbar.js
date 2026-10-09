@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getInventario, usarObjeto } from '../services/api'
-import { HOTBAR_KEYS, HOTBAR_SLOT_COUNT, HOTBAR_STORAGE_KEY } from '../game/hotbarConfig'
-import { isInputLocked } from '../game/inputLock'
+import { getInventario, usarObjeto } from '@/services/api'
+import { HOTBAR_KEYS, HOTBAR_SLOT_COUNT, HOTBAR_STORAGE_KEY } from '@/game/hotbarConfig'
+import { isInputLocked } from '@/game/inputLock'
 
 function loadSlots(personajeId) {
   try {

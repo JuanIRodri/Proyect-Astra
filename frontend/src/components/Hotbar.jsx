@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle } from 'react'
-import { useHotbar } from '../hooks/useHotbar'
-import { useItemTooltip } from '../hooks/useItemTooltip'
-import { HOTBAR_SLOT_COUNT, HOTBAR_KEYS } from '../game/hotbarConfig'
+import { useHotbar } from '@/hooks/useHotbar'
+import { useItemTooltip } from '@/hooks/useItemTooltip'
+import { HOTBAR_SLOT_COUNT, HOTBAR_KEYS } from '@/game/hotbarConfig'
 import { ItemTooltip } from './ItemTooltip'
 import './Hotbar.css'
 

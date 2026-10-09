@@ -5,7 +5,7 @@ import {
   BINDABLE_ACTIONS,
   eventKeyToBinding,
   prettifyBinding,
-} from '../../game/bindings'
+} from '@/game/bindings'
 
 const PAIRS = [
   ['moverArriba', 'moverAbajo'],

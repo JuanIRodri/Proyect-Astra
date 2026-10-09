@@ -4,9 +4,10 @@ Este documento es el mapa de rutas y responsabilidades del proyecto. Consultalo 
 
 ```mermaid
 flowchart TD
-    Root[Maniqui-Db]
+    Root[Proyect-Astra]
 
-    Root --> Frontend[frontend/\nReact + Vite]
+    Root --> Frontend[frontend/\nReact + Vite\nVitest (pnpm test) · alias @/ -> src/]
+    Root --> Ci[.github/workflows/ci.yml\nbuild · lint · tests · node --check]
     Root --> Backend[backend/\nNode.js + Express]
     Root --> SQL[sentencias-sql/\nMySQL y modelo de datos]
     Root --> Infra[docker-compose.yml\nstart-app.sh]
@@ -22,15 +23,15 @@ flowchart TD
     Frontend --> Game[frontend/src/game/]
     Frontend --> Assets[frontend/src/assets/\nfrontend/public/]
 
-    Components --> CharacterForm[CharacterForm.jsx]
+    Components --> CharacterForm[CharacterForm.jsx\neditor de stats por clase (sin apariencia)]
     Components --> ExplorationView[ExplorationView.jsx\nvista separada de exploracion]
     Components --> PhaserGame[PhaserGame.jsx\npuente React -> Phaser]
-    Components --> Inventory[components/inventory/\nInventoryPanel compone\nuseInventoryPanel.js\ninventoryUtils.js\ninventoryOperations.js\ninventoryKeyHandler.js\nInventoryHeader.jsx\nInventoryGrid.jsx\nInventoryDetail.jsx\nInventoryStats.jsx]
+    Components --> Inventory[components/inventory/\nInventoryPanel compone\nuseInventoryPanel.js\ninventoryUtils.js\ninventoryOperations.js\ninventoryKeyHandler.js\nInventoryHeader.jsx · InventoryGrid.jsx\nInventoryDetail.jsx · InventoryStats.jsx\nInventoryFilters.jsx · InventoryResources.jsx\nDetailsModal.jsx · SplitModal.jsx\nTransferModal.jsx · InventoryContextMenu.jsx]
     Components --> Hotbar[Hotbar.jsx\nbarra de acceso rapido (overlay y panel)]
     Components --> ItemTooltip[ItemTooltip.jsx\nficha flotante de objeto]
     Components --> Minimap[Minimap.jsx\nminimapa con zoom, rueda y drag]
     Components --> MapModules[components/map/\nMapView.jsx\nuseMapCanvasController.js]
-    Components --> FormParts[components/form-parts/\nAppearanceFields.jsx\nStatsFields.jsx]
+    Components --> FormParts[components/form-parts/\nStatsFields.jsx]
     Components --> MainMenu[MainMenu.jsx\ncompositor del menu inicial]
     Components --> MenuModules[components/mainmenu/\nMenuHome.jsx · MenuCargar.jsx · MenuNueva.jsx\nOpcionesStack.jsx · MenuOpciones.jsx\nMenuOpcionesAudio.jsx · MenuOpcionesVideo.jsx\nMenuOpcionesTeclas.jsx\nuseMenuNav.js · useOpciones.js · useOpcionesVideo.js\nuseTeclas.js · utils.js]
 
@@ -39,7 +40,21 @@ flowchart TD
     Hooks --> UseItemTooltip[useItemTooltip.js\nestado del tooltip de objeto]
     Services --> Api[services/api.js\ncliente HTTP]
     Game --> Exploration[game/ExplorationScene.js\nescena Phaser 3]
-    Game --> MapCanvas[game/mapCanvas.js\ndibujado compartido del mapa]
+    Game --> Iso[game/isometric.js\nproyección iso 48×24]
+    Game --> Collision[game/collision.js\ncolisiones por hitbox de objeto]
+    Game --> Board[game/board.js\noverlay de cuadrícula y posiciones seguras]
+    Game --> Party[game/party.js\nfichas del grupo y marcador de líder]
+    Game --> CharStats[game/characterStats.js\nstats iniciales y pesos por clase]
+    Game --> Decor[game/decor.js\nárboles y arbustos 2.5D]
+    Game --> Movement[game/movement.js\nmovimiento continuo del grupo]
+    Game --> Input[game/input.js\natajos de la escena]
+    Game --> Hotkeys[game/hotkeys.js\nlíder 1/2/3]
+    Game --> Bindings[game/bindings.js\ntezas configurables]
+    Game --> InputLock[game/inputLock.js\nbloqueo de input]
+    Game --> VideoSettings[game/videoSettings.js\nvideo/overlay]
+    Game --> PartyPositions[game/partyPositionsStore.js\nposiciones en vivo del grupo]
+    Game --> HotbarConfig[game/hotbarConfig.js\nconfig de la hotbar]
+    Game --> MapCanvas[game/mapCanvas.js\ndibujado del mapa M y minimapa]
     Game --> GameEvents[game/gameEvents.js\nCustomEvent compartidos]
     ExplorationView --> PhaserGame
     ExplorationView --> Inventory
@@ -63,7 +78,8 @@ flowchart TD
     Backend --> Routes[backend/routes/personajesRoutes.js\nrutas HTTP]
     Backend --> Controllers[backend/controllers/personajesController.js\ncontrolador delgado]
     Backend --> Services[backend/services/\npersonajesService.js\ninventarioService.js]
-    Backend --> Utils[backend/utils/\nasyncDb.js\nerrors.js]
+    Backend --> Utils[backend/utils/\nasyncDb.js\nerrors.js\nvalidate.js]
+    Backend --> EnvExample[backend/.env.example\nvariables replicables (incluye CORS_ORIGINS)]
     Backend --> Db[backend/config/db.js\npool MySQL]
     Entry --> Routes
     Routes --> Controllers
@@ -90,16 +106,24 @@ flowchart TD
 | Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `inventory/useInventoryPanel.js`, `gameEvents.js` |
 | Minimapa con zoom | `frontend/src/components/Minimap.jsx` | `map/useMapCanvasController.js`, `game/mapCanvas.js`, `usePartyPositions.js` |
 | Mapa completo (tecla M) | `frontend/src/components/map/MapView.jsx` | `map/useMapCanvasController.js`, `game/mapCanvas.js`, `usePartyPositions.js` |
-| Dibujado del mapa (grilla, paredes, grupo) | `frontend/src/game/mapCanvas.js` | `game/constants.js` |
+| Dibujado de mapas (diamante iso) | `frontend/src/game/mapCanvas.js` | `game/isometric.js`, `game/collision.js`, `game/constants.js` |
+| Proyeccion isometrica (48×24) | `frontend/src/game/isometric.js` | `game/constants.js` |
+| Colision (hitbox por objeto) | `frontend/src/game/collision.js` | `game/isometric.js`, `ExplorationScene.js`, `decor.js` |
+| Overlay de cuadricula y posiciones seguras | `frontend/src/game/board.js` | `game/collision.js`, `game/isometric.js` |
+| Fichas del grupo y marcador | `frontend/src/game/party.js` | `game/constants.js`, `isometric.js` |
+| Decoracion 2.5D (arboles/arbustos) | `frontend/src/game/decor.js` | `game/constants.js`, `isometric.js` |
+| Movimiento continuo del grupo | `frontend/src/game/movement.js` | `game/board.js`, `game/bindings.js` |
 | Logica del mapa y exploracion | `frontend/src/game/ExplorationScene.js` | Phaser 3 |
 | Eventos compartidos React-Phaser | `frontend/src/game/gameEvents.js` | `CustomEvent`, `PhaserGame.jsx`, `ExplorationScene.js` |
 | Estado y actualización de personajes | `frontend/src/hooks/usePersonajes.js` | `frontend/src/services/api.js` |
+| Tests de módulos puros | `frontend/src/**/*.test.js` | Vitest (`pnpm test`) |
 | Peticiones al backend | `frontend/src/services/api.js` | API Express |
 | Entrada de la API | `backend/index.js` | rutas y conexion MySQL |
 | Rutas de personajes | `backend/routes/personajesRoutes.js` | controlador de personajes |
 | Logica de personajes | `backend/services/personajesService.js` | `backend/utils/asyncDb.js` |
 | Logica de inventario | `backend/services/inventarioService.js` | `backend/utils/asyncDb.js` |
 | Controlador delgado | `backend/controllers/personajesController.js` | servicios de personajes e inventario |
+| Validación de requests | `backend/utils/validate.js` | `errors.js`, `personajesController.js` |
 | Conexion a la base de datos | `backend/config/db.js` | MySQL/Docker |
 | Esquema y datos SQL | `sentencias-sql/` | `docker-compose.yml` |
 | Requisitos y hoja de ruta del RPG | `Documento de Diseño y Arquitectura - RPG Táctico Web.md` | grafo y arquitectura |
@@ -118,9 +142,8 @@ sequenceDiagram
     participant U as Usuario
 
     R->>P: Renderiza el contenedor
-    P->>S: Crea Phaser.Game con la escena
-    S-->>R: Emite exploration-status
-    U->>S: Presiona 1, 2, 3, flechas o WASD
-    S-->>R: Emite cambio de lider, movimiento o bloqueo
-    R-->>U: Muestra el estado de la prueba
+    P->>S: Crea Phaser.Game con la escena (posiciones y líder de la partida)
+    U->>S: Presiona 1/2/3 (líder), flechas/WASD (movimiento), U (editor), I (inventario), M (mapa)
+    S-->>R: Emite party-position-update, leader-change y open-character-editor
+    R-->>U: Muestra minimapa/mapa M (60 fps) y paneles de inventario/editor
 ```

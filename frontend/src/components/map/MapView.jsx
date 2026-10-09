@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { drawMapCanvas, DEFAULT_MAP_ZOOM } from '../../game/mapCanvas'
-import { eventKeyToBinding, loadBindings, prettifyBinding } from '../../game/bindings'
-import { usePartyPositions } from '../../hooks/usePartyPositions'
+import { drawMapCanvas, DEFAULT_MAP_ZOOM } from '@/game/mapCanvas'
+import { eventKeyToBinding, loadBindings, prettifyBinding } from '@/game/bindings'
+import { usePartyPositions } from '@/hooks/usePartyPositions'
 import { useMapCanvasController } from './useMapCanvasController'
 import './MapView.css'
 

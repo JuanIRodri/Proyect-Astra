@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { usePartidas } from '../hooks/usePartidas'
-import { resetPartida } from '../services/api'
+import { usePartidas } from '@/hooks/usePartidas'
+import { resetPartida } from '@/services/api'
 import { MenuHome } from './mainmenu/MenuHome'
 import { MenuCargar } from './mainmenu/MenuCargar'
 import { MenuNueva } from './mainmenu/MenuNueva'
