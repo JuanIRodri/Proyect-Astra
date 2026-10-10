@@ -1,4 +1,4 @@
-const { query, withTransaction } = require('../utils/asyncDb');
+const asyncDb = require('../utils/asyncDb');
 const { AppError } = require('../utils/errors');
 
 const DEFAULT_LIDER_X = 5;
@@ -15,7 +15,7 @@ function parsePosiciones(row) {
 }
 
 async function list() {
-    const rows = await query(`
+    const rows = await asyncDb.query(`
         SELECT ${PARTIDA_COLUMNS}
         FROM Partida
         ORDER BY idPartida
@@ -27,7 +27,7 @@ async function list() {
 }
 
 async function detail(id) {
-    const rows = await query(`
+    const rows = await asyncDb.query(`
         SELECT ${PARTIDA_COLUMNS}
         FROM Partida
         WHERE idPartida = ?
@@ -48,7 +48,7 @@ async function save(id, data = {}) {
     } = data;
     const posiciones = data.posiciones ? JSON.stringify(data.posiciones) : existe.posiciones ?? null;
 
-    const result = await query(`
+    const result = await asyncDb.query(`
         UPDATE Partida
         SET mapa = ?, liderX = ?, liderY = ?, liderIndex = ?, posiciones = ?, fechaGuardado = NOW()
         WHERE idPartida = ?
@@ -61,7 +61,7 @@ async function save(id, data = {}) {
 
 async function reset(id) {
     await detail(id);
-    const result = await query(`
+    const result = await asyncDb.query(`
         UPDATE Partida
         SET mapa = NULL, liderX = NULL, liderY = NULL, liderIndex = 0, posiciones = NULL, fechaGuardado = NULL
         WHERE idPartida = ?

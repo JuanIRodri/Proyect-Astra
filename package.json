@@ -1,0 +1,13 @@
+{
+  "name": "proyect-astra",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "lint": "pnpm --dir frontend exec eslint src",
+    "test": "pnpm --dir frontend test && pnpm --dir backend test"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.3"
+  }
+}
