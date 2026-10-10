@@ -1,4 +1,4 @@
-const { query, withTransaction } = require('../utils/asyncDb');
+const asyncDb = require('../utils/asyncDb');
 const { AppError } = require('../utils/errors');
 
 const PERSONAJE_BASE_FROM = `
@@ -14,7 +14,7 @@ const PERSONAJE_BASE_FROM = `
 `;
 
 async function list() {
-    return query(`
+    return asyncDb.query(`
         SELECT
             p.idPersonaje, p.nombre, p.clase, p.nivel, p.altura, p.musculatura,
             c.Forma as Cabeza_Forma,
@@ -34,7 +34,7 @@ async function list() {
 }
 
 async function detail(id) {
-    const rows = await query(`
+    const rows = await asyncDb.query(`
         SELECT
             p.idPersonaje, p.nombre, p.clase, p.nivel, p.altura, p.musculatura,
             c.Forma as Cabeza_Forma,
@@ -69,7 +69,7 @@ async function detail(id) {
 }
 
 async function remove(id) {
-    const result = await query('DELETE FROM Personaje WHERE idPersonaje = ?', [id]);
+    const result = await asyncDb.query('DELETE FROM Personaje WHERE idPersonaje = ?', [id]);
     if (result.affectedRows === 0) {
         throw new AppError(404, 'Personaje no encontrado');
     }
@@ -122,7 +122,7 @@ async function update(id, data) {
         throw new AppError(400, 'No hay campos válidos para actualizar');
     }
 
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         if (basicColumns.length > 0) {
             const [basicResult] = await conn.query(`
                 UPDATE Personaje
@@ -179,7 +179,7 @@ async function create(data) {
         cuernos_tamanio = 'N/A', cuernos_color = 'N/A', torso_bello = 0,
     } = data;
 
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         const [boca] = await conn.query('INSERT INTO Boca (Forma, Tamanio, Color) VALUES (?, "Medio", "Rojo")', [boca_forma]);
         const [cabello] = await conn.query('INSERT INTO Cabello (Corte, Tinte) VALUES (?, ?)', [cabello_corte, cabello_tinte]);
         const [nariz] = await conn.query('INSERT INTO Nariz (Forma, Tamanio) VALUES (?, "Medio")', [nariz_forma]);

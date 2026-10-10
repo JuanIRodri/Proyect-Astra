@@ -7,7 +7,9 @@ flowchart TD
     Root[Proyect-Astra]
 
     Root --> Frontend[frontend/\nReact + Vite\nVitest (pnpm test) · alias @/ -> src/]
-    Root --> Ci[.github/workflows/ci.yml\nbuild · lint · tests · node --check]
+    Root --> Backend[backend/\nExpress + tests node:test]
+    Root --> Ci[.github/workflows/ci.yml\nbuild · lint · tests (frontend+backend) · node --check]
+    Root --> Hooks[.husky/pre-commit + lint-staged.config.mjs]
     Root --> Backend[backend/\nNode.js + Express]
     Root --> SQL[sentencias-sql/\nMySQL y modelo de datos]
     Root --> Infra[docker-compose.yml\nstart-app.sh]
@@ -78,8 +80,7 @@ flowchart TD
     Backend --> Routes[backend/routes/personajesRoutes.js\nrutas HTTP]
     Backend --> Controllers[backend/controllers/personajesController.js\ncontrolador delgado]
     Backend --> Services[backend/services/\npersonajesService.js\ninventarioService.js]
-    Backend --> Utils[backend/utils/\nasyncDb.js\nerrors.js\nvalidate.js]
-    Backend --> EnvExample[backend/.env.example\nvariables replicables (incluye CORS_ORIGINS)]
+    Backend --> TestsB[backend/**/*.test.js\nnode:test — validate, errors, personajesService, inventarioService, partidasService]
     Backend --> Db[backend/config/db.js\npool MySQL]
     Entry --> Routes
     Routes --> Controllers
