@@ -84,6 +84,31 @@ Las aplica `eslint-plugin-react-hooks` en CI: romperlas = lint rojo.
 - **Refs y portales**: `useRef` para refs de DOM (el inventario scrollea la ranura activa con `slotRefs`) y para exponer API imperative (`useImperativeHandle` en `InventoryPanel`). Los overlays flotantes (tooltip, modales) usan `createPortal` a `document.body`.
 - **Patrón canónico**: `components/inventory/useInventoryPanel.js` es solo el **orquestador**: compone sub-hooks (`useInventoryData`, `useInventorySelection`, `useInventoryActions`, `useInventoryDrag`, `useInventoryContextMenu`), helpers puros (`inventorySelectors.js`, `inventoryUtils.js`, `inventoryOperations.js`) y el teclado (`inventoryKeyHandler.js` + `keys/`). Cuando un sub-hook supere el límite, se divide en otro sub-hook; lo que se pueda, se baja a un helper puro testeado.
 
+### Atajos del inventario
+
+Fuente de verdad: `components/inventory/inventoryKeyHandler.js` (dispatcher) + `inventory/keys/`, cubierto por `inventoryKeyHandler.test.js`.
+
+| Tecla | Acción |
+| --- | --- |
+| `I` / `Esc` | cerrar el panel (o los detalles abiertos) |
+| `Q` | soltar el objeto seleccionado |
+| `G` | alternar entre la mochila y el equipamiento |
+| `E` | equipar / desequipar el objeto de la ranura activa; usar consumibles |
+| `V` | mostrar u ocultar los detalles del objeto |
+| `R` | dividir la pila rápidamente |
+| `C` | abrir el modal de división |
+| `O` | ordenar la mochila (unir pilas y acomodar) |
+| `T` | traspasar el objeto a otro personaje del grupo |
+| `F` / `Shift+F` | ciclar el filtro de categoría / el de rareza |
+| `4`-`8` | ranuras de la barra rápida |
+| `1` / `2` / `3` | cambiar de líder; con el traspaso abierto, elegir destinatario |
+| `Tab` / `Shift+Tab` | siguiente / anterior personaje del grupo |
+| `Enter` / `Espacio` | confirmar; tomar un objeto y moverlo con la flecha; cancelar si ya estaba tomado |
+| `WASD` / flechas | mover el cursor; en el equipamiento, recorrer las ranuras |
+| Rueda del mouse | avanzar el cursor; con `Shift`, ciclar los filtros |
+
+En el **menú contextual**: flechas para moverse, `Enter` para ejecutar, `Esc` para cerrar (si hay un submenú abierto, `Esc` cierra solo el submenú).
+
 ---
 
 ## 5. Phaser: `frontend/src/game/`
