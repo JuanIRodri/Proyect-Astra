@@ -1,604 +1,205 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  desequiparObjeto,
-  desequiparObjetoEnRanura,
-  equiparObjeto,
-  getEquipamiento,
-  getInventario,
-  saveInventario,
-  transferirObjeto,
-  usarObjeto,
-} from '@/services/api'
-import {
-  EQUIPMENT_SLOTS,
-  createInventory,
-  getClassThemeKey,
-  getFilteredIndexes,
-  getFilterOptions,
-  getNextFilteredSlotIndex,
-  getNextSlotIndex,
-  normalizeEquipment,
-  normalizeInventory,
-} from './inventoryUtils'
-import {
-  computeLoadStats,
-  moveOrMergeItems,
-  moveSingleItem,
-  removeItem,
-  setQuantity,
-  sortInventory,
-  splitStack,
-  splitStackByQuantity,
-} from './inventoryOperations'
+import { getClassThemeKey } from './inventoryUtils'
+import { computeLoadStats } from './inventoryOperations'
 import { createInventoryKeyHandler } from './inventoryKeyHandler'
+import { useInventoryData } from './useInventoryData'
+import { useInventorySelection } from './useInventorySelection'
+import { useInventoryActions } from './useInventoryActions'
+import { useInventoryDrag } from './useInventoryDrag'
+import { useInventoryContextMenu } from './useInventoryContextMenu'
+import { createInitialGold, getCharacterList, isEquipKeyActive } from './inventorySelectors'
 
-export function useInventoryPanel({ onClose, personajes, activeCharacterIndex, onActiveCharacterChange, onTransferComplete, onHotbarSlotKey }) {
-  const characterList = personajes.slice(0, 3)
-  const [inventories, setInventories] = useState(() => Object.fromEntries(
-    characterList.map((character) => [character.idPersonaje, createInventory()]),
-  ))
-  const [goldByCharacter] = useState(() => Object.fromEntries(
-    characterList.map((character) => [character.idPersonaje, 125]),
-  ))
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0)
-  const [cursorSlotIndex, setCursorSlotIndex] = useState(0)
-  const [heldSlotIndex, setHeldSlotIndex] = useState(null)
-  const [draggedSlotIndex, setDraggedSlotIndex] = useState(null)
-  const [inventoryLoading, setInventoryLoading] = useState(true)
-  const [equipmentByCharacter, setEquipmentByCharacter] = useState({})
-  const [showItemDetails, setShowItemDetails] = useState(false)
-  const [selectedEquipmentSlot, setSelectedEquipmentSlot] = useState(null)
-  const [navigationArea, setNavigationArea] = useState('inventory')
-  const [equipmentCursorIndex, setEquipmentCursorIndex] = useState(0)
-  const [filterCategory, setFilterCategory] = useState('todos')
-  const [filterRarity, setFilterRarity] = useState('todos')
-  const [transferPromptActive, setTransferPromptActive] = useState(false)
-  const [contextMenu, setContextMenu] = useState(null)
-  const [contextMenuActionIndex, setContextMenuActionIndex] = useState(0)
-  const [contextMenuSubmenuIndex, setContextMenuSubmenuIndex] = useState(null)
-  const slotRefs = useRef([])
+export function useInventoryPanel({
+  onClose,
+  personajes,
+  activeCharacterIndex,
+  onActiveCharacterChange,
+  onTransferComplete,
+  onHotbarSlotKey,
+}) {
+  const characterList = useMemo(() => getCharacterList(personajes), [personajes])
   const [notice, setNotice] = useState('Usa WASD y selecciona objetos con Enter.')
+  const [transferPromptActive, setTransferPromptActive] = useState(false)
+  const [draggedSlotIndex, setDraggedSlotIndex] = useState(null)
+  const [goldByCharacter] = useState(() => createInitialGold(characterList))
+  const slotRefs = useRef([])
+
   const activeCharacter = characterList[activeCharacterIndex]
   const activeCharacterId = activeCharacter?.idPersonaje
   const classThemeKey = getClassThemeKey(activeCharacter?.clase)
-  const [resourcesByCharacter, setResourcesByCharacter] = useState({})
-  const defaultResources = (character) => ({
-    vidaActual: character?.vidaActual ?? 30 + (character?.constitucion ?? 10) * 5,
-    vidaMax: character?.vidaMax ?? 30 + (character?.constitucion ?? 10) * 5,
-    manaActual: character?.manaActual ?? 20 + (character?.inteligencia ?? 10) * 5,
-    manaMax: character?.manaMax ?? 20 + (character?.inteligencia ?? 10) * 5,
+
+  const data = useInventoryData({ activeCharacterId, activeCharacter, characterList, setNotice })
+  const selection = useInventorySelection({
+    items: data.items,
+    equipment: data.equipment,
+    setTransferPromptActive,
+    setNotice,
   })
-  const resources = resourcesByCharacter[activeCharacterId] || defaultResources(activeCharacter)
-  const items = inventories[activeCharacterId] || createInventory()
-  const equipment = useMemo(
-    () => equipmentByCharacter[activeCharacterId] || {},
-    [activeCharacterId, equipmentByCharacter],
-  )
-  const selectedItem = items[selectedSlotIndex] || null
-  const selectedEquipmentItem = selectedEquipmentSlot ? equipment[selectedEquipmentSlot] : null
-  const detailItem = selectedEquipmentItem || selectedItem
-  const goldAmount = goldByCharacter[activeCharacterId] || 0
-  const isFilterActive = filterCategory !== 'todos' || filterRarity !== 'todos'
-  const matchingIndexes = useMemo(() => (
-    getFilteredIndexes(items, filterCategory, filterRarity)
-  ), [items, filterCategory, filterRarity])
-  const filteredOutIndexes = useMemo(() => {
-    if (!isFilterActive) return null
-    const matching = new Set(matchingIndexes)
-    return new Set(items.map((item, index) => (item && !matching.has(index) ? index : null)).filter((index) => index !== null))
-  }, [items, matchingIndexes, isFilterActive])
-  const categoryOptions = useMemo(() => ['todos', ...getFilterOptions(items, 'category')], [items])
-  const rarityOptions = useMemo(() => ['todos', ...getFilterOptions(items, 'rarity')], [items])
-  const equipKeyActive = Boolean(
-    (selectedEquipmentSlot && selectedEquipmentItem) || selectedItem?.tipoEquipamiento || selectedItem?.consumible,
-  )
+  const actions = useInventoryActions({
+    data,
+    selection,
+    characterList,
+    activeCharacterId,
+    setNotice,
+    setTransferPromptActive,
+    setDraggedSlotIndex,
+    onActiveCharacterChange,
+    onTransferComplete,
+  })
+  const drag = useInventoryDrag({
+    items: data.items,
+    updateInventory: data.updateInventory,
+    moveItem: actions.handleMoveItem,
+    unequipItemToSlot: actions.handleUnequipToSlot,
+    draggedSlotIndex,
+    setDraggedSlotIndex,
+    setHeldSlotIndex: selection.setHeldSlotIndex,
+    setNotice,
+  })
+  const contextMenu = useInventoryContextMenu({
+    items: data.items,
+    characterList,
+    activeCharacterId,
+    focusSlot: selection.focusSlot,
+    setTransferPromptActive,
+    onUse: actions.handleUseSelected,
+    onEquip: actions.handleEquipSelected,
+    onTransfer: actions.handleTransferFromSlot,
+    onSplit: actions.handleRequestSplit,
+    onShowDetails: selection.toggleDetails,
+    onDrop: actions.handleDropSelected,
+  })
+
+  const { closeContextMenu } = contextMenu
+  const { toggleEquipmentArea } = selection
+
+  const handleToggleEquipment = useCallback(() => {
+    toggleEquipmentArea()
+    setTransferPromptActive(false)
+    closeContextMenu()
+  }, [closeContextMenu, setTransferPromptActive, toggleEquipmentArea])
+
   const {
     equipmentBonuses,
     maxWeight,
     currentWeight,
     weightPercent,
     weightState,
-  } = computeLoadStats({ items, equipment, fuerza: activeCharacter?.fuerza })
-  const itemCount = items.filter(Boolean).length
+  } = useMemo(() => computeLoadStats({
+    items: data.items,
+    equipment: data.equipment,
+    fuerza: activeCharacter?.fuerza,
+  }), [activeCharacter?.fuerza, data.equipment, data.items])
 
-  useEffect(() => {
-    if (!activeCharacterId) return undefined
-    let cancelled = false
-    Promise.all([getInventario(activeCharacterId), getEquipamiento(activeCharacterId)])
-      .then(([rows, equipmentRows]) => {
-        if (cancelled) return
-        setInventories((currentInventories) => ({
-          ...currentInventories,
-          [activeCharacterId]: normalizeInventory(rows),
-        }))
-        setEquipmentByCharacter((currentEquipment) => ({
-          ...currentEquipment,
-          [activeCharacterId]: normalizeEquipment(equipmentRows),
-        }))
-      })
-      .catch(() => {
-        if (!cancelled) setNotice('No se pudo cargar el inventario.')
-      })
-      .finally(() => {
-        if (!cancelled) setInventoryLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [activeCharacterId])
+  const itemCount = data.items.filter(Boolean).length
+  const goldAmount = goldByCharacter[activeCharacterId] || 0
+  const equipKeyActive = isEquipKeyActive({
+    selectedEquipmentSlot: selection.selectedEquipmentSlot,
+    selectedEquipmentItem: selection.selectedEquipmentItem,
+    selectedItem: selection.selectedItem,
+  })
 
-  const updateInventory = useCallback((nextItems, successNotice) => {
-    setInventories((currentInventories) => ({
-      ...currentInventories,
-      [activeCharacterId]: nextItems,
-    }))
-    setNotice(successNotice)
-    saveInventario(activeCharacterId, nextItems).catch(() => {
-      setNotice('El cambio se aplicó visualmente, pero no se pudo guardar.')
-    })
-  }, [activeCharacterId])
+  const keyHandlerState = useMemo(() => ({
+    items: data.items,
+    selectedItem: selection.selectedItem,
+    selectedEquipmentItem: selection.selectedEquipmentItem,
+    selectedEquipmentSlot: selection.selectedEquipmentSlot,
+    navigationArea: selection.navigationArea,
+    cursorSlotIndex: selection.cursorSlotIndex,
+    equipmentCursorIndex: selection.equipmentCursorIndex,
+    heldSlotIndex: selection.heldSlotIndex,
+    characterListLength: characterList.length,
+    showItemDetails: selection.showItemDetails,
+    transferPromptActive,
+    contextMenuActive: contextMenu.contextMenu !== null,
+    contextMenuActionIndex: contextMenu.contextMenuActionIndex,
+    contextMenuActions: contextMenu.contextMenuActions,
+    contextMenuSubmenuIndex: contextMenu.contextMenuSubmenuIndex,
+    activeCharacterIndex,
+  }), [
+    activeCharacterIndex,
+    characterList.length,
+    contextMenu.contextMenu,
+    contextMenu.contextMenuActionIndex,
+    contextMenu.contextMenuActions,
+    contextMenu.contextMenuSubmenuIndex,
+    data.items,
+    selection.cursorSlotIndex,
+    selection.equipmentCursorIndex,
+    selection.heldSlotIndex,
+    selection.navigationArea,
+    selection.selectedEquipmentItem,
+    selection.selectedEquipmentSlot,
+    selection.selectedItem,
+    selection.showItemDetails,
+    transferPromptActive,
+  ])
 
-  const handleDropSelected = useCallback(() => {
-    if (!selectedItem) {
-      setNotice('Selecciona un objeto antes de soltarlo.')
-      return
-    }
-
-    updateInventory(removeItem(items, selectedSlotIndex), `${selectedItem.name}: objeto soltado.`)
-    setSelectedSlotIndex((currentIndex) => Math.max(0, currentIndex - 1))
-    setCursorSlotIndex((currentIndex) => Math.max(0, currentIndex - 1))
-    setHeldSlotIndex(null)
-  }, [items, selectedItem, selectedSlotIndex, updateInventory])
-
-  const handleSplit = useCallback(() => {
-    const result = splitStack(items, selectedSlotIndex)
-    if (result.error) {
-      setNotice(result.error)
-      return
-    }
-    updateInventory(result.nextItems, result.message)
-  }, [items, selectedSlotIndex, updateInventory])
-
-  const [splitPromptActive, setSplitPromptActive] = useState(false)
-
-  const handleRequestSplit = useCallback(() => {
-    const item = items[selectedSlotIndex]
-    if (!item || item.quantity < 2) {
-      setNotice('Selecciona una pila con más de un objeto para dividirla.')
-      return
-    }
-    setSplitPromptActive(true)
-  }, [items, selectedSlotIndex])
-
-  const handleConfirmSplit = useCallback((quantity) => {
-    setSplitPromptActive(false)
-    const result = splitStackByQuantity(items, selectedSlotIndex, quantity)
-    if (result.error) {
-      setNotice(result.error)
-      return
-    }
-    updateInventory(result.nextItems, result.message)
-  }, [items, selectedSlotIndex, updateInventory])
-
-  const handleCancelSplit = useCallback(() => {
-    setSplitPromptActive(false)
-    setNotice('División cancelada.')
-  }, [])
-
-  const handleMoveItem = useCallback((sourceSlotIndex, targetSlotIndex) => {
-    const result = moveOrMergeItems(items, sourceSlotIndex, targetSlotIndex)
-    if (!result) return
-
-    updateInventory(result.nextItems, result.message)
-    setSelectedSlotIndex(targetSlotIndex)
-    setCursorSlotIndex(targetSlotIndex)
-  }, [items, updateInventory])
-
-  const handleUseSelected = useCallback(async (slotIndex = selectedSlotIndex) => {
-    const item = items[slotIndex]
-    if (!item) {
-      setNotice('Selecciona un objeto antes de usarlo.')
-      return
-    }
-    if (!item.consumible) {
-      setNotice('Este objeto no se puede consumir.')
-      return
-    }
-
-    try {
-      const result = await usarObjeto(activeCharacterId, slotIndex)
-      const nextItems = setQuantity(items, slotIndex, result.quantity)
-      setInventories((currentInventories) => ({
-        ...currentInventories,
-        [activeCharacterId]: nextItems,
-      }))
-      const nextResources = {
-        vidaActual: result.effect?.vidaActual ?? resources.vidaActual,
-        manaActual: result.effect?.manaActual ?? resources.manaActual,
-      }
-      setResourcesByCharacter((currentResources) => ({
-        ...currentResources,
-        [activeCharacterId]: { ...resources, ...nextResources },
-      }))
-      const effectNotice = result.effect?.vida ? ` Efecto: +${result.effect.vida} vida (${nextResources.vidaActual}/${resources.vidaMax}).` : ''
-      setNotice(`${item.name} consumido.${effectNotice}`)
-      return { name: item.name, quantity: result.quantity, effect: result.effect }
-    } catch {
-      setNotice('No se pudo consumir el objeto.')
-      return undefined
-    }
-  }, [activeCharacterId, items, selectedSlotIndex, resources])
-
-  const handleEquipSelected = useCallback(async (slotIndex = selectedSlotIndex) => {
-    const item = items[slotIndex]
-    if (!item?.tipoEquipamiento) {
-      setNotice('Selecciona un objeto equipable.')
-      return
-    }
-
-    try {
-      await equiparObjeto(activeCharacterId, slotIndex)
-      setInventories((currentInventories) => ({
-        ...currentInventories,
-        [activeCharacterId]: removeItem(items, slotIndex),
-      }))
-      setEquipmentByCharacter((currentEquipment) => ({
-        ...currentEquipment,
-        [activeCharacterId]: {
-          ...(currentEquipment[activeCharacterId] || {}),
-          [item.tipoEquipamiento]: item,
-        },
-      }))
-      setHeldSlotIndex(null)
-      setNotice(`${item.name} equipado en ${item.tipoEquipamiento}.`)
-    } catch (error) {
-      setNotice(error.response?.data?.error || 'No se pudo equipar el objeto.')
-    }
-  }, [activeCharacterId, items, selectedSlotIndex])
-
-  const handleUnequip = useCallback(async (equipmentSlot) => {
-    try {
-      await desequiparObjeto(activeCharacterId, equipmentSlot)
-      const [rows, equipmentRows] = await Promise.all([
-        getInventario(activeCharacterId),
-        getEquipamiento(activeCharacterId),
-      ])
-      setInventories((currentInventories) => ({
-        ...currentInventories,
-        [activeCharacterId]: normalizeInventory(rows),
-      }))
-      setEquipmentByCharacter((currentEquipment) => ({
-        ...currentEquipment,
-        [activeCharacterId]: normalizeEquipment(equipmentRows),
-      }))
-      setSelectedEquipmentSlot(null)
-      setNotice('Objeto desequipado y devuelto a la mochila.')
-    } catch (error) {
-      setNotice(error.response?.data?.error || 'No se pudo desequipar el objeto.')
-    }
-  }, [activeCharacterId])
-
-  const handleToggleDetails = useCallback(() => {
-    if (!detailItem) {
-      setNotice('Selecciona un objeto para ver sus detalles.')
-      return
-    }
-    setShowItemDetails((isVisible) => !isVisible)
-  }, [detailItem])
-
-  const handleCloseDetails = useCallback(() => setShowItemDetails(false), [])
-
-  const handleDoubleClickSlot = useCallback((slotIndex) => {
-    const item = items[slotIndex]
-    if (!item) return
-    if (item.tipoEquipamiento) {
-      handleEquipSelected(slotIndex)
-    } else if (item.consumible) {
-      handleUseSelected(slotIndex)
-    }
-  }, [handleEquipSelected, handleUseSelected, items])
-
-  const handleEquipToSlot = useCallback(async (slotIndex, equipmentSlotKey) => {
-    const item = items[slotIndex]
-    if (!item?.tipoEquipamiento) {
-      setNotice('Selecciona un objeto equipable.')
-      return
-    }
-    if (item.tipoEquipamiento !== equipmentSlotKey) {
-      setNotice('Solo se puede equipar en la ranura correspondiente.')
-      return
-    }
-    try {
-      await equiparObjeto(activeCharacterId, slotIndex)
-      setInventories((currentInventories) => ({
-        ...currentInventories,
-        [activeCharacterId]: removeItem(items, slotIndex),
-      }))
-      setEquipmentByCharacter((currentEquipment) => ({
-        ...currentEquipment,
-        [activeCharacterId]: {
-          ...(currentEquipment[activeCharacterId] || {}),
-          [equipmentSlotKey]: item,
-        },
-      }))
-      setHeldSlotIndex(null)
-      setNotice(`${item.name} equipado en ${equipmentSlotKey}.`)
-    } catch (error) {
-      setNotice(error.response?.data?.error || 'No se pudo equipar el objeto.')
-    }
-  }, [activeCharacterId, items])
-
-  const handleUnequipToSlot = useCallback(async (equipmentSlotKey, targetSlotIndex) => {
-    const equipmentItem = equipment[equipmentSlotKey]
-    if (!equipmentItem) {
-      setNotice('Esa ranura de equipamiento está vacía.')
-      return
-    }
-    try {
-      await desequiparObjetoEnRanura(activeCharacterId, equipmentSlotKey, targetSlotIndex)
-      setEquipmentByCharacter((currentEquipment) => {
-        const next = { ...(currentEquipment[activeCharacterId] || {}) }
-        delete next[equipmentSlotKey]
-        return { ...currentEquipment, [activeCharacterId]: next }
-      })
-      const nextItems = items.map((item, itemIndex) => (
-        itemIndex === targetSlotIndex ? equipmentItem : item
-      ))
-      setInventories((currentInventories) => ({
-        ...currentInventories,
-        [activeCharacterId]: nextItems,
-      }))
-      setHeldSlotIndex(null)
-      setSelectedEquipmentSlot(null)
-      setNavigationArea('inventory')
-      setShowItemDetails(false)
-      setNotice(`${equipmentItem.name} desequipado y dejado en la mochila.`)
-    } catch (error) {
-      setNotice(error.response?.data?.error || 'No se pudo desequipar el objeto.')
-    }
-  }, [activeCharacterId, equipment, items])
-
-  const handleDoubleClickEquipment = useCallback((equipmentSlotKey) => {
-    handleUnequip(equipmentSlotKey)
-  }, [handleUnequip])
-
-  const handleToggleEquipment = useCallback(() => {
-    if (navigationArea === 'equipment') {
-      setNavigationArea('inventory')
-      setSelectedEquipmentSlot(null)
-      setSelectedSlotIndex(0)
-      setCursorSlotIndex(0)
-      setNotice('Navegación en la mochila.')
-    } else {
-      const equipmentSlot = EQUIPMENT_SLOTS[equipmentCursorIndex]
-      setNavigationArea('equipment')
-      setSelectedEquipmentSlot(equipmentSlot.key)
-      setSelectedSlotIndex(-1)
-      setShowItemDetails(false)
-      setNotice('Navegación en el equipamiento.')
-    }
-    setTransferPromptActive(false)
-    setContextMenu(null)
-  }, [equipmentCursorIndex, navigationArea])
-
-  const moveSelection = useCallback((rowDelta, columnDelta) => {
-    const nextIndex = isFilterActive && matchingIndexes.length > 0
-      ? getNextFilteredSlotIndex(cursorSlotIndex, rowDelta, columnDelta, new Set(matchingIndexes))
-      : getNextSlotIndex(cursorSlotIndex, rowDelta, columnDelta)
-    setCursorSlotIndex(nextIndex)
-    setSelectedSlotIndex(nextIndex)
-    setShowItemDetails(false)
-    setSelectedEquipmentSlot(null)
-    setNavigationArea('inventory')
-  }, [cursorSlotIndex, isFilterActive, matchingIndexes])
-
-  const handleCategoryChange = useCallback((nextCategory) => {
-    setFilterCategory(nextCategory)
-    const nextMatches = getFilteredIndexes(items, nextCategory, filterRarity)
-    if (navigationArea === 'equipment') return
-    if (nextMatches.length > 0 && !nextMatches.includes(selectedSlotIndex)) {
-      setSelectedSlotIndex(nextMatches[0])
-      setCursorSlotIndex(nextMatches[0])
-      setShowItemDetails(false)
-    }
-  }, [filterRarity, items, navigationArea, selectedSlotIndex])
-
-  const handleRarityChange = useCallback((nextRarity) => {
-    setFilterRarity(nextRarity)
-    const nextMatches = getFilteredIndexes(items, filterCategory, nextRarity)
-    if (navigationArea === 'equipment') return
-    if (nextMatches.length > 0 && !nextMatches.includes(selectedSlotIndex)) {
-      setSelectedSlotIndex(nextMatches[0])
-      setCursorSlotIndex(nextMatches[0])
-      setShowItemDetails(false)
-    }
-  }, [filterCategory, items, navigationArea, selectedSlotIndex])
-
-  const handleCycleCategory = useCallback(() => {
-    const currentIndex = Math.max(0, categoryOptions.indexOf(filterCategory))
-    handleCategoryChange(categoryOptions[(currentIndex + 1) % categoryOptions.length])
-  }, [categoryOptions, filterCategory, handleCategoryChange])
-
-  const handleCycleRarity = useCallback(() => {
-    const currentIndex = Math.max(0, rarityOptions.indexOf(filterRarity))
-    handleRarityChange(rarityOptions[(currentIndex + 1) % rarityOptions.length])
-  }, [rarityOptions, filterRarity, handleRarityChange])
-
-  const handleOrderItems = useCallback(() => {
-    updateInventory(sortInventory(items), 'Mochila ordenada: pilas unidas y objetos acomodados.')
-  }, [items, updateInventory])
-
-  const handleRequestTransfer = useCallback(() => {
-    if (navigationArea !== 'inventory') {
-      setNotice('Sal primero del equipamiento para transferir un objeto.')
-      return
-    }
-    if (!selectedItem) {
-      setNotice('Selecciona un objeto antes de transferirlo.')
-      return
-    }
-    setTransferPromptActive(true)
-    setNotice(`Elegí el personaje al que enviar ${selectedItem.name}.`)
-  }, [navigationArea, selectedItem])
-
-  const handleCancelTransfer = useCallback(() => {
-    setTransferPromptActive(false)
-    setNotice('Traspaso cancelado.')
-  }, [])
-
-  const handleOpenContextMenu = useCallback((slotIndex, clientX, clientY, limitX, limitY) => {
-    setSelectedSlotIndex(slotIndex)
-    setCursorSlotIndex(slotIndex)
-    setHeldSlotIndex(null)
-    setShowItemDetails(false)
-    setSelectedEquipmentSlot(null)
-    setNavigationArea('inventory')
-    setTransferPromptActive(false)
-    setContextMenuActionIndex(0)
-    setContextMenuSubmenuIndex(null)
-    setContextMenu({
-      slotIndex,
-      x: Math.max(4, Math.min(clientX, limitX - 170)),
-      y: Math.max(4, Math.min(clientY, limitY - 230)),
-    })
-  }, [])
-
-  const handleCloseContextMenu = useCallback(() => {
-    setContextMenu(null)
-    setContextMenuActionIndex(0)
-    setContextMenuSubmenuIndex(null)
-  }, [])
-
-  const handleTransferFromSlot = useCallback(async (slotIndex, targetCharacterIndex) => {
-    const target = characterList[targetCharacterIndex]
-    if (!target) {
-      setTransferPromptActive(false)
-      return
-    }
-    if (target.idPersonaje === activeCharacterId) {
-      setTransferPromptActive(false)
-      setNotice('No puedes enviarte un objeto a vos mismo.')
-      return
-    }
-    const item = items[slotIndex]
-    if (!item) {
-      setTransferPromptActive(false)
-      setNotice('Selecciona un objeto antes de transferirlo.')
-      return
-    }
-    try {
-      await transferirObjeto(activeCharacterId, slotIndex, target.idPersonaje)
-      setInventories((current) => {
-        const next = { ...current, [activeCharacterId]: removeItem(items, slotIndex) }
-        delete next[target.idPersonaje]
-        return next
-      })
-      setSelectedSlotIndex((current) => Math.max(0, current - 1))
-      setCursorSlotIndex((current) => Math.max(0, current - 1))
-      setHeldSlotIndex(null)
-      setDraggedSlotIndex(null)
-      setTransferPromptActive(false)
-      onTransferComplete?.()
-      setNotice(`${item.name} enviado a ${target.nombre}.`)
-    } catch (error) {
-      setTransferPromptActive(false)
-      setNotice(error.response?.data?.error || 'No se pudo transferir el objeto.')
-    }
-  }, [activeCharacterId, characterList, items, onTransferComplete])
-
-  const handleTransferSelected = useCallback((targetCharacterIndex) => {
-    handleTransferFromSlot(selectedSlotIndex, targetCharacterIndex)
-  }, [handleTransferFromSlot, selectedSlotIndex])
-
-  const contextMenuActions = useMemo(() => {
-    if (!contextMenu) return []
-    const item = items[contextMenu.slotIndex]
-    const actions = []
-    if (item?.consumible) actions.push({ label: 'Usar', run: handleUseSelected })
-    if (item?.tipoEquipamiento) actions.push({ label: 'Equipar', run: handleEquipSelected })
-    const targetCharacters = characterList
-      .map((character, index) => ({ character, index }))
-      .filter(({ character }) => character.idPersonaje !== activeCharacterId)
-    if (item && targetCharacters.length > 0) {
-      actions.push({
-        label: 'Enviar a',
-        submenu: targetCharacters.map(({ character, index }) => ({
-          label: `${index + 1} · ${character.nombre || `Héroe #${character.idPersonaje}`}`,
-          run: () => handleTransferFromSlot(contextMenu.slotIndex, index),
-        })),
-      })
-    }
-    if (item && item.quantity > 1) actions.push({ label: 'Dividir', run: handleRequestSplit })
-    actions.push({ label: 'Ver detalles', run: handleToggleDetails })
-    actions.push({ label: 'Soltar', run: handleDropSelected })
-    return actions
-  }, [activeCharacterId, characterList, contextMenu, handleDropSelected, handleEquipSelected, handleRequestSplit, handleToggleDetails, handleTransferFromSlot, handleUseSelected, items])
-
-  const handleCharacterChange = useCallback((characterIndex) => {
-    onActiveCharacterChange(characterIndex)
-    setInventoryLoading(true)
-    setSelectedSlotIndex(0)
-    setCursorSlotIndex(0)
-    setHeldSlotIndex(null)
-    setShowItemDetails(false)
-    setSelectedEquipmentSlot(null)
-    setNavigationArea('inventory')
-    setTransferPromptActive(false)
-    setNotice('Usa WASD y selecciona objetos con Enter.')
-  }, [onActiveCharacterChange])
+  const keyHandlerActions = useMemo(() => ({
+    onClose,
+    setNotice,
+    setShowItemDetails: selection.setShowItemDetails,
+    handleCloseDetails: selection.closeDetails,
+    setSelectedSlotIndex: selection.setSelectedSlotIndex,
+    setHeldSlotIndex: selection.setHeldSlotIndex,
+    setEquipmentCursorIndex: selection.setEquipmentCursorIndex,
+    setSelectedEquipmentSlot: selection.setSelectedEquipmentSlot,
+    setTransferPromptActive,
+    handleDropSelected: actions.handleDropSelected,
+    handleToggleEquipment,
+    handleUnequip: actions.handleUnequip,
+    handleEquipSelected: actions.handleEquipSelected,
+    handleUseSelected: actions.handleUseSelected,
+    handleToggleDetails: selection.toggleDetails,
+    handleSplit: actions.handleSplit,
+    handleRequestSplit: actions.handleRequestSplit,
+    handleMoveItem: actions.handleMoveItem,
+    handleCharacterChange: actions.handleCharacterChange,
+    handleOrderItems: actions.handleOrderItems,
+    handleRequestTransfer: actions.handleRequestTransfer,
+    handleTransferSelected: actions.handleTransferSelected,
+    handleCycleCategory: selection.cycleCategory,
+    handleCycleRarity: selection.cycleRarity,
+    handleHotbarKey: onHotbarSlotKey,
+    moveSelection: selection.moveSelection,
+    setContextMenuActionIndex: contextMenu.setContextMenuActionIndex,
+    setContextMenuSubmenuIndex: contextMenu.setContextMenuSubmenuIndex,
+    handleCloseContextMenu: contextMenu.closeContextMenu,
+  }), [
+    actions.handleCharacterChange,
+    actions.handleDropSelected,
+    actions.handleEquipSelected,
+    actions.handleMoveItem,
+    actions.handleOrderItems,
+    actions.handleRequestSplit,
+    actions.handleRequestTransfer,
+    actions.handleSplit,
+    actions.handleTransferSelected,
+    actions.handleUnequip,
+    actions.handleUseSelected,
+    handleToggleEquipment,
+    contextMenu.closeContextMenu,
+    contextMenu.setContextMenuActionIndex,
+    contextMenu.setContextMenuSubmenuIndex,
+    onClose,
+    onHotbarSlotKey,
+    selection.closeDetails,
+    selection.cycleCategory,
+    selection.cycleRarity,
+    selection.moveSelection,
+    selection.setEquipmentCursorIndex,
+    selection.setHeldSlotIndex,
+    selection.setSelectedEquipmentSlot,
+    selection.setSelectedSlotIndex,
+    selection.setShowItemDetails,
+    selection.toggleDetails,
+    setNotice,
+    setTransferPromptActive,
+  ])
 
   const handleKeyDown = useMemo(
-    () => createInventoryKeyHandler({
-      items,
-      selectedItem,
-      selectedEquipmentItem,
-      selectedEquipmentSlot,
-      navigationArea,
-      cursorSlotIndex,
-      equipmentCursorIndex,
-      heldSlotIndex,
-      characterListLength: characterList.length,
-      onClose,
-      setNotice,
-      setShowItemDetails,
-      showItemDetails,
-      handleCloseDetails,
-      setSelectedSlotIndex,
-      setHeldSlotIndex,
-      setEquipmentCursorIndex,
-      setSelectedEquipmentSlot,
-handleDropSelected,
-      handleToggleEquipment,
-      handleUnequip,
-      handleEquipSelected,
-      handleUseSelected,
-      handleToggleDetails,
-      handleSplit,
-      handleMoveItem,
-      handleCharacterChange,
-      handleOrderItems,
-      handleRequestTransfer,
-      handleTransferSelected,
-      handleCycleCategory,
-      handleCycleRarity,
-      handleHotbarKey: onHotbarSlotKey,
-      moveSelection,
-      transferPromptActive,
-      setTransferPromptActive,
-      contextMenu,
-      contextMenuActive: contextMenu !== null,
-      contextMenuActionIndex,
-      setContextMenuActionIndex,
-      contextMenuActions,
-      contextMenuSubmenuIndex,
-      setContextMenuSubmenuIndex,
-      splitPromptActive,
-      handleRequestSplit,
-      handleCancelSplit,
-      activeCharacterIndex,
-      handleCloseContextMenu,
-    }),
-    [activeCharacterIndex, characterList.length, contextMenu, contextMenuActionIndex, contextMenuActions, contextMenuSubmenuIndex, cursorSlotIndex, equipmentCursorIndex, handleCancelSplit, handleCharacterChange, handleCloseContextMenu, handleCloseDetails, handleCycleCategory, handleCycleRarity, onHotbarSlotKey, handleDropSelected, handleEquipSelected, handleMoveItem, handleOrderItems, handleRequestSplit, handleRequestTransfer, handleSplit, handleToggleDetails, handleToggleEquipment, handleTransferSelected, handleUnequip, handleUseSelected, heldSlotIndex, items, moveSelection, navigationArea, onClose, selectedEquipmentItem, selectedEquipmentSlot, selectedItem, splitPromptActive, transferPromptActive, showItemDetails],
+    () => createInventoryKeyHandler({ state: keyHandlerState, actions: keyHandlerActions }),
+    [keyHandlerActions, keyHandlerState],
   )
 
   useEffect(() => {
@@ -607,153 +208,74 @@ handleDropSelected,
   }, [handleKeyDown])
 
   useEffect(() => {
-    slotRefs.current[cursorSlotIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [cursorSlotIndex])
-
-  const handleSelectSlot = (slotIndex) => {
-    setCursorSlotIndex(slotIndex)
-    setSelectedSlotIndex(slotIndex)
-    setHeldSlotIndex(null)
-    setShowItemDetails(false)
-    setSelectedEquipmentSlot(null)
-    setTransferPromptActive(false)
-    setNavigationArea('inventory')
-  }
-
-  const handleGridWheel = useCallback((event) => {
-    event.preventDefault()
-    const direction = event.deltaY > 0 ? 1 : -1
-    if (event.shiftKey) {
-      if (direction > 0) handleCycleCategory()
-      else handleCycleRarity()
-      return
-    }
-    moveSelection(direction, 0)
-  }, [handleCycleCategory, handleCycleRarity, moveSelection])
-
-  const handleOpenDetails = () => setShowItemDetails(true)
-
-  const handleSelectEquipmentSlot = (slotKey) => {
-    setSelectedEquipmentSlot(slotKey)
-    setSelectedSlotIndex(-1)
-    setShowItemDetails(false)
-    setNavigationArea('equipment')
-  }
-
-  const handleDragStart = (slotIndex) => {
-    setDraggedSlotIndex(slotIndex)
-    setHeldSlotIndex(null)
-  }
-
-  const handleDragEnd = () => {
-    window.inventoryDrag = null
-    setDraggedSlotIndex(null)
-    setHeldSlotIndex(null)
-  }
-
-  const handleDrop = (sourceIndex, targetIndex) => {
-    handleMoveItem(sourceIndex, targetIndex)
-    setDraggedSlotIndex(null)
-    setHeldSlotIndex(null)
-  }
-
-  const handleDropSplit = (sourceIndex, targetIndex) => {
-    const result = moveSingleItem(items, sourceIndex, targetIndex)
-    if (result?.error) {
-      setNotice(result.error)
-    } else if (result) {
-      updateInventory(result.nextItems, result.message)
-    }
-    setDraggedSlotIndex(null)
-    setHeldSlotIndex(null)
-  }
-
-  const handleDragStartWithSplit = (slotIndex, split) => {
-    if (split && items[slotIndex]?.quantity > 1) window.inventoryDrag = { slotIndex, split: true }
-    handleDragStart(slotIndex)
-  }
-
-  const handleDropGrid = (data, slotIndex) => {
-    if (data.startsWith('equip-')) {
-      handleUnequipToSlot(data.slice(6), slotIndex)
-      setDraggedSlotIndex(null)
-      return
-    }
-    const sourceIndex = Number(data)
-    if (!Number.isFinite(sourceIndex)) return
-    const drag = window.inventoryDrag
-    window.inventoryDrag = null
-    if (drag?.split && drag.slotIndex === sourceIndex && items[sourceIndex]?.quantity > 1) {
-      handleDropSplit(sourceIndex, slotIndex)
-      return
-    }
-    handleDrop(sourceIndex, slotIndex)
-  }
+    slotRefs.current[selection.cursorSlotIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selection.cursorSlotIndex])
 
   return {
     activeCharacter,
     characterList,
     classThemeKey,
-    resources,
-    items,
+    resources: data.resources,
+    items: data.items,
     itemCount,
-    equipment,
-    detailItem,
-    showItemDetails,
-    handleToggleDetails,
-    handleCloseDetails,
+    equipment: data.equipment,
+    detailItem: selection.detailItem,
+    showItemDetails: selection.showItemDetails,
+    handleToggleDetails: selection.toggleDetails,
+    handleCloseDetails: selection.closeDetails,
     equipmentBonuses,
-    selectedEquipmentSlot,
+    selectedEquipmentSlot: selection.selectedEquipmentSlot,
     goldAmount,
     currentWeight,
     maxWeight,
     weightPercent,
     weightState,
     notice,
-    inventoryLoading,
+    inventoryLoading: data.inventoryLoading,
     equipKeyActive,
     transferPromptActive,
-    handleRequestTransfer,
-    handleTransferSelected,
-    handleCancelTransfer,
-    selectedItem,
-    selectedSlotIndex,
-    cursorSlotIndex,
-    heldSlotIndex,
+    handleRequestTransfer: actions.handleRequestTransfer,
+    handleTransferSelected: actions.handleTransferSelected,
+    handleCancelTransfer: actions.handleCancelTransfer,
+    selectedItem: selection.selectedItem,
+    selectedSlotIndex: selection.selectedSlotIndex,
+    cursorSlotIndex: selection.cursorSlotIndex,
+    heldSlotIndex: selection.heldSlotIndex,
     draggedSlotIndex,
     slotRefs,
-    filterCategory,
-    filterRarity,
-    handleCategoryChange,
-    handleRarityChange,
-    handleCycleCategory,
-    handleCycleRarity,
-    categoryOptions,
-    rarityOptions,
-    filteredOutIndexes,
-    filteredCount: matchingIndexes.length,
-    contextMenu,
-    contextMenuActions,
-    contextMenuActionIndex,
-    setContextMenuActionIndex,
-    contextMenuSubmenuIndex,
-    setContextMenuSubmenuIndex,
-    handleOpenContextMenu,
-    handleCloseContextMenu,
-    handleDoubleClickSlot,
-    handleEquipToSlot,
-    handleUnequipToSlot,
-    handleDoubleClickEquipment,
-    handleSelectSlot,
-    handleGridWheel,
-    handleOpenDetails,
-    handleSelectEquipmentSlot,
-    handleDragEnd,
-    handleDropGrid,
-    handleDragStartWithSplit,
-    handleTransferFromSlot,
-    splitPromptActive,
-    handleConfirmSplit,
-    handleCancelSplit,
+    filterCategory: selection.filterCategory,
+    filterRarity: selection.filterRarity,
+    handleCategoryChange: selection.changeCategory,
+    handleRarityChange: selection.changeRarity,
+    handleCycleCategory: selection.cycleCategory,
+    handleCycleRarity: selection.cycleRarity,
+    categoryOptions: selection.categoryOptions,
+    rarityOptions: selection.rarityOptions,
+    filteredOutIndexes: selection.filteredOutIndexes,
+    filteredCount: selection.filteredCount,
+    contextMenu: contextMenu.contextMenu,
+    contextMenuActions: contextMenu.contextMenuActions,
+    contextMenuActionIndex: contextMenu.contextMenuActionIndex,
+    setContextMenuActionIndex: contextMenu.setContextMenuActionIndex,
+    contextMenuSubmenuIndex: contextMenu.contextMenuSubmenuIndex,
+    setContextMenuSubmenuIndex: contextMenu.setContextMenuSubmenuIndex,
+    handleOpenContextMenu: contextMenu.openContextMenu,
+    handleCloseContextMenu: contextMenu.closeContextMenu,
+    handleDoubleClickSlot: actions.handleDoubleClickSlot,
+    handleEquipToSlot: actions.handleEquipToSlot,
+    handleUnequipToSlot: actions.handleUnequipToSlot,
+    handleDoubleClickEquipment: actions.handleDoubleClickEquipment,
+    handleSelectSlot: selection.focusSlot,
+    handleGridWheel: actions.handleGridWheel,
+    handleOpenDetails: selection.openDetails,
+    handleSelectEquipmentSlot: selection.selectEquipmentSlot,
+    handleDragStartWithSplit: drag.dragStartWithSplit,
+    handleDragEnd: drag.dragEnd,
+    handleDropGrid: drag.dropGrid,
+    handleUseSelected: actions.handleUseSelected,
+    handleTransferFromSlot: actions.handleTransferFromSlot,
+    splitPromptActive: actions.splitPromptActive,
+    handleConfirmSplit: actions.handleConfirmSplit,
+    handleCancelSplit: actions.handleCancelSplit,
   }
 }

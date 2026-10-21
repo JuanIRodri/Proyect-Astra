@@ -29,7 +29,7 @@ flowchart TD
     Components --> CharacterForm[CharacterForm.jsx\neditor de stats por clase (sin apariencia)]
     Components --> ExplorationView[ExplorationView.jsx\nvista separada de exploracion]
     Components --> PhaserGame[PhaserGame.jsx\npuente React -> Phaser]
-    Components --> Inventory[components/inventory/\nInventoryPanel compone\nuseInventoryPanel.js\ninventoryUtils.js\ninventoryOperations.js\ninventoryKeyHandler.js\nInventoryHeader.jsx · InventoryGrid.jsx\nInventoryDetail.jsx · InventoryStats.jsx\nInventoryFilters.jsx · InventoryResources.jsx\nDetailsModal.jsx · SplitModal.jsx\nTransferModal.jsx · InventoryContextMenu.jsx]
+    Components --> Inventory[components/inventory/\nInventoryPanel compone\nuseInventoryPanel.js (orquestador)\nuseInventoryData.js · useInventorySelection.js\nuseInventoryActions.js · useInventoryDrag.js\nuseInventoryContextMenu.js\ninventorySelectors.js · inventoryConstants.js\ninventoryUtils.js · inventoryOperations.js\ninventoryKeyHandler.js + keys/\nInventoryHeader.jsx · InventoryGrid.jsx\nInventoryDetail.jsx · InventoryStats.jsx\nInventoryFilters.jsx · InventoryResources.jsx\nDetailsModal.jsx · SplitModal.jsx\nTransferModal.jsx · InventoryContextMenu.jsx]
     Components --> Hotbar[Hotbar.jsx\nbarra de acceso rapido (overlay y panel)]
     Components --> ItemTooltip[ItemTooltip.jsx\nficha flotante de objeto]
     Components --> Minimap[Minimap.jsx\nminimapa con zoom, rueda y drag]
@@ -75,10 +75,12 @@ flowchart TD
     MapModules --> MapCanvas
     PhaserGame --> GameEvents
     PhaserGame --> Exploration
-    Inventory --> InventoryState[inventory/useInventoryPanel.js\nestado y acciones]
+    Inventory --> InventoryState[inventory/useInventoryPanel.js\norquestador de sub-hooks]
+    Inventory --> InventoryHooks[inventory/useInventoryData.js\nuseInventorySelection.js\nuseInventoryActions.js\nuseInventoryDrag.js\nuseInventoryContextMenu.js]
+    Inventory --> InventorySelectors[inventory/inventorySelectors.js\nselectores puros y constantes]
     Inventory --> InventoryHelpers[inventory/inventoryUtils.js\nnormalizacion y navegacion]
     Inventory --> InventoryOps[inventory/inventoryOperations.js\noperaciones puras y carga]
-    Inventory --> InventoryKeys[inventory/inventoryKeyHandler.js\ntratamiento de teclado]
+    Inventory --> InventoryKeys[inventory/inventoryKeyHandler.js\ndispatcher + keys/]
     Inventory --> InventoryViews[inventory/InventoryGrid.jsx\nInventoryDetail.jsx\nInventoryStats.jsx]
     App --> Components
     App --> FrontHooks
@@ -115,7 +117,7 @@ flowchart TD
 | Menu inicial | `frontend/src/components/MainMenu.jsx` | `mainmenu/MenuHome.jsx`, `MenuCargar.jsx`, `MenuNueva.jsx`, `MenuOpciones.jsx`, `MenuOpcionesVideo.jsx` |
 | Vista separada de exploracion | `frontend/src/components/ExplorationView.jsx` | `PhaserGame.jsx`, `Minimap.jsx`, `map/MapView.jsx`, `InventoryPanel.jsx` |
 | Montar Phaser en React | `frontend/src/components/PhaserGame.jsx` | `frontend/src/game/ExplorationScene.js` |
-| Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `inventory/useInventoryPanel.js`, `gameEvents.js` |
+| Mostrar inventario | `frontend/src/components/InventoryPanel.jsx` | `inventory/useInventoryPanel.js`, `inventory/useInventoryData.js`, `inventory/useInventorySelection.js`, `inventory/useInventoryActions.js`, `gameEvents.js` |
 | Barra de acceso rapido | `frontend/src/components/Hotbar.jsx` | `hooks/useHotbar.js`, `services/api.js` |
 | Menu de pausa | `frontend/src/components/PauseMenu.jsx` | `hooks/usePartyPositions.js`, `services/api.js` |
 | Minimapa con zoom | `frontend/src/components/Minimap.jsx` | `map/useMapCanvasController.js`, `game/mapCanvas.js`, `usePartyPositions.js` |

@@ -60,10 +60,10 @@ No existe un `utils/` global: los helpers son privados de su feature (p. ej. `co
 ## 3. Convenciones de código
 
 - **Archivos**: camelCase (`inventoryKeyHandler.js`), componentes en PascalCase (`InventoryGrid.jsx`), hooks `useXxx.js`, servicios backend `xService.js`, controladores `xController.js`, rutas `xRoutes.js`, tests `x.test.js` pegados al módulo.
-- **Tamaño**: ~300 líneas como techo por archivo (§0.4). Hoy el peor caso es `components/inventory/useInventoryPanel.js` (~760 líneas): es el candidato natural al próximo refactor.
+- **Tamaño**: ~300 líneas como techo por archivo (§0.4). Hoy el peor caso es `backend/services/inventarioService.js` (~310 líneas). El panel de inventario ya se dividió en sub-hooks (ver §4).
 - **Estilos**: CSS plano, un `.css` por componente, importado desde su `.jsx`. Sin CSS-in-JS, sin `!important` salvo necesidad puntual. Clases en kebab-case; el tema por clase de personaje usa el prefijo `inventory-class-*` + la variable CSS `--inventory-accent`.
 - **Comentarios**: sólo para explicar *por qué*, nunca *qué*. En español.
-- **Constantes**: nada de números mágicos; van en `game/constants.js`, `inventory/inventoryUtils.js` o `backend/utils/validate.js`.
+- **Constantes**: nada de números mágicos; van en `game/constants.js`, `inventory/inventoryConstants.js`, `inventory/inventoryUtils.js` o `backend/utils/validate.js`.
 - **Errores**: en backend los servicios lanzan `AppError(status, msg)` y el middleware central responde `{ error: mensaje }`. En frontend se lee `error.response?.data?.error` y se muestra un aviso al usuario.
 
 ---
@@ -82,7 +82,32 @@ Las aplica `eslint-plugin-react-hooks` en CI: romperlas = lint rojo.
 - **Callbacks hacia abajo**: las props de función son `useCallback` cuando el hijo las usa como dependencia.
 - **Evitar prop drilling**: a más de dos niveles, subir el estado a un hook común o componer.
 - **Refs y portales**: `useRef` para refs de DOM (el inventario scrollea la ranura activa con `slotRefs`) y para exponer API imperative (`useImperativeHandle` en `InventoryPanel`). Los overlays flotantes (tooltip, modales) usan `createPortal` a `document.body`.
-- **Patrón canónico**: `components/inventory/useInventoryPanel.js` (estado + acciones + subcomponentes). Cuando supere el límite de líneas, se divide en sub-hooks (`useInventorySelection`, `useInventoryItems`…) y los helpers puros se testean.
+- **Patrón canónico**: `components/inventory/useInventoryPanel.js` es solo el **orquestador**: compone sub-hooks (`useInventoryData`, `useInventorySelection`, `useInventoryActions`, `useInventoryDrag`, `useInventoryContextMenu`), helpers puros (`inventorySelectors.js`, `inventoryUtils.js`, `inventoryOperations.js`) y el teclado (`inventoryKeyHandler.js` + `keys/`). Cuando un sub-hook supere el límite, se divide en otro sub-hook; lo que se pueda, se baja a un helper puro testeado.
+
+### Atajos del inventario
+
+Fuente de verdad: `components/inventory/inventoryKeyHandler.js` (dispatcher) + `inventory/keys/`, cubierto por `inventoryKeyHandler.test.js`.
+
+| Tecla | Acción |
+| --- | --- |
+| `I` / `Esc` | cerrar el panel (o los detalles abiertos) |
+| `Q` | soltar el objeto seleccionado |
+| `G` | alternar entre la mochila y el equipamiento |
+| `E` | equipar / desequipar el objeto de la ranura activa; usar consumibles |
+| `V` | mostrar u ocultar los detalles del objeto |
+| `R` | dividir la pila rápidamente |
+| `C` | abrir el modal de división |
+| `O` | ordenar la mochila (unir pilas y acomodar) |
+| `T` | traspasar el objeto a otro personaje del grupo |
+| `F` / `Shift+F` | ciclar el filtro de categoría / el de rareza |
+| `4`-`8` | ranuras de la barra rápida |
+| `1` / `2` / `3` | cambiar de líder; con el traspaso abierto, elegir destinatario |
+| `Tab` / `Shift+Tab` | siguiente / anterior personaje del grupo |
+| `Enter` / `Espacio` | confirmar; tomar un objeto y moverlo con la flecha; cancelar si ya estaba tomado |
+| `WASD` / flechas | mover el cursor; en el equipamiento, recorrer las ranuras |
+| Rueda del mouse | avanzar el cursor; con `Shift`, ciclar los filtros |
+
+En el **menú contextual**: flechas para moverse, `Enter` para ejecutar, `Esc` para cerrar (si hay un submenú abierto, `Esc` cierra solo el submenú).
 
 ---
 
