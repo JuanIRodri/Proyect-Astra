@@ -1,148 +1,71 @@
-# Contexto de trabajo del proyecto
+# Contexto de trabajo — Proyect-Astra
 
-## Proyecto
+Este documento registra **el estado del proyecto**, las decisiones tomadas y lo que falta. Las reglas de trabajo (ramas, modularización, hooks, verificación, contrato de API) viven en [`AGENTS.md`](../AGENTS.md); el mapa de archivos, en [`docs/project-graph.md`](./project-graph.md). Si algo se contradice, manda `AGENTS.md`.
 
-Proyect-Astra es un RPG tactico 2D web. La interfaz usa React y Vite, la escena de exploracion usa Phaser 3, la API usa Node.js y Express, y los datos persisten en MySQL mediante Docker.
+## Qué es el proyecto
 
-## Arquitectura que debo respetar
+RPG táctico 2D web. React + Vite para la interfaz, Phaser 3 para la exploración isométrica, Express para la API REST y MySQL (Docker) para persistencia. Todo el texto de UI, los comentarios y los commits están en español.
 
-- `frontend/src/App.jsx` compone el dashboard y la vista de exploracion.
-- `frontend/src/components/ExplorationView.jsx` conecta Phaser, el editor de stats del lider y el inventario.
-- `frontend/src/components/PhaserGame.jsx` crea Phaser y conecta los eventos React-Phaser.
-- `frontend/src/game/ExplorationScene.js` controla mapa, movimiento, formacion y cambio de lider.
-- `frontend/src/game/gameEvents.js` centraliza los `CustomEvent` compartidos.
-- `frontend/src/game/characterStats.js` concentra las stats iniciales y los pesos por clase (antes `classStats.js`); lo consume `CharacterForm.jsx`. La fórmula está duplicada con `backend/migrate-rpg.js` y debe mantenerse en sincronía.
-- `frontend/src/components/inventory/` modula el inventario: `useInventoryPanel.js` (estado y acciones), `inventoryUtils.js` (helpers puros), `inventoryOperations.js` (operaciones puras de items y cálculo de carga/bonos), `inventoryKeyHandler.js` (teclado) y los subcomponentes `InventoryHeader.jsx`, `InventoryGrid.jsx`, `InventoryDetail.jsx`, `InventoryStats.jsx` y `TransferModal.jsx`; `InventoryPanel.jsx` los compone. Cada subcomponente tiene su propio `.css` (`InventoryPanel.css` conserva el layout y el tema por clase; `TransferModal.css` el modal); `inventoryKeyHandler.js` reutiliza `game/hotkeys.js` para los atajos de personaje.
-- `frontend/src/hooks/usePersonajes.js` y `frontend/src/services/api.js` gestionan los personajes y la API.
-- `backend/` contiene Express con capas separadas: rutas, controlador delgado con validación (`utils/validate.js`), servicios (`personajesService.js`, `inventarioService.js`, `partidasService.js`) y utilidades (`asyncDb.js`, `errors.js`, `validate.js`) sobre un pool MySQL. `index.js` configura CORS (whitelist por `CORS_ORIGINS`), `helmet`, `express-rate-limit`, `morgan` con request-id, handler 404 y middleware central de errores. `asyncDb` usa pool lazy (seam para tests). `config/env.js` valida variables requeridas al arrancar.
-- `sentencias-sql/` contiene el esquema, datos iniciales, consultas y vistas.
-- `start-app.sh` levanta Docker/MySQL, ejecuta la migracion, inicia backend y frontend.
+## Estado confirmado por el usuario
 
-## Estado confirmado por documentacion
+- Exploración Phaser integrada en React, con mapa isométrico real (Tiled, 48×24, mundo 36×22).
+- Movimiento continuo en 360° con diagonales normalizadas, límites del mundo y colisión contra obstáculos.
+- Cambio de líder con `1`, `2` y `3`; followers con estela.
+- Persistencia de personajes, inventario, equipamiento y partida entre reinicios: la migración solo carga datos si las tablas están vacías y no pisa lo del usuario.
+- Inventario visual completo: 48 ranuras, 6 de equipamiento, filtros, auto-orden, traspaso entre personajes, consumo, división de pilas, drag & drop, tooltip y menú contextual.
+- Guardado de partida: snapshot ligero con autosave (debounce 800 ms), menú principal con 3 slots y menú de pausa con "Continuar / Opciones / Guardar y salir".
+- Consola de tests en verde: 55 tests de módulos puros (Vitest) + 56 del backend (`node:test`), lint del frontend en cero y CI con dos jobs.
 
-- Exploracion Phaser integrada en React.
-- Grupo de hasta tres personajes con seguidores.
-- Cambio de lider con `1`, `2` y `3`.
-- Movimiento con flechas y `WASD`.
-- Colisiones y camara de exploracion.
-- Edicion de estadisticas del lider con `U` y cierre con `Escape` (confirmado).
-- Inventario visual abierto con `I` (confirmado).
-- Eventos React-Phaser centralizados (confirmado).
-- Modularizacion confirmada por pruebas en navegador: backend en capas (`services/`, `utils/`, controlador delgado sobre pool MySQL), exploracion descompuesta en `game/*` (constants, board, party, movement, input, hotkeys, characterStats) e inventario en `components/inventory/*`.
-- Persistencia de inventario y estadisticas entre reinicios: la migracion hace una carga inicial solo si las tablas estan vacias y no sobrescribe los datos del usuario (confirmado).
+## Pendiente de confirmación del usuario
 
-## Trabajo actual: inventario
+- Drag & drop y doble clic del inventario (arrastrar entre mochila y equipo, dividir al soltar con `Shift`/`Ctrl`).
+- Tooltip flotante del objeto y drop sobre la pestaña de otro personaje.
+- Rueda del mouse sobre la grilla y `Shift+rueda` para ciclar filtros.
+- Menú contextual del clic derecho con la opción "Enviar a".
+- Vida y maná por personaje en el panel y en el HUD del grupo.
+- Minimapa, mapa `M`, hotbar y menú de opciones (audio/video/teclas).
+- Que la capacidad de carga (10 + Fuerza × 1.5) **no** bloquea mover objetos dentro del inventario: hoy solo informational; el límite se aplicará al recoger objetos desde la exploración.
 
-El módulo de inventario (`frontend/src/components/inventory/`) ofrece:
+## Módulos y capacidades
 
-- Inventario separado por personaje.
-- El aside de personajes (`EQUIPO`) muestra la cantidad de objetos de cada personaje (se calcula desde la API al abrir el inventario); el pie del panel quedó solo con el aviso de estado.
-- Seleccion por teclado con `1`, `2` y `3`.
-- Navegacion y seleccion visual con `WASD` o flechas.
-- Seleccion y preparacion de objetos con `Enter` o espacio.
-- El movimiento de objetos requiere confirmar con `Enter` despues de seleccionar el destino.
-- Movimiento, intercambio y acumulacion mediante teclado o arrastrar y soltar.
-- Division de pilas con `R`.
-- Soltar objetos con `Q`.
-- Indicador de oro, peso y detalle del objeto.
-- Tema de color según la clase del personaje activo, visible en el borde, selección, controles y cabecera.
-- Persistencia por personaje mediante las tablas `Objeto` e `Inventario` y la API de inventario.
-- Consumo de objetos con la tecla `E`.
-- Equipar/desequipar con la tecla `E`, soltar con `Q` y dividir pilas con `R`.
-- El pie muestra las claves de acceso rápido: `E` Equipar·Usar, `Q` Soltar, `R` Dividir, `V` Detalles, `G` Equipo, `I` Salir.
-- `Ver detalles` aparece al posicionarse sobre una ranura ocupada y la descripción se abre al pulsarla de nuevo.
-- `G` cambia entre la navegación de mochila y equipamiento; en equipamiento se recorren las seis ranuras con WASD/flechas y Enter.
-- El peso total conserva el peso de los objetos equipados, mientras la capacidad sigue dependiendo de la Fuerza.
-- Movimiento de exploración continuo en 360 grados con diagonales normalizadas, límites y colisión contra la pared.
-- Capacidad de carga calculada como `10 + Fuerza * 1.5`.
-- Cuadrícula ampliada a 48 ranuras de prueba con scroll interno para soportar más pilas.
-- Equipamiento persistente por personaje con ranuras de casco, pecho, pantalón, botas, arma y arma secundaria.
-- Bonificaciones de equipamiento para Fuerza, Destreza, Inteligencia, Constitución y Agilidad.
-- El equipo puesto no se cuenta en el peso de la mochila; su bonificación de Fuerza sí aumenta la capacidad.
-- Filtros por categoría y rareza en la cabecera del inventario, con contador de objetos visibles y botón para limpiar filtros. Atajos de teclado: `F` cicla la categoría y `Shift+F` la rareza (dan la vuelta por las opciones).
-- Auto-orden de la mochila con la tecla `O`: une pilas del mismo objeto (respetando el máximo por pila) y acomoda la cuadrícula por categoría/nombre/rareza.
-- Traspaso de la pila seleccionada con la tecla `T`: abre un modal visual que muestra el objeto y pregunta a qué personaje enviarlo. Se elige con botones o con `1/2/3` (el personaje activo queda deshabilitado), `Escape` o `Cancelar` cierra. Se junta en pilas del mismo objeto del destino y, si hace falta, ocupa el primer slot vacío; si el destino elegido está lleno, no recibe el objeto. El backend lo hace en una transacción (`POST /personajes/:id/inventario/:ranura/transferir`).
-- La navegación con WASD/flechas salta a los objetos que coinciden con el filtro activo; los que no coinciden se atenúan.
-- Mientras el inventario o el editor está abierto, el input de Phaser queda bloqueado (`game/inputLock.js`: `lockInput`/`unlockInput`/`isInputLocked`), por lo que el grupo no se mueve ni responden atajos de la escena hasta cerrar el panel.
-- El panel mide `min(96vw, 1240px)` con una cuadrícula de 8 columnas (48 ranuras en 6 filas); la navegación por teclado sigue usando `GRID_COLUMNS`.
-- Doble clic sobre un objeto de la mochila lo equipa (si es equipable) o lo consume (si es consumible). Doble clic sobre una ranura de equipamiento desequipa el objeto al primer hueco libre de la mochila.
-- Arrastre con el mouse también funciona en ambos sentidos: soltar un objeto de la mochila sobre la ranura de equipo correcta lo equipa (no en otra ranura), y arrastrar un objeto equipado sobre un hueco de la mochila lo desequipa directo a ese hueco. El backend usa una variante de desequipado a ranura concreta (`POST /personajes/:id/equipamiento/:ranura/desequipar/:ranuraDestino`, transacción).
+### Exploración (`frontend/src/game/`)
 
-La seleccion numerica fue probada desde el navegador para el personaje 2 y funciona. La confirmacion funcional final corresponde al usuario.
-El cambio de color por clase fue confirmado visualmente por el usuario.
-La persistencia, el consumo y la capacidad quedan pendientes de prueba manual del usuario.
-El consumo con `E` fue confirmado por el usuario (la cantidad de la pila baja y el objeto desaparece al llegar a 0).
-El peso total y la capacidad se muestran en el pie, pero la capacidad de peso NO bloquea mover/acomodar objetos dentro del inventario: el jugador puede dejar un objeto aunque esté sobre el límite, para transferirlo a otro personaje que sí tenga capacidad. El límite se aplicará al recoger objetos desde la exploración (pendiente, en el planning).
-El equipamiento con `G` fue confirmado por el usuario: equipar/desequipar con `E`, soltar con `Q` y dividir pilas con `R` funcionando.
-El movimiento continuo fue probado y confirmado por el usuario.
-Confirmado por el usuario: contador de objetos por personaje en el aside, pie del panel solo con el aviso de estado, filtros con `F`/`Shift+F`, auto-orden con `O`, bloqueo de input con el panel abierto, ancho de panel ampliado, grilla de 8 columnas y el traspaso con `T` (modo que pregunta a qué personaje enviar con `1/2/3`, Escape cancela).
-- El drag y el doble clic quedan pendientes de confirmación visual del usuario.
-- "Ver detalles" (`V` o clic sobre el objeto ya seleccionado) ya no se despliega dentro de la columna derecha: abre un modal tipo el de traspaso (`DetailsModal.jsx`, portal a `body`, clic fuera/Escape/botón Cerrar lo cierra, keyhandler bloquea el resto mientras está abierto). La columna derecha queda solo con la equipación.
-- Mejoras con mouse implementadas (pendientes de confirmación): tooltip al pasar el cursor sobre un objeto de la mochila o equipo (`InventoryTooltip.jsx`, portal a `body`); drop sobre el tab de otro personaje en `CharacterSelector` transfiere el objeto arrastrado directamente (el panel expone `transferFromSlot` por ref, sin pasar modal); soltar una pila con `Shift`/`Ctrl` separa 1 unidad a ese hueco (`moveSingleItem`); el swap al soltar sobre un slot ocupado ya existía en `moveOrMergeItems`.
-- Mejoras mouse/teclado de nueva interacción (pendientes de confirmación): la rueda del mouse sobre la grilla mueve la selección con una pasada filtrada si hay filtro activo, y `Shift+rueda` cicla la categoría (hacia abajo) o la rareza (hacia arriba) — listener nativo con `passive: false` en `InventoryGrid` para poder hacer `preventDefault`. El menú contextual del clic derecho tiene ahora una opción "Enviar a" con submenú por personaje (excluye al activo) que transfiere directo al destino elegido; se navega con flechas/Enter y `Escape` cierra una capa a la vez. `C` sobre una pila abre el modal `SplitModal.jsx` para separar una cantidad exacta (`splitStackByQuantity` en `inventoryOperations.js`); `Tab`/`Shift+Tab` cambia de personaje en el panel y el doble clic sobre una pestaña del aside también lo activa.
-- Vida y maná reales por personaje: la tabla `Estadistica` tiene `vidaActual`/`manaActual` (persistidos). Los máximos NO se guardan: se derivan como `vidaMax = 30 + constitucion*5` y `manaMax = 20 + inteligencia*5` (duplicado en `migrate-rpg.js`, `personajesService.js` y `inventarioService.js`; a diferencia de la fórmula de pesos por clase, esta es cálculo puro, no requiere mantenerse en el form React). La migración hace backfill inicial (recursos al máximo para filas existentes). Al consumir un objeto con `efectoVida`, `usarObjeto` aplica el incremento con tope en `vidaMax` dentro de la misma transacción y devuelve `effect: { vida, vidaActual, manaActual }`. `GET /personajes` y `GET /personajes/:id` exponen `vidaActual`, `vidaMax`, `manaActual`, `manaMax`. Al editar stats (PUT), los recursos actuales se clampean al nuevo máximo. Las barras de Vida/Maná se muestran en el panel en `InventoryResources.jsx/.css`. Todo queda pendiente de confirmación visual del usuario.
+- `ExplorationScene.js` compone el resto (mapa, decor, colisiones, cámara, input). La lógica nueva va en un módulo propio.
+- Isométrica 48×24 (`isometric.js`), colisiones por hitbox elíptica (`collision.js`), overlay y posiciones seguras (`board.js`), fichas y marcador (`party.js`), movimiento (`movement.js`), atajos (`input.js`), cluster `1/2/3` (`hotkeys.js`), teclas rebindeables (`bindings.js`), bloqueo de input (`inputLock.js`), dibujado de minimapa y mapa (`mapCanvas.js`), posiciones en vivo (`partyPositionsStore.js`), video (`videoSettings.js`), hotbar (`hotbarConfig.js`), stats por clase (`characterStats.js`), eventos React↔Phaser (`gameEvents.js`).
 
-## Trabajo actual: interfaz (rama `interfaz`)
+### Interfaz (`frontend/src/components/`)
 
-Iteración de interfaz sobre la exploración, empezando por un minimapa y un HUD de grupo fijo (ambos pendientes de confirmación visual del usuario):
+- `ExplorationView.jsx` monta Phaser y coordina minimapa, HUD, hotbar, pausa, mapa, inventario y editor de stats.
+- `InventoryPanel.jsx` compone `inventory/`: `useInventoryPanel.js` (estado y acciones), `inventoryUtils.js` y `inventoryOperations.js` (helpers puros y testeados), `inventoryKeyHandler.js` (teclado) y los subcomponentes `InventoryHeader`, `InventoryGrid`, `InventoryDetail`, `InventoryStats`, `InventoryFilters`, `InventoryResources`, `DetailsModal`, `SplitModal`, `TransferModal`, `InventoryContextMenu`.
+- `mainmenu/`: pantalla inicial, carga de partidas, opciones de audio/video/teclas y `OpcionesStack` (compartido con la pausa).
+- `map/`: mapa completo (tecla `M`) con zoom y paneo.
+- `Minimap.jsx`, `GroupHud.jsx`, `Hotbar.jsx`, `ItemTooltip.jsx`, `PauseMenu.jsx`, `CharacterForm.jsx` + `form-parts/StatsFields.jsx`.
 
-- `frontend/src/components/Minimap.jsx`/`.css`: radar sobre el canvas. Dibuja en un `<canvas>` el mundo completo en vista de **diamante isométrico**:
-  - Pedazo, contorno del mundo y capas de rombos; caminos y rocas bloqueadas (`game/collision.js`); punto por ficha del grupo con su color de clase (`getPartyColorForClass()`) y aro blanco para el líder. Dibujo compartido en `game/mapCanvas.js`.
-- `frontend/src/components/GroupHud.jsx`/`.css`: panel fijo en la esquina inferior izquierda con los 3 personajes (nombre, barra de Vida en rojo y barra de Maná en azul, con porcentaje real desde `vidaActual/vidaMax/manaActual/manaMax`); el líder se resalta con el color dorado del tema.
-- `frontend/src/hooks/usePartyPositions.js`: suscribe el evento `party-position-update` y mantiene las posiciones en coordenadas de tile `(u, v)` (el puente `game/partyPositionsStore.js` guarda en vivo) más el `leaderIndex`. El estado inicial sale de `PARTY_POSITIONS`.
-- Puente Phaser→React: `gameEvents.js` ganó `partyPositionUpdate` y el emisor `emitPartyPositionUpdate(positions, leaderIndex)`. `ExplorationScene.js` lo dispara al crear la escena, al cambiar de líder (`setLeader`) y en `update` cuando el líder cambia de casilla (se cachea la última casilla para no spamear eventos en cada frame).
-- Ambas piezas se montan en `ExplorationView.jsx` junto a `<PhaserGame/>`; son overlays con `pointer-events: none` para no bloquear el input de la escena.
+### API (`backend/`)
 
-## Trabajo actual: menú y guardado de partida
+- Capas: `routes/` → `controllers/` (delgado, valida con `utils/validate.js`) → `services/` (SQL, transacciones con `withTransaction()`) → `utils/` (`asyncDb`, `errors`, `validate`) → `config/` (`db.js` pool, `env.js` variables).
+- Personajes (CRUD + inventario + equipamiento), partidas (guardado ligero) y errores centralizados `{ error: mensaje }`.
 
-Sistema de guardado **ligero** (snapshot de exploración, no volcado de toda la DB; los personajes ya persisten en vivo):
+## Decisiones de diseño (con su porqué)
 
-- Tabla `Partida`: `idPartida`, `nombre`, `mapa`, `liderX`, `liderY`, `liderIndex`, `fechaGuardado`. La migración crea 3 slots ("Partida 1/2/3") si la tabla está vacía. Endpoints: `GET /partidas` (lista con `tieneGuardado`), `GET /partidas/:id`, `PUT /partidas/:id` (guarda posición + líder, setea `fechaGuardado = NOW()`), `POST /partidas/:id/reset` (limpia el slot). Backend en capas: `routes/partidasRoutes.js`, `controllers/partidasController.js`, `services/partidasService.js`.
-- `MainMenu.jsx`/`.css`: pantalla previa a la exploración con título y 3 slots; cada slot ofrece "Continuar" (deshabilitado si está vacío) y "Nueva partida" (que resetea el slot). Lista con `usePartidas.js` (evita `setState` síncrono en el efecto para lint).
-- `App.jsx` decide entre `MainMenu` y `ExplorationView`: "Continuar" carga `GET /partidas/:id` y deriva las 3 posiciones del grupo desde el líder (x-1, x-2); "Nueva partida" resetea el slot y usa `PARTY_POSITIONS`. `ExplorationView` se remonta con `key={id}` y recibe `inicioPartida`.
-- `ExplorationScene` acepta `positions` (tiles) y `leaderIndex` desde `init(data)`; `createParty` acepta un arreglo de posiciones custom. `PhaserGame` recibe `inicioPartida` y se lo pasa a la escena. Así el grupo arranca donde quedó, con el líder correcto y cámara siguiéndolo.
-- Autosave: `ExplorationView` usa `usePartyPositions` (ahora acepta posiciones/líder iniciales) y guarda con debounce de 800 ms `PUT /partidas/:id` con `liderX`/`liderY`/`liderIndex` (coordenadas de tile) cada vez que el grupo se mueve o cambia de líder.
-- Menú de pausa: ESC abre `PauseMenu.jsx`/`.css` (overlay con "Continuar" y "Guardar y salir") **solo cuando** no hay inventario, editor o modal abiertos; si el inventario (`I`) o el editor (`U`) están abiertos, ESC sigue teniendo prioridad para cerrarlos antes de abrir el menú. El menú abierto bloquea el input de Phaser (`lockInput` con razón `'pause'`), y ESC lo cierra de nuevo. "Guardar y salir" guarda la posición del líder y vuelve al `MainMenu`.
-- Navegación del menú de pausa con teclado: `W/S` o flechas mueven el foco entre "Continuar", "Guardar y salir" y "Borrar partida" (patrón `PAUSE_ACTIONS` + refs de botones, como la navegación del inventario); Enter/espacio activa, ESC continúa. Se agregó la acción "Borrar partida" que pide confirmación con `window.confirm` y llama `POST /partidas/:id/reset` antes de volver al menú.
-- Editor de estadísticas (`CharacterForm` en modo `estadistica`, tecla `U`) reestilizado como el panel del inventario: contenedor `inventory-layout` (mismo oscurecido sutil, sin blur ni backdrop negro del modal, aprovechando `stats-layout`) y `form-content` con borde/acentos por clase (`inventory-class-*` + `--inventory-accent`, vía `getClassThemeKey`). Las filas de atributos se pintan como ranuras y los botones siguen el tema.
-- El editor de stats es navegable por teclado (`StatsFields.jsx`), con las 5 stats **en una sola columna** (FUE→DES→INT→CON→AGI) para que `W/S`/`↑/↓` se desplacen en orden lineal; `A/D`, `←/→` o `+/-` asignan/quitan puntos, `R` desasigna todo (vuelve las cinco a 10), `T` reparte los puntos automáticamente, y `Enter`/espacio guarda directo desde cualquier fila (sin necesidad de bajar a un botón; el `submitRef` dispara el submit del form que cierra el editor). El mouse sigue operativo sobre las mismas filas/botones.
-- Colores del grupo (fichas de Phaser, puntos del minimapa y HUD) derivados de la **clase** de cada personaje, no del índice: `PARTY_CLASS_COLORS` + `getPartyColorForClass()` en `game/constants.js` (mismos tonos que el tema del inventario: Guerrero rojo, Mago azul, Paladín dorado, Pícaro púrpura, Cazador verde; `aventurero` como fallback). `buildPartyData`, `Minimap` (recibe `personajes`) y `GroupHud` lo consultan por `personaje.clase`.
+- **Inventario en un panel separado, no en el HUD**: el inventario tiene teclado, drag & drop, modales y filtros propios; mezclarlo con la escena isométrica saturaba la pantalla.
+- **El estado de la escena vive en Phaser, el de la UI en React**: el puente es únicamente `gameEvents.js` (`CustomEvent`), lo que evita acoplar ambos runtimes.
+- **Autosave de partida en vez de volcado completo de la BD**: los personajes ya persisten en vivo; la partida solo guarda posición del líder, líder activo y posiciones del grupo.
+- **Vida/mana actuales persistidas, máximos derivados**: `vidaMax = 30 + constitucion*5`, `manaMax = 20 + inteligencia*5`; al editar stats se clampean los recursos actuales al nuevo máximo.
+- **Fórmulas duplicadas a propósito**: los pesos de stats por clase están en `frontend/src/game/characterStats.js` y `backend/migrate-rpg.js` (el backend necesita repartir al crear personajes). Si tocás una, tocá la otra.
+- **Stats sin apariencia**: la apariencia quedó fuera del editor (la hoja de ruta original la tenía) para no mezclar dos formularios en un panel; el catálogo de la BD sigue existiendo.
 
-Todo queda pendiente de confirmación visual del usuario.
-
-## Trabajo actual: calidad y robustez (rama `feature/mejoras-calidad`)
-
-- Lint del frontend en cero (excluye los módulos de `mainmenu/` que siguen en otra rama): se corrigieron `react-hooks/set-state-in-effect` en `usePersonajes.js` (fetch en `useCallback` + flag `cancelled` en el efecto) y `useInventoryPanel.js` (`equipment` con `useMemo`, `inventoryLoading` con valor inicial `true`, `handleCharacterChange` en `useCallback`). `pnpm exec eslint src` → exit 0 y `pnpm run build` OK.
-- Apariencia/altura fuera del formulario: `CharacterForm.jsx` quedó solo-stats (sin modo `vista`, sin `AppearanceFields.jsx`, que fue eliminado) y el backend solo actualiza los campos que llegan. La DB conserva esas columnas intactas.
-- Vitest montado (`frontend/vite.config.js`, script `pnpm test`): 55 tests de módulos puros (`characterStats`, `inventoryOperations`, `inventoryUtils`, `isometric`, `collision`, `board`). `characterStats` es el nuevo nombre de `classStats`.
-- CI agregado en `.github/workflows/ci.yml` (build + lint + tests en frontend; `node --check` en backend) y nuevo `backend/.env.example`.
-- Backend endurecido: CORS con whitelist (`CORS_ORIGINS`), middleware 404 y de errores, y validación server-side en `backend/utils/validate.js` (body con tipos/rangos/enums, params enteros, ranura de equipamiento por nombre, items de inventario con ranura 0-47). El controlador los aplica antes de llamar a los servicios.
-- Imports del frontend con alias `@/` → `src/` (config en `vite.config.js` y `jsconfig.json`); los imports entre directorios ya no usan rutas relativas.
-- Pendiente: que el usuario pruebe en el navegador, defina commits y el PR de `feature/mejoras-calidad`. Los cambios conviven con el WIP de `feature/mapa-tiled` (gamepad: `PhaserGame.jsx`, `ExplorationScene.js`, `ExplorationView.jsx` y el documento de diseño).
-
-## Planning posterior del inventario
+## Planning posterior
 
 - Validar límites de pila y capacidad al recoger objetos desde la exploración.
-- Integrar el equipamiento con las estadísticas efectivas del personaje y el combate.
+- Integrar el equipamiento con las estadísticas efectivas y el combate.
 - Decidir si se incorporan ranuras de aretes, collar u otros accesorios.
+- Combate táctico por casillas, interacciones con el entorno y mapas exportados desde Tiled (ver la hoja de ruta del documento de diseño).
 
-## Como ejecutar
-
-Desde la raiz del proyecto:
+## Cómo ejecutar
 
 ```bash
-./start-app.sh
+./start-app.sh          # MySQL (Docker) + migración + backend + frontend
 ```
 
-URLs esperadas:
-
-- Frontend: `http://localhost:5173/`
-- API: `http://localhost:3000/`
-
-Requisitos: Docker, Node.js 18 o superior y `pnpm`.
-
-## Regla de trabajo
-
-Antes de iniciar una tarea debo consultar este archivo, `docs/project-graph.md`, el documento de diseño y arquitectura y `README.md`. Los cambios implementados se dejan pendientes de confirmacion hasta que el usuario los pruebe en el navegador. No debo repetir tareas ya marcadas como completadas ni modificar partes no relacionadas.
-
-Siempre debo modularizar el codigo cuando sea posible: preferir archivos pequeños y con una sola responsabilidad (hooks, helpers puros, subcomponentes) y componerlos desde un punto de entrada, antes que acumular logica inline en archivos grandes.
+Frontend `http://localhost:5173` · API `http://localhost:3000`. Variables y ejecución manual en [`README.md`](../README.md).
