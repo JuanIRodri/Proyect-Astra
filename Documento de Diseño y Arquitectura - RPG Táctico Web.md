@@ -126,8 +126,8 @@ Este apartado registra lo que ya se implemento y lo que continua pendiente. Debe
 - [ ] Soporte de joystick/gamepad (prioridad por Steam Deck): traducir gamepad → las mismas "acciones lógicas" que ya maneja el juego (movimiento, cambio de líder `1/2/3`, usar hotkeys `4-8`, abrir inventario/mapa/editor, navegar menús con confirmar/cancelar) para no tocar los `keydown` sueltos de React/Phaser/menús después. Usar `Phaser.input.gamepad` en la escena con fallback `navigator.getGamepads` para el resto de la UI web, y un módulo `game/joystick.js` que emita esas acciones. No profundizar ahora (ratón total, touch, vibración) hasta el playtest.
 
 ### Pendiente de implementacion (hardening / empaquetado - para despues)
-- [ ] Validar entradas server-side en el backend: whitelist de campos, tipos y longitudes en `createPersonaje`/`updatePersonaje` e inventario (hoy el body va directo a SQL parametrizado).
-- [ ] Restringir CORS a una whitelist de origenes (hoy `app.use(cors())` acepta todo).
+- [x] Validar entradas server-side en el backend: whitelist de campos, tipos y longitudes en `createPersonaje`/`updatePersonaje` e inventario (hoy el body va directo a SQL parametrizado). Implementado en `backend/utils/validate.js` (`validateBody`, `expectIntParam`, `expectEquipmentSlot`, `validateInventoryItems`) aplicado desde `backend/controllers/personajesController.js`; el body ya no va directo al SQL.
+- [x] Restringir CORS a una whitelist de origenes (hoy `app.use(cors())` acepta todo). Implementado con `CORS_ORIGINS` (CSV, por defecto `http://localhost:5173`) leído en `backend/config/env.js` y aplicado en `backend/index.js`.
 - [ ] Version de escritorio: reemplazar MySQL por SQLite embebido (mismo schema y capa de acceso) y envolver frontend (build de Vite) + backend con Electron o Tauri.
 - [ ] Version de escritorio: el backend debe escuchar solo en `127.0.0.1` (nada de `0.0.0.0`) y no embeber credenciales reales en el exe (generar configuracion local en el primer arranque).
 - [ ] Version de escritorio: firmar el instalador/exe (SmartScreen) antes de distribuir.
