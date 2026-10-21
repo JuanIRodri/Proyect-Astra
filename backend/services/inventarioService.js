@@ -1,4 +1,4 @@
-const { query, withTransaction } = require('../utils/asyncDb');
+const asyncDb = require('../utils/asyncDb');
 const { AppError } = require('../utils/errors');
 
 const SLOT_COUNT = 48;
@@ -48,15 +48,15 @@ const EQUIPAMIENTO_SELECT = `
 `;
 
 async function getInventario(idPersonaje) {
-    return query(`${INVENTARIO_SELECT} WHERE i.idPersonaje = ? ORDER BY i.ranura`, [idPersonaje]);
+    return asyncDb.query(`${INVENTARIO_SELECT} WHERE i.idPersonaje = ? ORDER BY i.ranura`, [idPersonaje]);
 }
 
 async function getEquipamiento(idPersonaje) {
-    return query(`${EQUIPAMIENTO_SELECT} WHERE e.idPersonaje = ?`, [idPersonaje]);
+    return asyncDb.query(`${EQUIPAMIENTO_SELECT} WHERE e.idPersonaje = ?`, [idPersonaje]);
 }
 
 async function saveInventario(idPersonaje, items = []) {
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         await conn.query('DELETE FROM Inventario WHERE idPersonaje = ?', [idPersonaje]);
 
         for (const [ranura, item] of items.entries()) {
@@ -76,7 +76,7 @@ async function saveInventario(idPersonaje, items = []) {
 }
 
 async function usarObjeto(idPersonaje, ranura) {
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         const [results] = await conn.query(`
             SELECT i.cantidad, o.nombre, o.consumible, o.efectoVida
             FROM Inventario i
@@ -132,7 +132,7 @@ async function usarObjeto(idPersonaje, ranura) {
 }
 
 async function equiparObjeto(idPersonaje, ranura) {
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         const [items] = await conn.query(`
             SELECT i.idObjeto, i.cantidad, o.tipoEquipamiento, o.nombre
             FROM Inventario i
@@ -162,7 +162,7 @@ async function equiparObjeto(idPersonaje, ranura) {
 }
 
 async function desequiparObjeto(idPersonaje, ranura) {
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         const [equipment] = await conn.query(`
             SELECT e.idObjeto, o.clave, o.nombre
             FROM Equipamiento e
@@ -193,7 +193,7 @@ async function desequiparObjeto(idPersonaje, ranura) {
 }
 
 async function transferirObjeto(idPersonaje, ranura, destinoIdPersonaje) {
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         const sourceId = Number(idPersonaje);
         const targetId = Number(destinoIdPersonaje);
         const slot = Number(ranura);
@@ -264,7 +264,7 @@ async function transferirObjeto(idPersonaje, ranura, destinoIdPersonaje) {
 }
 
 async function desequiparObjetoEnRanura(idPersonaje, ranura, ranuraDestino) {
-    return withTransaction(async (conn) => {
+    return asyncDb.withTransaction(async (conn) => {
         const targetSlot = Number(ranuraDestino);
         if (!Number.isInteger(targetSlot) || targetSlot < 0 || targetSlot >= SLOT_COUNT) {
             throw new AppError(400, 'La ranura de destino no es válida');

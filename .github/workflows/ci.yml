@@ -48,4 +48,6 @@ jobs:
       - name: Instalar dependencias
         run: pnpm install --frozen-lockfile
       - name: Verificar sintaxis de todos los archivos JS
+        run: node --test
+      - name: Verificar sintaxis con node --check
         run: find . -name '*.js' -not -path './node_modules/*' -exec node --check {} \;
