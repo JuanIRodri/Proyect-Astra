@@ -36,7 +36,7 @@ RPG táctico 2D web. React + Vite para la interfaz, Phaser 3 para la exploració
 ### Interfaz (`frontend/src/components/`)
 
 - `ExplorationView.jsx` monta Phaser y coordina minimapa, HUD, hotbar, pausa, mapa, inventario y editor de stats.
-- `InventoryPanel.jsx` compone `inventory/`: `useInventoryPanel.js` (estado y acciones), `inventoryUtils.js` y `inventoryOperations.js` (helpers puros y testeados), `inventoryKeyHandler.js` (teclado) y los subcomponentes `InventoryHeader`, `InventoryGrid`, `InventoryDetail`, `InventoryStats`, `InventoryFilters`, `InventoryResources`, `DetailsModal`, `SplitModal`, `TransferModal`, `InventoryContextMenu`.
+- `InventoryPanel.jsx` compone `inventory/`: `useInventoryPanel.js` (orquestador) y los sub-hooks `useInventoryData.js`, `useInventorySelection.js`, `useInventoryActions.js`, `useInventoryDrag.js` y `useInventoryContextMenu.js`; los helpers puros y testeados `inventoryUtils.js`, `inventoryOperations.js` e `inventorySelectors.js` (más `inventoryConstants.js`); el teclado `inventoryKeyHandler.js` (dispatcher) con `keys/`; y los subcomponentes `InventoryHeader`, `InventoryGrid`, `InventoryDetail`, `InventoryStats`, `InventoryFilters`, `InventoryResources`, `DetailsModal`, `SplitModal`, `TransferModal`, `InventoryContextMenu`.
 - `mainmenu/`: pantalla inicial, carga de partidas, opciones de audio/video/teclas y `OpcionesStack` (compartido con la pausa).
 - `map/`: mapa completo (tecla `M`) con zoom y paneo.
 - `Minimap.jsx`, `GroupHud.jsx`, `Hotbar.jsx`, `ItemTooltip.jsx`, `PauseMenu.jsx`, `CharacterForm.jsx` + `form-parts/StatsFields.jsx`.
